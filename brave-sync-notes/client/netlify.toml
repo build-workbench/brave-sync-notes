@@ -1,0 +1,9 @@
+[build]
+  base = "brave-sync-notes/client"
+  publish = "dist"
+  command = "npm install && npm run build"
+
+[build.environment]
+  # URL of your production Socket.IO backend
+  # Example: "https://your-sync-server.example.com"
+  VITE_SOCKET_URL = "https://your-sync-server.example.com"

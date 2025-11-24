@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 // Connect to server
-const SOCKET_URL = 'http://localhost:3002';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3002';
 
 function App() {
   // --- State ---
@@ -17,7 +17,7 @@ function App() {
   const [status, setStatus] = useState('disconnected'); // 'disconnected', 'connected', 'syncing'
   const [members, setMembers] = useState([]);
   const [copyFeedback, setCopyFeedback] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const [showPreview, setShowPreview] = useState(false); // Toggle between Edit/Preview
   const [lang, setLang] = useState('en');
 
