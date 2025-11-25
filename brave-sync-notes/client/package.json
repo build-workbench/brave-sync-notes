@@ -1,7 +1,7 @@
 {
   "name": "brave-sync-client",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,20 +9,37 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/lang-markdown": "^6.2.5",
+    "@codemirror/lang-python": "^6.1.6",
+    "@codemirror/lang-html": "^6.4.9",
+    "@codemirror/lang-css": "^6.2.1",
+    "@codemirror/lang-json": "^6.0.1",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@uiw/react-codemirror": "^4.21.21",
     "bip39": "^3.1.0",
     "buffer": "^6.0.3",
     "crypto-js": "^4.2.0",
     "events": "^3.3.0",
+    "framer-motion": "^10.16.16",
+    "idb-keyval": "^6.2.1",
+    "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.292.0",
     "process": "^0.11.10",
+    "qrcode.react": "^3.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
     "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^15.5.0",
+    "rehype-highlight": "^7.0.0",
     "remark-gfm": "^4.0.1",
-    "socket.io-client": "^4.7.0"
+    "socket.io-client": "^4.7.0",
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@vitejs/plugin-react": "^4.2.0",

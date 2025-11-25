@@ -1,14 +1,37 @@
-# Note Sync Now / Brave Sync Notes
+# Note Sync Now / 安全同步笔记
 
-A minimal, Brave-like, end‑to‑end encrypted note synchronization tool. Notes are synchronized in real-time across devices via a shared 12‑word chain code, without accounts or central storage of plaintext data.
+A modern, secure, end-to-end encrypted note synchronization tool with real-time collaboration features. Synchronize notes across devices using a 12-word chain code - no accounts, no tracking.
 
-## Features
+一个现代化的端到端加密笔记同步工具，支持实时协作。使用 12 个单词的同步密钥在多设备间同步笔记，无需账号，保护隐私。
 
-- **End‑to‑end encryption** using a shared 12‑word mnemonic chain code.
-- **Real-time sync** between multiple devices using Socket.IO.
-- **No accounts, no tracking** – only an in‑memory store on the server.
-- **Markdown editing & preview** with dark/light themes.
-- **English / Simplified Chinese** UI toggle.
+## Features / 功能特点
+
+### Core Features / 核心功能
+- **End-to-end Encryption** - AES-256 encryption with 12-word mnemonic chain code
+- **Real-time Sync** - Instant synchronization across multiple devices via WebSocket
+- **No Accounts, No Tracking** - Privacy-first design with no data collection
+- **Offline-ready** - Local storage persistence for seamless experience
+
+### Editor / 编辑器
+- **CodeMirror Integration** - Professional code editor with syntax highlighting
+- **Markdown Support** - Full GFM (GitHub Flavored Markdown) with live preview
+- **Split View** - Edit and preview side-by-side
+- **Code Highlighting** - 10+ programming languages supported
+
+### Mobile & Accessibility / 移动端支持
+- **QR Code Sharing** - Scan QR code to join sync chain from mobile
+- **Responsive Design** - Fully optimized for mobile devices
+- **Touch Optimized** - Large touch targets and gestures support
+
+### History & Management / 历史记录
+- **Version History** - Auto-save and restore previous versions
+- **Import/Export** - Support for .md and .txt files
+- **Settings Persistence** - All preferences saved locally
+
+### UI/UX / 界面体验
+- **Dark/Light Themes** - System-aware theme with manual toggle
+- **Bilingual UI** - Full English and Chinese interface
+- **Modern Design** - Glass morphism, smooth animations
 
 ## Project structure
 
