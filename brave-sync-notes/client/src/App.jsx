@@ -1,33 +1,34 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useMemo, Suspense, lazy } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from './store/useStore';
 import { useSocket } from './hooks/useSocket';
 import { useTranslation } from './utils/translations';
-import Landing from './components/Landing/Landing';
-import Header from './components/Header/Header';
-import Sidebar from './components/Sidebar/Sidebar';
-import CodeEditor from './components/Editor/CodeEditor';
-import MarkdownPreview from './components/Editor/MarkdownPreview';
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
+import { LoadingOverlay, EditorSkeleton } from './components/Loading/LoadingSpinner';
 import { Eye, Edit3, Columns } from 'lucide-react';
 
-function App() {
-  const {
-    darkMode,
-    lang,
-    view,
-    setView,
-    note,
-    setNote,
-    showPreview,
-    setShowPreview,
-    resetConnection,
-    showSidebar,
-  } = useAppStore();
+// Lazy load heavy components
+const Landing = lazy(() => import('./components/Landing/Landing'));
+const Header = lazy(() => import('./components/Header/Header'));
+const Sidebar = lazy(() => import('./components/Sidebar/Sidebar'));
+const CodeEditor = lazy(() => import('./components/Editor/CodeEditor'));
+const MarkdownPreview = lazy(() => import('./components/Editor/MarkdownPreview'));
 
-  const { joinChain, pushUpdate, disconnect, getSocketId } = useSocket();
+function App() {
+  // Use selectors to prevent unnecessary re-renders
+  const darkMode = useAppStore((state) => state.darkMode);
+  const lang = useAppStore((state) => state.lang);
+  const view = useAppStore((state) => state.view);
+  const note = useAppStore((state) => state.note);
+  const setNote = useAppStore((state) => state.setNote);
+  const resetConnection = useAppStore((state) => state.resetConnection);
+  const showSidebar = useAppStore((state) => state.showSidebar);
+
+  const { joinChain, pushUpdate, disconnect, getSocketId, requestSync } = useSocket();
   const t = useTranslation(lang);
   const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
+  const [isLoading, setIsLoading] = useState(false);
 
   // Apply dark mode to document
   useEffect(() => {
@@ -37,6 +38,18 @@ function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  // Handle visibility change - request sync when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && view === 'app') {
+        requestSync();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [view, requestSync]);
 
   // Handle note changes
   const handleNoteChange = useCallback((newContent) => {
@@ -55,11 +68,18 @@ function App() {
     resetConnection();
   }, [disconnect, resetConnection]);
 
+  // Memoize word count calculation
+  const wordCount = useMemo(() => {
+    return note.split(/\s+/).filter(Boolean).length;
+  }, [note]);
+
   // Landing Page
   if (view === 'landing') {
     return (
-      <>
-        <Landing onJoinChain={handleJoinChain} />
+      <ErrorBoundary lang={lang}>
+        <Suspense fallback={<LoadingOverlay lang={lang} />}>
+          <Landing onJoinChain={handleJoinChain} />
+        </Suspense>
         <Toaster
           position="bottom-center"
           toastOptions={{
@@ -67,19 +87,24 @@ function App() {
             duration: 3000,
           }}
         />
-      </>
+      </ErrorBoundary>
     );
   }
 
   // Main App
   return (
-    <div className={`h-screen flex flex-col overflow-hidden transition-colors duration-300 ${
-      darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'
-    }`}>
-      <Header onLeave={handleLeave} />
+    <ErrorBoundary lang={lang}>
+      <div className={`h-screen flex flex-col overflow-hidden transition-colors duration-300 ${
+        darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'
+      }`}>
+        <Suspense fallback={<div className="h-14 bg-slate-800" />}>
+          <Header onLeave={handleLeave} />
+        </Suspense>
 
-      <div className="flex flex-1 overflow-hidden relative">
-        <Sidebar socketId={getSocketId()} />
+        <div className="flex flex-1 overflow-hidden relative">
+          <Suspense fallback={<div className="w-64 bg-slate-800" />}>
+            <Sidebar socketId={getSocketId()} />
+          </Suspense>
 
         {/* Main Content Area */}
         <main className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
@@ -135,7 +160,7 @@ function App() {
 
             {/* Character/Word count */}
             <div className={`text-xs ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-              {note.length} {lang === 'zh' ? '字符' : 'chars'} · {note.split(/\s+/).filter(Boolean).length} {lang === 'zh' ? '词' : 'words'}
+              {note.length} {lang === 'zh' ? '字符' : 'chars'} · {wordCount} {lang === 'zh' ? '词' : 'words'}
             </div>
           </div>
 
@@ -151,11 +176,13 @@ function App() {
                   transition={{ duration: 0.2 }}
                   className="w-full h-full"
                 >
-                  <CodeEditor
-                    value={note}
-                    onChange={handleNoteChange}
-                    placeholder={t.notePlaceholder}
-                  />
+                  <Suspense fallback={<EditorSkeleton darkMode={darkMode} />}>
+                    <CodeEditor
+                      value={note}
+                      onChange={handleNoteChange}
+                      placeholder={t.notePlaceholder}
+                    />
+                  </Suspense>
                 </motion.div>
               )}
 
@@ -170,7 +197,9 @@ function App() {
                     darkMode ? 'bg-slate-900' : 'bg-white'
                   }`}
                 >
-                  <MarkdownPreview content={note || t.noContent} />
+                  <Suspense fallback={<EditorSkeleton darkMode={darkMode} />}>
+                    <MarkdownPreview content={note || t.noContent} />
+                  </Suspense>
                 </motion.div>
               )}
 
@@ -186,32 +215,37 @@ function App() {
                   <div className={`w-1/2 h-full border-r ${
                     darkMode ? 'border-slate-700' : 'border-slate-200'
                   }`}>
-                    <CodeEditor
-                      value={note}
-                      onChange={handleNoteChange}
-                      placeholder={t.notePlaceholder}
-                    />
+                    <Suspense fallback={<EditorSkeleton darkMode={darkMode} />}>
+                      <CodeEditor
+                        value={note}
+                        onChange={handleNoteChange}
+                        placeholder={t.notePlaceholder}
+                      />
+                    </Suspense>
                   </div>
                   <div className={`w-1/2 h-full overflow-auto ${
                     darkMode ? 'bg-slate-900' : 'bg-white'
                   }`}>
-                    <MarkdownPreview content={note || t.noContent} />
+                    <Suspense fallback={<EditorSkeleton darkMode={darkMode} />}>
+                      <MarkdownPreview content={note || t.noContent} />
+                    </Suspense>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </main>
-      </div>
+        </div>
 
-      <Toaster
-        position="bottom-center"
-        toastOptions={{
-          className: darkMode ? '!bg-slate-800 !text-white' : '',
-          duration: 3000,
-        }}
-      />
-    </div>
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            className: darkMode ? '!bg-slate-800 !text-white' : '',
+            duration: 3000,
+          }}
+        />
+      </div>
+    </ErrorBoundary>
   );
 }
 

@@ -59,13 +59,29 @@ export const useAppStore = create(
       
       // History Management
       addToHistory: (entry) => set((state) => {
+        // Skip if content is too short
+        if (!entry.content || entry.content.length < 10) {
+          return {};
+        }
+        
+        // Check for duplicate content (compare first 100 chars and length)
+        const contentPreview = entry.content.substring(0, 100);
+        const contentLength = entry.content.length;
+        const isDuplicate = state.history.some(
+          (h) => h.preview === contentPreview && h.content.length === contentLength
+        );
+        
+        if (isDuplicate) {
+          return {};
+        }
+        
         const newHistory = [
           {
             id: Date.now(),
             content: entry.content,
             timestamp: new Date().toISOString(),
             deviceName: entry.deviceName || state.deviceName,
-            preview: entry.content.substring(0, 100),
+            preview: contentPreview,
           },
           ...state.history,
         ].slice(0, state.maxHistoryItems);
