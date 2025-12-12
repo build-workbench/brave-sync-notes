@@ -210,12 +210,16 @@ class LocalStorageAdapter extends ClientStorage {
         }
 
         const now = Date.now();
+
+        // Get existing note to preserve version
+        const existing = await this.getNote(notebookId, note.id);
+
         const noteData = {
             ...note,
             notebookId,
             updatedAt: now,
             createdAt: note.createdAt || now,
-            version: (note.version || 0) + 1,
+            version: existing ? existing.version + 1 : (note.version || 1),
             tags: note.tags || []
         };
 
