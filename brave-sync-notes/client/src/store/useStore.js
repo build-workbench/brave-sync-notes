@@ -22,6 +22,9 @@ export const useAppStore = create(
       
       // Content
       note: '',
+      noteVersion: 0,
+      noteTimestamp: 0,
+      noteDeviceId: 'local',
       currentFileType: 'markdown',
       
       // History
@@ -54,7 +57,12 @@ export const useAppStore = create(
       setDeviceName: (deviceName) => set({ deviceName }),
       setMembers: (members) => set({ members }),
       
-      setNote: (note) => set({ note }),
+      setNote: (note, meta) => set((state) => ({
+        note,
+        noteVersion: meta?.version ?? state.noteVersion,
+        noteTimestamp: meta?.timestamp ?? Date.now(),
+        noteDeviceId: meta?.deviceId ?? (state.deviceName || state.noteDeviceId || 'local'),
+      })),
       setCurrentFileType: (currentFileType) => set({ currentFileType }),
       
       // History Management
@@ -98,7 +106,12 @@ export const useAppStore = create(
         const state = get();
         const item = state.history.find((h) => h.id === id);
         if (item) {
-          set({ note: item.content });
+          set({
+            note: item.content,
+            noteVersion: state.noteVersion,
+            noteTimestamp: Date.now(),
+            noteDeviceId: state.deviceName || state.noteDeviceId || 'local',
+          });
         }
       },
       
@@ -116,6 +129,9 @@ export const useAppStore = create(
         mnemonic: '',
         members: [],
         note: '',
+        noteVersion: 0,
+        noteTimestamp: 0,
+        noteDeviceId: 'local',
       }),
     }),
     {

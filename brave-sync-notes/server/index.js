@@ -1,11 +1,16 @@
+require('dotenv').config();
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const PersistenceManager = require('./src/persistence/PersistenceManager');
+const { DataValidator } = require('./src/persistence/PersistenceAdapter');
+
+const corsOrigin = process.env.CORS_ORIGIN || '*';
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json({ limit: '50mb' }));
 
 // Health check endpoint
@@ -58,7 +63,7 @@ app.get('/stats', async (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: corsOrigin,
     methods: ["GET", "POST"]
   },
   // Increase max buffer size for large files
@@ -108,6 +113,8 @@ const socketMeta = new Map();
 // Chunked transfer storage: sessionId -> { chunks: [], total, received }
 const chunkStore = new Map();
 
+const ROOM_TTL_MS = Number(process.env.ROOM_TTL_MS) || 24 * 60 * 60 * 1000;
+
 // Cleanup old chunk sessions (older than 5 minutes)
 setInterval(() => {
   const now = Date.now();
@@ -123,7 +130,7 @@ setInterval(() => {
 setInterval(() => {
   const now = Date.now();
   for (const [roomId, data] of chainStore.entries()) {
-    if (now - data.timestamp > 24 * 60 * 60 * 1000) {
+    if (now - data.timestamp > ROOM_TTL_MS) {
       // Check if room is empty
       const clients = io.sockets.adapter.rooms.get(roomId);
       if (!clients || clients.size === 0) {
@@ -138,13 +145,18 @@ io.on('connection', (socket) => {
   console.log(`[${new Date().toISOString()}] User connected: ${socket.id}`);
 
   // Join a specific sync chain
-  socket.on('join-chain', ({ roomId, deviceName }) => {
+  socket.on('join-chain', async (payload = {}) => {
+    const { roomId, deviceName } = payload;
     try {
       // Validate input
-      if (!roomId || typeof roomId !== 'string' || roomId.length < 10) {
+      if (!DataValidator.isValidRoomId(roomId)) {
         socket.emit('error', { message: 'Invalid room ID' });
         return;
       }
+
+      const safeDeviceName = (typeof deviceName === 'string' && deviceName.trim())
+        ? deviceName.trim().substring(0, 50)
+        : 'Unknown Device';
 
       // Leave previous room if any
       if (socketMeta.has(socket.id)) {
@@ -157,11 +169,11 @@ io.on('connection', (socket) => {
       // Store metadata for this socket
       socketMeta.set(socket.id, {
         roomId,
-        deviceName: (deviceName || 'Unknown Device').substring(0, 50),
+        deviceName: safeDeviceName,
         joinedAt: Date.now()
       });
 
-      console.log(`[${new Date().toISOString()}] Socket ${socket.id} (${deviceName}) joined chain: ${roomId.substring(0, 8)}...`);
+      console.log(`[${new Date().toISOString()}] Socket ${socket.id} (${safeDeviceName}) joined chain: ${roomId.substring(0, 8)}...`);
 
       // 1. Send existing data to the new device
       let existingData = null;

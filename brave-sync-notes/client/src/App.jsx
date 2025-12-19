@@ -6,6 +6,7 @@ import { useSocket } from './hooks/useSocket';
 import { useTranslation } from './utils/translations';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import { LoadingOverlay, EditorSkeleton } from './components/Loading/LoadingSpinner';
+import { ConflictDialog, ConflictIndicator } from './components/Conflict';
 import { Eye, Edit3, Columns } from 'lucide-react';
 
 // Lazy load heavy components
@@ -25,10 +26,48 @@ function App() {
   const resetConnection = useAppStore((state) => state.resetConnection);
   const showSidebar = useAppStore((state) => state.showSidebar);
 
-  const { joinChain, pushUpdate, disconnect, getSocketId, requestSync } = useSocket();
+  const {
+    joinChain,
+    pushUpdate,
+    disconnect,
+    getSocketId,
+    requestSync,
+    conflictCount,
+    pendingConflicts,
+    resolveConflict,
+    clearConflicts,
+  } = useSocket();
   const t = useTranslation(lang);
   const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
   const [isLoading, setIsLoading] = useState(false);
+  const [activeConflictId, setActiveConflictId] = useState(null);
+
+  const activeConflict = useMemo(() => {
+    if (!activeConflictId) return null;
+    return pendingConflicts.find((c) => c.id === activeConflictId) || null;
+  }, [activeConflictId, pendingConflicts]);
+
+  const openConflictDialog = useCallback(() => {
+    const first = pendingConflicts[0];
+    if (first) {
+      setActiveConflictId(first.id);
+    }
+  }, [pendingConflicts]);
+
+  const closeConflictDialog = useCallback(() => {
+    setActiveConflictId(null);
+  }, []);
+
+  const handleResolveConflict = useCallback(async (resolvedContent) => {
+    if (!activeConflictId) return;
+
+    const resolved = await resolveConflict(activeConflictId, resolvedContent);
+    if (typeof resolved === 'string') {
+      setNote(resolved);
+      pushUpdate(resolved);
+    }
+    setActiveConflictId(null);
+  }, [activeConflictId, resolveConflict, setNote, pushUpdate]);
 
   // Apply dark mode to document
   useEffect(() => {
@@ -65,8 +104,9 @@ function App() {
   // Handle leave
   const handleLeave = useCallback(() => {
     disconnect();
+    clearConflicts();
     resetConnection();
-  }, [disconnect, resetConnection]);
+  }, [disconnect, clearConflicts, resetConnection]);
 
   // Memoize word count calculation
   const wordCount = useMemo(() => {
@@ -100,6 +140,19 @@ function App() {
         <Suspense fallback={<div className="h-14 bg-slate-800" />}>
           <Header onLeave={handleLeave} />
         </Suspense>
+
+        <ConflictIndicator
+          conflictCount={conflictCount}
+          onClick={openConflictDialog}
+          darkMode={darkMode}
+        />
+
+        <ConflictDialog
+          conflict={activeConflict}
+          onResolve={handleResolveConflict}
+          onCancel={closeConflictDialog}
+          darkMode={darkMode}
+        />
 
         <div className="flex flex-1 overflow-hidden relative">
           <Suspense fallback={<div className="w-64 bg-slate-800" />}>

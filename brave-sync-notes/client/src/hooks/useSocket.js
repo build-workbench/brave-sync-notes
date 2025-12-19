@@ -1,7 +1,8 @@
-import { useRef, useCallback, useEffect, useMemo } from 'react';
+import { useRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAppStore } from '../store/useStore';
 import { deriveKeys, encryptData, decryptData } from '../utils/crypto';
+import { ConflictManager } from '../utils/conflict';
 import debounce from 'lodash.debounce';
 import toast from 'react-hot-toast';
 
@@ -43,8 +44,13 @@ export const useSocket = () => {
   const debouncedPushRef = useRef(null);
   const lastHistorySaveRef = useRef(0);
   const lastContentHashRef = useRef('');
+  const lastSyncedHashRef = useRef('');
   const reconnectAttemptRef = useRef(0);
   const isReconnectingRef = useRef(false);
+
+  const conflictManagerRef = useRef(null);
+  const [pendingConflicts, setPendingConflicts] = useState([]);
+  const [conflictCount, setConflictCount] = useState(0);
   
   // Get store values with selector to prevent unnecessary rerenders
   const setStatus = useAppStore((state) => state.setStatus);
@@ -56,6 +62,10 @@ export const useSocket = () => {
   const lang = useAppStore((state) => state.lang);
 
   const t = useMemo(() => messages[lang] || messages.zh, [lang]);
+
+  if (!conflictManagerRef.current) {
+    conflictManagerRef.current = new ConflictManager({ autoResolveStrategy: 'manual' });
+  }
 
   // Simple hash function for content comparison
   const hashContent = useCallback((content) => {
@@ -179,6 +189,11 @@ export const useSocket = () => {
       try {
         const keys = deriveKeys(chainMnemonic);
         keysRef.current = keys;
+
+        lastSyncedHashRef.current = '00';
+        conflictManagerRef.current?.clearConflicts();
+        setPendingConflicts([]);
+        setConflictCount(0);
         
         // Disconnect existing socket if any
         if (socketRef.current) {
@@ -214,21 +229,64 @@ export const useSocket = () => {
           }
         });
 
-        socket.on('sync-update', (payload) => {
+        socket.on('sync-update', async (payload) => {
           if (payload && payload.encryptedData) {
             try {
               const decrypted = decryptData(payload.encryptedData, keys.encryptionKey);
               if (decrypted) {
+                const handleRemoteContent = async (remoteContent) => {
+                  const state = useAppStore.getState();
+                  const localContent = state.note || '';
+                  const localHash = hashContent(localContent);
+                  const isDirty = localHash !== lastSyncedHashRef.current;
+
+                  const remoteMeta = {
+                    version: payload.version ?? 0,
+                    timestamp: payload.timestamp ?? Date.now(),
+                    deviceId: payload.deviceName || 'remote',
+                  };
+
+                  if (!isDirty || !conflictManagerRef.current) {
+                    setNote(remoteContent, remoteMeta);
+                    lastSyncedHashRef.current = hashContent(remoteContent);
+                    saveToHistory(remoteContent, payload.deviceName);
+                    return;
+                  }
+
+                  const result = await conflictManagerRef.current.checkAndHandle(
+                    {
+                      content: localContent,
+                      version: state.noteVersion || 0,
+                      timestamp: state.noteTimestamp || 0,
+                      deviceId: state.noteDeviceId || state.deviceName || 'local',
+                    },
+                    {
+                      content: remoteContent,
+                      version: remoteMeta.version,
+                      timestamp: remoteMeta.timestamp,
+                      deviceId: remoteMeta.deviceId,
+                    }
+                  );
+
+                  setPendingConflicts(conflictManagerRef.current.getPendingConflicts());
+                  setConflictCount(conflictManagerRef.current.getConflictCount());
+
+                  if (!result.hasConflict || result.resolved) {
+                    const nextContent = result.resolved ?? remoteContent;
+                    setNote(nextContent, remoteMeta);
+                    lastSyncedHashRef.current = hashContent(nextContent);
+                    saveToHistory(nextContent, payload.deviceName);
+                  }
+                };
+
                 // Handle chunked content
                 if (decrypted.chunked) {
                   const fullContent = reassembleChunks(decrypted.sessionId, decrypted.chunk);
                   if (fullContent !== null) {
-                    setNote(fullContent);
-                    saveToHistory(fullContent, payload.deviceName);
+                    await handleRemoteContent(fullContent);
                   }
                 } else if (decrypted.content !== undefined) {
-                  setNote(decrypted.content);
-                  saveToHistory(decrypted.content, payload.deviceName);
+                  await handleRemoteContent(decrypted.content);
                 }
               }
             } catch (err) {
@@ -297,7 +355,7 @@ export const useSocket = () => {
         resolve(false);
       }
     });
-  }, [setStatus, setNote, setMembers, setView, saveToHistory, reassembleChunks, t]);
+  }, [setStatus, setNote, setMembers, setView, saveToHistory, reassembleChunks, t, hashContent]);
 
   // Create debounced push function
   useEffect(() => {
@@ -326,6 +384,8 @@ export const useSocket = () => {
             totalChunks: chunks.length,
           });
         });
+
+        lastSyncedHashRef.current = hashContent(content);
         
         setStatus('connected');
       } catch (err) {
@@ -339,7 +399,7 @@ export const useSocket = () => {
         debouncedPushRef.current.cancel();
       }
     };
-  }, [syncDebounceMs, setStatus, splitIntoChunks]);
+  }, [syncDebounceMs, setStatus, splitIntoChunks, hashContent]);
 
   const pushUpdate = useCallback((content) => {
     if (!socketRef.current?.connected) {
@@ -360,6 +420,23 @@ export const useSocket = () => {
     }
     keysRef.current = null;
     pendingChunksRef.current = {};
+    conflictManagerRef.current?.clearConflicts();
+    setPendingConflicts([]);
+    setConflictCount(0);
+  }, []);
+
+  const resolveConflict = useCallback(async (conflictId, resolvedContent) => {
+    if (!conflictManagerRef.current) return null;
+    const resolved = await conflictManagerRef.current.resolveManually(conflictId, resolvedContent);
+    setPendingConflicts(conflictManagerRef.current.getPendingConflicts());
+    setConflictCount(conflictManagerRef.current.getConflictCount());
+    return resolved;
+  }, []);
+
+  const clearConflicts = useCallback(() => {
+    conflictManagerRef.current?.clearConflicts();
+    setPendingConflicts([]);
+    setConflictCount(0);
   }, []);
 
   const getSocketId = useCallback(() => {
@@ -386,5 +463,9 @@ export const useSocket = () => {
     getSocketId,
     requestSync,
     isConnected: () => socketRef.current?.connected ?? false,
+    conflictCount,
+    pendingConflicts,
+    resolveConflict,
+    clearConflicts,
   };
 };
