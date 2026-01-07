@@ -209,6 +209,11 @@ class LocalStorageAdapter extends ClientStorage {
             throw new Error('Invalid note data: id and notebookId are required');
         }
 
+        // Validate that note has content or title (at least one meaningful field)
+        if (note.content === undefined && note.title === undefined) {
+            throw new Error('Invalid note data: content or title is required');
+        }
+
         const now = Date.now();
 
         // Get existing note to preserve version
@@ -218,7 +223,7 @@ class LocalStorageAdapter extends ClientStorage {
             ...note,
             notebookId,
             updatedAt: now,
-            createdAt: note.createdAt || now,
+            createdAt: existing?.createdAt || note.createdAt || now,
             version: existing ? existing.version + 1 : (note.version || 1),
             tags: note.tags || []
         };

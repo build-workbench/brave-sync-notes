@@ -140,17 +140,16 @@ describe('LocalStorageAdapter', () => {
         });
 
         it('should sort notes by update time', async () => {
-            const note1 = { ...testNote, id: 'note-1', updatedAt: 1000 };
-            const note2 = { ...testNote, id: 'note-2', updatedAt: 2000 };
-            const note3 = { ...testNote, id: 'note-3', updatedAt: 1500 };
-
-            await storage.saveNote(notebookId, note1);
-            await storage.saveNote(notebookId, note2);
-            await storage.saveNote(notebookId, note3);
+            // Save notes with delays to ensure different updatedAt timestamps
+            await storage.saveNote(notebookId, { ...testNote, id: 'note-1', title: 'Note 1' });
+            await new Promise(resolve => setTimeout(resolve, 10));
+            await storage.saveNote(notebookId, { ...testNote, id: 'note-2', title: 'Note 2' });
+            await new Promise(resolve => setTimeout(resolve, 10));
+            await storage.saveNote(notebookId, { ...testNote, id: 'note-3', title: 'Note 3' });
 
             const notes = await storage.listNotes(notebookId);
-            expect(notes[0].id).toBe('note-2'); // Most recent
-            expect(notes[1].id).toBe('note-3');
+            expect(notes[0].id).toBe('note-3'); // Most recent
+            expect(notes[1].id).toBe('note-2');
             expect(notes[2].id).toBe('note-1'); // Oldest
         });
     });
@@ -190,19 +189,26 @@ describe('LocalStorageAdapter', () => {
         });
 
         it('should cleanup old history', async () => {
+            // First, add 100 history entries without auto-cleanup
+            const storage2 = new LocalStorageAdapter({ prefix: 'test_', maxHistoryPerNote: 200 });
+            await storage2.initialize();
+
             for (let i = 0; i < 100; i++) {
-                await storage.saveHistory(noteId, {
+                await storage2.saveHistory(noteId, {
                     ...testHistory,
                     id: `history-${i}`,
                     version: i,
                 });
             }
 
-            const deleted = await storage.cleanupHistory(noteId, 50);
+            // Now cleanup to keep only 50
+            const deleted = await storage2.cleanupHistory(noteId, 50);
             expect(deleted).toBe(50);
 
-            const remaining = await storage.getHistory(noteId);
+            const remaining = await storage2.getHistory(noteId);
             expect(remaining.length).toBeLessThanOrEqual(50);
+
+            await storage2.close();
         });
     });
 
@@ -270,7 +276,12 @@ describe('LocalStorageAdapter', () => {
 
         it('should cleanup old data', async () => {
             const notebookId = 'notebook-1';
-            await storage.saveNotebook({
+
+            // Create a storage with higher history limit
+            const storage2 = new LocalStorageAdapter({ prefix: 'test2_', maxHistoryPerNote: 200 });
+            await storage2.initialize();
+
+            await storage2.saveNotebook({
                 id: notebookId,
                 name: 'Test',
                 mnemonic: 'test',
@@ -279,7 +290,7 @@ describe('LocalStorageAdapter', () => {
             });
 
             const noteId = 'note-1';
-            await storage.saveNote(notebookId, {
+            await storage2.saveNote(notebookId, {
                 id: noteId,
                 title: 'Test',
                 content: 'Test',
@@ -288,7 +299,7 @@ describe('LocalStorageAdapter', () => {
 
             // Add many history entries
             for (let i = 0; i < 100; i++) {
-                await storage.saveHistory(noteId, {
+                await storage2.saveHistory(noteId, {
                     id: `history-${i}`,
                     noteId,
                     content: `Version ${i}`,
@@ -299,8 +310,12 @@ describe('LocalStorageAdapter', () => {
                 });
             }
 
-            const freed = await storage.cleanup();
+            // Now set a lower limit and cleanup
+            storage2.maxHistoryPerNote = 50;
+            const freed = await storage2.cleanup();
             expect(freed).toBeGreaterThan(0);
+
+            await storage2.close();
         });
     });
 
@@ -312,7 +327,7 @@ describe('LocalStorageAdapter', () => {
 
         it('should throw error for invalid note data', async () => {
             await expect(storage.saveNote('notebook-1', {})).rejects.toThrow();
-            await expect(storage.saveNote('notebook-1', { id: 'test' })).rejects.toThrow();
+            await expect(storage.saveNote('notebook-1', { id: 'test' })).rejects.toThrow('content or title is required');
         });
 
         it('should throw error for invalid history data', async () => {
