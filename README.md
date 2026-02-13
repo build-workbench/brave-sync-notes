@@ -1,5 +1,11 @@
 # Note Sync Now / 安全同步笔记
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socketdotio&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
+
 A modern, secure, end-to-end encrypted note synchronization tool with real-time collaboration features. Synchronize notes across devices using a 12-word chain code - no accounts, no tracking.
 
 一个现代化的端到端加密笔记同步工具，支持实时协作。使用 12 个单词的同步密钥在多设备间同步笔记，无需账号，保护隐私。
