@@ -1,0 +1,5 @@
+title: Note Sync Now
+description: E2E encrypted note sync — AES-256, 12-word mnemonic, real-time collaboration
+remote_theme: pages-themes/cayman@v0.2.0
+plugins:
+  - jekyll-remote-theme
