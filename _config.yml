@@ -1,22 +1,51 @@
 title: Note Sync Now
-description: E2E encrypted note sync — AES-256, 12-word mnemonic, real-time collaboration
-url: https://lessup.github.io
-baseurl: /sync-notes
-lang: en
-
+description: >-
+  E2E encrypted note sync — AES-256, 12-word mnemonic, real-time collaboration
 remote_theme: pages-themes/cayman@v0.2.0
 plugins:
   - jekyll-remote-theme
+  - jekyll-seo-tag
+repository: LessUp/sync-notes
+show_downloads: false
 
+# SEO & metadata
+url: https://lessup.github.io
+baseurl: /sync-notes
+lang: en
+author: LessUp
+
+# Markdown rendering
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+
+# Default layout for all pages
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+  - scope:
+      path: "changelog"
+    values:
+      layout: default
+
+# Exclude irrelevant files from Jekyll build
 exclude:
-  - brave-sync-notes/
-  - node_modules/
+  - .git
+  - .github
+  - .kiro
+  - .vscode
+  - brave-sync-notes
+  - node_modules
   - package-lock.json
   - IMPLEMENTATION_PROGRESS.md
   - TEST_RESULTS.md
   - CONTRIBUTING.md
   - .editorconfig
   - .gitignore
-  - .github/
-  - .kiro/
-  - .vscode/
+  - Gemfile
+  - Gemfile.lock
+  - vendor
