@@ -126,20 +126,45 @@ setInterval(() => {
   }
 }, 60000);
 
-// Cleanup rooms with no data after 24 hours
+// Cleanup stale rooms — runs every 30 minutes
+// Removes rooms with no connected clients that are older than TTL.
+// Also enforces a hard cap on total in-memory rooms to prevent unbounded growth.
+const MAX_MEMORY_ROOMS = Number(process.env.MAX_MEMORY_ROOMS) || 10000;
+
 setInterval(() => {
   const now = Date.now();
+  let evictedTTL = 0;
+  let evictedCap = 0;
+
+  // Phase 1: evict expired rooms with no clients
   for (const [roomId, data] of chainStore.entries()) {
     if (now - data.timestamp > ROOM_TTL_MS) {
-      // Check if room is empty
       const clients = io.sockets.adapter.rooms.get(roomId);
       if (!clients || clients.size === 0) {
         chainStore.delete(roomId);
-        console.log(`Cleaned up stale room: ${roomId.substring(0, 8)}...`);
+        evictedTTL++;
       }
     }
   }
-}, 60 * 60 * 1000);
+
+  // Phase 2: if still over capacity, evict oldest rooms without clients
+  if (chainStore.size > MAX_MEMORY_ROOMS) {
+    const sorted = [...chainStore.entries()]
+      .sort((a, b) => a[1].timestamp - b[1].timestamp);
+    for (const [roomId] of sorted) {
+      if (chainStore.size <= MAX_MEMORY_ROOMS) break;
+      const clients = io.sockets.adapter.rooms.get(roomId);
+      if (!clients || clients.size === 0) {
+        chainStore.delete(roomId);
+        evictedCap++;
+      }
+    }
+  }
+
+  if (evictedTTL + evictedCap > 0) {
+    console.log(`Room cleanup: ${evictedTTL} expired, ${evictedCap} over-cap. Remaining: ${chainStore.size}`);
+  }
+}, 30 * 60 * 1000);
 
 io.on('connection', (socket) => {
   console.log(`[${new Date().toISOString()}] User connected: ${socket.id}`);
@@ -214,12 +239,33 @@ io.on('connection', (socket) => {
         return;
       }
 
+      // Validate encryptedData size to prevent DoS (max 5MB)
+      if (!encryptedData || typeof encryptedData !== 'string') {
+        socket.emit('error', { message: 'Invalid data format' });
+        return;
+      }
+      if (encryptedData.length > 5 * 1024 * 1024) {
+        socket.emit('error', { message: 'Data too large (max 5MB)' });
+        return;
+      }
+
+      // Rate limiting: max 30 updates per minute per socket
+      const now = Date.now();
+      if (!meta._rateWindow || now - meta._rateWindow > 60000) {
+        meta._rateWindow = now;
+        meta._rateCount = 0;
+      }
+      meta._rateCount = (meta._rateCount || 0) + 1;
+      if (meta._rateCount > 30) {
+        socket.emit('error', { message: 'Rate limit exceeded' });
+        return;
+      }
+
       const payload = {
         encryptedData,
-        timestamp,
+        timestamp: typeof timestamp === 'number' ? timestamp : Date.now(),
         deviceName: meta.deviceName,
-        version: Date.now(), // 添加版本号
-        hash: '' // 可以添加数据完整性校验
+        version: Date.now(),
       };
 
       // 保存到内存存储

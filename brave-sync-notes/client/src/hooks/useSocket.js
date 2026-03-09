@@ -195,11 +195,20 @@ export const useSocket = () => {
         setPendingConflicts([]);
         setConflictCount(0);
         
-        // Disconnect existing socket if any
+        // Fully tear down existing socket before creating a new one
+        // This prevents event listener leaks from rapid joinChain calls
         if (socketRef.current) {
-          socketRef.current.removeAllListeners();
-          socketRef.current.disconnect();
+          const oldSocket = socketRef.current;
+          socketRef.current = null; // Clear ref immediately to prevent stale handlers
+          oldSocket.removeAllListeners();
+          oldSocket.disconnect();
         }
+
+        // Cancel any pending debounced pushes from previous session
+        if (debouncedPushRef.current) {
+          debouncedPushRef.current.cancel();
+        }
+        pendingChunksRef.current = {};
         
         socketRef.current = io(SOCKET_URL, {
           transports: ['websocket', 'polling'],

@@ -13,17 +13,19 @@ export const generateSyncChain = () => {
 
 export const deriveKeys = (mnemonic) => {
   // 1. Derive Room ID (Public)
-  // We simply hash the mnemonic. Since the server never sees the mnemonic, 
-  // it can't reverse this to get the key.
-  // We use SHA256.
+  // SHA256 of the mnemonic — server uses this as the room identifier
+  // but never sees the mnemonic itself.
   const roomId = CryptoJS.SHA256(mnemonic).toString(CryptoJS.enc.Hex);
 
   // 2. Derive Encryption Key (Private)
-  // We use PBKDF2 to stretch the mnemonic into a key.
-  // Salt is constant for this demo, but could be part of the protocol.
-  const encryptionKey = CryptoJS.PBKDF2(mnemonic, "brave-sync-demo-salt", {
+  // Use PBKDF2 with a mnemonic-derived salt for key stretching.
+  // The salt is derived from the mnemonic itself via a different hash,
+  // ensuring each mnemonic gets a unique salt while remaining deterministic
+  // (so all devices with the same mnemonic derive the same key).
+  const salt = CryptoJS.SHA256("notesync-salt:" + mnemonic).toString(CryptoJS.enc.Hex);
+  const encryptionKey = CryptoJS.PBKDF2(mnemonic, salt, {
     keySize: 256 / 32,
-    iterations: 1000
+    iterations: 10000
   }).toString(CryptoJS.enc.Hex);
 
   return { roomId, encryptionKey };
