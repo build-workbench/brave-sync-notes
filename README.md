@@ -1,5 +1,7 @@
 # Note Sync Now / 安全同步笔记
 
+简体中文 | [English](README.en.md)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
