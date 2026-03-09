@@ -3,57 +3,83 @@ layout: default
 title: Note Sync Now
 ---
 
-# Note Sync Now / 安全同步笔记
+# Note Sync Now
 
-端到端加密笔记同步工具 — 使用 12 个单词的同步密钥在多设备间同步笔记，无需账号，保护隐私。
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socketdotio&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
 
-## 核心特性
+A secure, end-to-end encrypted note synchronization tool with real-time collaboration. Sync notes across devices using a **12-word mnemonic chain code** — no accounts, no tracking, no server-side plaintext.
 
-- **端到端加密** — AES-256 加密 + 12-word 助记词链码
-- **实时同步** — WebSocket 多设备即时同步
-- **无需账号** — 隐私优先设计，无数据采集
-- **离线可用** — 本地存储持久化
+## Key Features
 
-### 编辑器
+### Security & Sync
+- **End-to-End Encryption** — AES-256 with a 12-word mnemonic-derived key; the server never sees plaintext
+- **Real-Time Sync** — Instant multi-device synchronization via WebSocket (Socket.IO)
+- **No Accounts** — Privacy-first design with zero data collection
+- **Offline-Ready** — Local storage persistence; works without network
 
-- **CodeMirror** — 专业代码编辑器，语法高亮
-- **Markdown** — 完整 GFM 支持，实时预览
-- **分屏视图** — 编辑与预览并排显示
+### Editor
+- **CodeMirror Integration** — Professional code editor with syntax highlighting for 10+ languages
+- **Markdown Support** — Full GFM with live preview in split-pane mode
+- **Version History** — Auto-save with restore to previous versions
+- **Import/Export** — Support for `.md` and `.txt` files
 
-### 移动端
+### Mobile & UX
+- **QR Code Sharing** — Scan to join a sync chain from any mobile device
+- **Responsive Design** — Fully optimized for phones and tablets
+- **Dark/Light Themes** — System-aware with manual toggle
+- **Bilingual UI** — Complete English and Chinese interface
+- **Glass Morphism** — Modern design with smooth animations
 
-- **二维码分享** — 扫码加入同步链
-- **响应式设计** — 完全适配移动设备
-- **触控优化** — 大触摸目标和手势支持
+## Architecture
 
-### 界面
-
-- **深色/浅色主题** — 跟随系统 + 手动切换
-- **中英双语** — 完整的英文和中文界面
-- **现代设计** — 毛玻璃效果、流畅动画
-
-## 快速开始
-
-```bash
-# 客户端
-cd brave-sync-notes/client
-npm install && npm run dev
-
-# 服务端
-cd brave-sync-notes/server
-npm install && npm run dev
+```
+┌───────────────────────────────────────────────────────────┐
+│                   Client  (React + Vite)                  │
+│  CodeMirror ─── Markdown Preview ─── Theme / i18n         │
+│       │                                                   │
+│   AES-256 Encrypt ◄──── 12-word mnemonic ────►  Decrypt   │
+│       │                                          │        │
+└───────┼──────────────────────────────────────────┼────────┘
+        │  WebSocket (encrypted payloads only)     │
+┌───────▼──────────────────────────────────────────▼────────┐
+│                 Server  (Express + Socket.IO)             │
+│        Relay encrypted blobs — zero knowledge             │
+└───────────────────────────────────────────────────────────┘
 ```
 
-## 技术栈
+## Quick Start
 
-| 类别 | 技术 |
-|------|------|
-| 前端 | React 18, Vite 5, CodeMirror |
-| 后端 | Express 4, Socket.IO 4 |
-| 加密 | AES-256, Web Crypto API |
-| 样式 | Tailwind CSS |
+```bash
+# Backend
+cd brave-sync-notes/server
+npm install && node index.js    # → http://localhost:3002
 
-## 链接
+# Frontend
+cd brave-sync-notes/client
+npm install && npm run dev      # → http://localhost:5173
+```
 
-- [GitHub 仓库](https://github.com/LessUp/sync-notes)
-- [README](README.md)
+## Deployment
+
+| Component | Platform | Notes |
+|-----------|----------|-------|
+| **Frontend** | Netlify | Set `VITE_SOCKET_URL` env var |
+| **Backend** | Any VPS | Run with pm2 or systemd behind Nginx + HTTPS |
+
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Frontend | React 18, Vite 5, CodeMirror 6 |
+| Backend | Express 4, Socket.IO 4 |
+| Encryption | AES-256-GCM, Web Crypto API |
+| Styling | Tailwind CSS |
+| CI | GitHub Actions (build + lint) |
+
+---
+
+[View on GitHub](https://github.com/LessUp/sync-notes) · [README](README.md)
