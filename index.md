@@ -5,6 +5,7 @@ title: Note Sync Now
 
 # Note Sync Now
 
+[![GitHub Pages](https://github.com/LessUp/sync-notes/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/sync-notes/actions/workflows/pages.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
