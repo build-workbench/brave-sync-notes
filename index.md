@@ -1,86 +1,60 @@
 ---
 layout: default
 title: Note Sync Now
+description: 端到端加密笔记同步工具的文档入口：项目定位、阅读路径与关键页面导航
 ---
 
 # Note Sync Now
 
-[![GitHub Pages](https://github.com/LessUp/sync-notes/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/sync-notes/actions/workflows/pages.yml)
+[![GitHub Pages](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socketdotio&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
 
-A secure, end-to-end encrypted note synchronization tool with real-time collaboration. Sync notes across devices using a **12-word mnemonic chain code** — no accounts, no tracking, no server-side plaintext.
+Note Sync Now 面向“无需账号、保持私密、支持多设备实时同步”的笔记协作场景：客户端负责助记词恢复与端到端加密，服务端只转发加密后的同步数据。
 
-## Key Features
+## 项目定位
 
-### Security & Sync
-- **End-to-End Encryption** — AES-256 with a 12-word mnemonic-derived key; the server never sees plaintext
-- **Real-Time Sync** — Instant multi-device synchronization via WebSocket (Socket.IO)
-- **No Accounts** — Privacy-first design with zero data collection
-- **Offline-Ready** — Local storage persistence; works without network
+这是一个把隐私优先同步、实时协作体验和可维护工程结构放在一起的实验项目。仓库首页只保留最小启动信息，这个页面负责说明它是什么、适合谁以及应该从哪里开始阅读。
 
-### Editor
-- **CodeMirror Integration** — Professional code editor with syntax highlighting for 10+ languages
-- **Markdown Support** — Full GFM with live preview in split-pane mode
-- **Version History** — Auto-save with restore to previous versions
-- **Import/Export** — Support for `.md` and `.txt` files
+## 适合谁
 
-### Mobile & UX
-- **QR Code Sharing** — Scan to join a sync chain from any mobile device
-- **Responsive Design** — Fully optimized for phones and tablets
-- **Dark/Light Themes** — System-aware with manual toggle
-- **Bilingual UI** — Complete English and Chinese interface
-- **Glass Morphism** — Modern design with smooth animations
+- 想了解助记词恢复与客户端侧加密同步流程的开发者
+- 想参考 React + Express + Socket.IO 协作型应用拆分方式的工程师
+- 需要快速定位部署、贡献与历史变更入口的维护者
 
-## Architecture
+## 从哪里开始
 
-```
-┌───────────────────────────────────────────────────────────┐
-│                   Client  (React + Vite)                  │
-│  CodeMirror ─── Markdown Preview ─── Theme / i18n         │
-│       │                                                   │
-│   AES-256 Encrypt ◄──── 12-word mnemonic ────►  Decrypt   │
-│       │                                          │        │
-└───────┼──────────────────────────────────────────┼────────┘
-        │  WebSocket (encrypted payloads only)     │
-┌───────▼──────────────────────────────────────────▼────────┐
-│                 Server  (Express + Socket.IO)             │
-│        Relay encrypted blobs — zero knowledge             │
-└───────────────────────────────────────────────────────────┘
-```
+1. 先看 [README](README.md)，完成本地启动。
+2. 再看 [CONTRIBUTING](CONTRIBUTING.md)，了解开发与协作约定。
+3. 想了解历史演进和部署相关调整时，继续查看 [更新日志](changelog/)。
 
-## Quick Start
+## 推荐阅读路径
 
-```bash
-# Backend
-cd brave-sync-notes/server
-npm install && node index.js    # → http://localhost:3002
+### 我只想把项目跑起来
 
-# Frontend
-cd brave-sync-notes/client
-npm install && npm run dev      # → http://localhost:5173
-```
+- [README](README.md)
+- [CONTRIBUTING](CONTRIBUTING.md)
 
-## Deployment
+### 我想理解系统边界
 
-| Component | Platform | Notes |
-|-----------|----------|-------|
-| **Frontend** | Netlify | Set `VITE_SOCKET_URL` env var |
-| **Backend** | Any VPS | Run with pm2 or systemd behind Nginx + HTTPS |
+- [README](README.md)
+- `brave-sync-notes/client`
+- `brave-sync-notes/server`
 
-## Tech Stack
+### 我准备继续维护
 
-| Category | Technology |
-|----------|------------|
-| Frontend | React 18, Vite 5, CodeMirror 6 |
-| Backend | Express 4, Socket.IO 4 |
-| Encryption | AES-256-GCM, Web Crypto API |
-| Styling | Tailwind CSS |
-| CI | GitHub Actions (build + lint) |
+- [CONTRIBUTING](CONTRIBUTING.md)
+- [更新日志](changelog/)
+- [GitHub 仓库](https://github.com/LessUp/brave-sync-notes)
 
----
+## 核心入口
 
-[View on GitHub](https://github.com/LessUp/sync-notes) · [README](README.md)
+| 类别 | 页面 | 说明 |
+|------|------|------|
+| 概览 | [README](README.md) | 仓库定位、最小启动命令与文档链接 |
+| 快速开始 | [README](README.md) | 前后端本地开发启动方式 |
+| 开发指南 | [CONTRIBUTING](CONTRIBUTING.md) | 开发流程、代码规范与提交约定 |
+| 归档 | [更新日志](changelog/) | Pages、部署与功能迭代记录 |
+| 外部链接 | [GitHub 仓库](https://github.com/LessUp/brave-sync-notes) | 源码、Issue 与协作入口 |

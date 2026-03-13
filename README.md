@@ -4,52 +4,36 @@
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
 
-English | [简体中文](README.zh-CN.md)
+English | [简体中文](README.zh-CN.md) | [Docs](https://lessup.github.io/brave-sync-notes/)
 
-End-to-end encrypted note synchronization — AES-256 encryption, 12-word mnemonic recovery, real-time collaboration via WebSocket.
+Note Sync Now is an end-to-end encrypted note synchronization project for experimenting with mnemonic-based recovery, real-time collaboration, and privacy-first multi-device sync.
 
-## Features
+## Repository Overview
 
-- **E2E Encryption** — AES-256-GCM, keys never leave the client
-- **Mnemonic Recovery** — BIP39-style 12-word seed phrase for key backup
-- **Real-Time Sync** — WebSocket-based instant synchronization
-- **Offline Support** — Local-first with conflict resolution on reconnect
-- **Markdown Editor** — Rich text editing with live preview
-- **Multi-Device** — Sync across browsers/devices via mnemonic
-
-## Tech Stack
-
-- **Frontend**: React 18 + TypeScript + Tailwind CSS
-- **Backend**: Express + Socket.IO
-- **Encryption**: Web Crypto API (AES-256-GCM)
-- **Storage**: IndexedDB (client) + SQLite (server)
+- React + Vite client in `brave-sync-notes/client`
+- Express + Socket.IO server in `brave-sync-notes/server`
+- AES-256-based client-side encryption with mnemonic recovery flow
+- GitHub Pages site for architecture, usage paths, and project updates
 
 ## Quick Start
 
 ```bash
-# Install dependencies
+cd brave-sync-notes/server
 npm install
+node index.js
 
-# Start development
+cd ../client
+npm install
 npm run dev
-
-# Build for production
-npm run build
 ```
 
-## How It Works
+Backend defaults to `http://localhost:3002`; the Vite dev server usually runs on `http://localhost:5173`.
 
-1. **Generate or Import** a 12-word mnemonic phrase
-2. **Derive encryption key** from mnemonic using PBKDF2
-3. **Create/edit notes** — encrypted locally before sync
-4. **Real-time sync** — encrypted blobs transmitted via WebSocket
-5. **Multi-device** — import same mnemonic on another device to decrypt
+## Docs
 
-## Security Model
-
-- Keys derived client-side from mnemonic, never sent to server
-- Server only stores encrypted blobs — zero-knowledge architecture
-- AES-256-GCM with unique IV per encryption operation
+- Project docs: `https://lessup.github.io/brave-sync-notes/`
+- Site home covers positioning, reading paths, and deployment context
+- See `CONTRIBUTING.md` for contribution guidelines
 
 ## License
 

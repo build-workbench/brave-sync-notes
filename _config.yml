@@ -1,17 +1,17 @@
 title: Note Sync Now
 description: >-
-  E2E encrypted note sync — AES-256, 12-word mnemonic, real-time collaboration
+  端到端加密笔记同步工具：12 词助记词恢复、实时协作与多设备同步
 remote_theme: pages-themes/cayman@v0.2.0
 plugins:
   - jekyll-remote-theme
   - jekyll-seo-tag
-repository: LessUp/sync-notes
+repository: LessUp/brave-sync-notes
 show_downloads: false
 
 # SEO & metadata
 url: https://lessup.github.io
-baseurl: /sync-notes
-lang: en
+baseurl: /brave-sync-notes
+lang: zh-CN
 author: LessUp
 
 # Markdown rendering
@@ -43,7 +43,6 @@ exclude:
   - package-lock.json
   - IMPLEMENTATION_PROGRESS.md
   - TEST_RESULTS.md
-  - CONTRIBUTING.md
   - .editorconfig
   - .gitignore
   - Gemfile

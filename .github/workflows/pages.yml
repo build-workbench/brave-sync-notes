@@ -2,11 +2,12 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [master, main]
     paths:
       - 'index.md'
       - 'README.md'
       - 'README.zh-CN.md'
+      - 'CONTRIBUTING.md'
       - 'changelog/**'
       - '_config.yml'
       - 'LICENSE'
@@ -33,6 +34,7 @@ jobs:
             index.md
             README.md
             README.zh-CN.md
+            CONTRIBUTING.md
             changelog
             _config.yml
             LICENSE
