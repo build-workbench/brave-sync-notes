@@ -116,7 +116,7 @@ const chunkStore = new Map();
 const ROOM_TTL_MS = Number(process.env.ROOM_TTL_MS) || 24 * 60 * 60 * 1000;
 
 // Cleanup old chunk sessions (older than 5 minutes)
-setInterval(() => {
+const chunkCleanupTimer = setInterval(() => {
   const now = Date.now();
   for (const [sessionId, session] of chunkStore.entries()) {
     if (now - session.startTime > 5 * 60 * 1000) {
@@ -125,13 +125,14 @@ setInterval(() => {
     }
   }
 }, 60000);
+chunkCleanupTimer.unref?.();
 
 // Cleanup stale rooms — runs every 30 minutes
 // Removes rooms with no connected clients that are older than TTL.
 // Also enforces a hard cap on total in-memory rooms to prevent unbounded growth.
 const MAX_MEMORY_ROOMS = Number(process.env.MAX_MEMORY_ROOMS) || 10000;
 
-setInterval(() => {
+const roomCleanupTimer = setInterval(() => {
   const now = Date.now();
   let evictedTTL = 0;
   let evictedCap = 0;
@@ -165,8 +166,9 @@ setInterval(() => {
     console.log(`Room cleanup: ${evictedTTL} expired, ${evictedCap} over-cap. Remaining: ${chainStore.size}`);
   }
 }, 30 * 60 * 1000);
+roomCleanupTimer.unref?.();
 
-io.on('connection', (socket) => {
+function handleSocketConnection(socket) {
   console.log(`[${new Date().toISOString()}] User connected: ${socket.id}`);
 
   // Join a specific sync chain
@@ -339,7 +341,9 @@ io.on('connection', (socket) => {
   socket.on('error', (error) => {
     console.error(`Socket error for ${socket.id}:`, error);
   });
-});
+}
+
+io.on('connection', handleSocketConnection);
 
 function updateRoomMembers(roomId) {
   // Get all socket IDs in the room
@@ -374,53 +378,83 @@ async function gracefulShutdown(signal) {
   console.log(`${signal} received, shutting down gracefully...`);
 
   try {
-    // 关闭 HTTP 服务器
-    await new Promise((resolve) => {
-      server.close(resolve);
-    });
-    console.log('HTTP server closed');
+    if (server.listening) {
+      await new Promise((resolve) => {
+        server.close(resolve);
+      });
+      console.log('HTTP server closed');
+    }
 
     // 关闭持久化存储
     if (persistenceManager) {
       await persistenceManager.close();
       console.log('Persistence layer closed');
+      persistenceManager = null;
     }
 
     console.log('Graceful shutdown completed');
-    process.exit(0);
+    if (require.main === module) {
+      process.exit(0);
+    }
   } catch (error) {
     console.error('Error during shutdown:', error);
-    process.exit(1);
+    if (require.main === module) {
+      process.exit(1);
+    }
+    throw error;
   }
 }
 
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-const PORT = process.env.PORT || 3002;
-
-// 启动服务器
 async function startServer() {
   try {
     // 初始化持久化存储
     await initializePersistence();
 
-    // 启动 HTTP 服务器
-    server.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Secure Note Sync Server running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`📈 Stats: http://localhost:${PORT}/stats`);
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(PORT, '0.0.0.0', () => {
+        server.off('error', reject);
+        console.log(`🚀 Secure Note Sync Server running on port ${PORT}`);
+        console.log(`📊 Health check: http://localhost:${PORT}/health`);
+        console.log(`📈 Stats: http://localhost:${PORT}/stats`);
 
-      if (persistenceManager) {
-        console.log(`💾 Persistence: ${persistenceManager.getCurrentAdapter()}`);
-      } else {
-        console.log(`⚠️  Persistence: In-memory only`);
-      }
+        if (persistenceManager) {
+          console.log(`💾 Persistence: ${persistenceManager.getCurrentAdapter()}`);
+        } else {
+          console.log(`⚠️  Persistence: In-memory only`);
+        }
+
+        resolve();
+      });
     });
   } catch (error) {
     console.error('Failed to start server:', error);
-    process.exit(1);
+    if (require.main === module) {
+      process.exit(1);
+    }
+    throw error;
   }
 }
 
-startServer();
+const PORT = process.env.PORT || 3002;
+
+module.exports = {
+  app,
+  server,
+  io,
+  startServer,
+  initializePersistence,
+  updateRoomMembers,
+  gracefulShutdown,
+  handleSocketConnection,
+  stores: {
+    chainStore,
+    socketMeta,
+    chunkStore,
+  },
+};
+
+if (require.main === module) {
+  startServer();
+}

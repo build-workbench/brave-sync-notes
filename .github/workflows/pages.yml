@@ -4,10 +4,7 @@ on:
   push:
     branches: [master, main]
     paths:
-      - 'index.md'
-      - 'README.md'
-      - 'README.zh-CN.md'
-      - 'CONTRIBUTING.md'
+      - '*.md'
       - 'changelog/**'
       - '_config.yml'
       - 'LICENSE'
@@ -29,16 +26,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            index.md
-            README.md
-            README.zh-CN.md
-            CONTRIBUTING.md
-            changelog
-            _config.yml
-            LICENSE
-          sparse-checkout-cone-mode: false
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

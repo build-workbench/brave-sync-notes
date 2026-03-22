@@ -26,35 +26,39 @@ Note Sync Now 面向“无需账号、保持私密、支持多设备实时同步
 
 ## 从哪里开始
 
-1. 先看 [README](README.md)，完成本地启动。
-2. 再看 [CONTRIBUTING](CONTRIBUTING.md)，了解开发与协作约定。
-3. 想了解历史演进和部署相关调整时，继续查看 [更新日志](changelog/)。
+1. 先看 [仓库概览]({{ '/overview/' | relative_url }})，完成本地启动并了解仓库结构。
+2. 再看 [贡献指南]({{ '/contributing/' | relative_url }})，了解开发、验证与 changelog 约定。
+3. 想了解历史演进和部署相关调整时，继续查看 [更新日志]({{ '/changelog/' | relative_url }})。
 
 ## 推荐阅读路径
 
 ### 我只想把项目跑起来
 
-- [README](README.md)
-- [CONTRIBUTING](CONTRIBUTING.md)
+- [仓库概览]({{ '/overview/' | relative_url }})
+- [部署与运行]({{ '/deployment/' | relative_url }})
+- [贡献指南]({{ '/contributing/' | relative_url }})
 
 ### 我想理解系统边界
 
-- [README](README.md)
-- `brave-sync-notes/client`
-- `brave-sync-notes/server`
+- [仓库概览]({{ '/overview/' | relative_url }})
+- [架构说明]({{ '/architecture/' | relative_url }})
+- [安全与同步机制]({{ '/security-sync/' | relative_url }})
 
 ### 我准备继续维护
 
-- [CONTRIBUTING](CONTRIBUTING.md)
-- [更新日志](changelog/)
+- [贡献指南]({{ '/contributing/' | relative_url }})
+- [部署与运行]({{ '/deployment/' | relative_url }})
+- [更新日志]({{ '/changelog/' | relative_url }})
 - [GitHub 仓库](https://github.com/LessUp/brave-sync-notes)
 
 ## 核心入口
 
 | 类别 | 页面 | 说明 |
 |------|------|------|
-| 概览 | [README](README.md) | 仓库定位、最小启动命令与文档链接 |
-| 快速开始 | [README](README.md) | 前后端本地开发启动方式 |
-| 开发指南 | [CONTRIBUTING](CONTRIBUTING.md) | 开发流程、代码规范与提交约定 |
-| 归档 | [更新日志](changelog/) | Pages、部署与功能迭代记录 |
+| 概览 | [仓库概览]({{ '/overview/' | relative_url }}) | 仓库定位、最小启动命令与文档入口 |
+| 架构 | [架构说明]({{ '/architecture/' | relative_url }}) | 客户端、服务端与同步数据流的结构说明 |
+| 部署 | [部署与运行]({{ '/deployment/' | relative_url }}) | 本地运行、环境变量、Pages 与 CI 调整要点 |
+| 安全 | [安全与同步机制]({{ '/security-sync/' | relative_url }}) | 端到端加密边界、冲突处理与服务端防护 |
+| 开发指南 | [贡献指南]({{ '/contributing/' | relative_url }}) | 开发流程、验证命令与 changelog 约定 |
+| 归档 | [更新日志]({{ '/changelog/' | relative_url }}) | Pages、部署、文档与功能演进记录 |
 | 外部链接 | [GitHub 仓库](https://github.com/LessUp/brave-sync-notes) | 源码、Issue 与协作入口 |

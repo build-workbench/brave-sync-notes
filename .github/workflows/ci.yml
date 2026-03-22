@@ -14,8 +14,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-client-and-server:
+  client:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./brave-sync-notes/client
 
     steps:
       - name: Checkout repository
@@ -26,15 +29,36 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: ./brave-sync-notes/client/package-lock.json
 
-      - name: Install and build client
-        working-directory: ./brave-sync-notes/client
-        run: |
-          npm install
-          npm run build
+      - name: Install client dependencies
+        run: npm install
+
+      - name: Run client tests
+        run: npm test -- --run
+
+      - name: Build client
+        run: npm run build
+
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./brave-sync-notes/server
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./brave-sync-notes/server/package-lock.json
 
       - name: Install server dependencies
-        working-directory: ./brave-sync-notes/server
-        run: |
-          npm install
-          # Optionally, add tests or lint here when available
+        run: npm install
+
+      - name: Run server tests
+        run: npm test
