@@ -10,7 +10,7 @@ permalink: /zh/overview/
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
-![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
 
 Note Sync Now 是一个端到端加密笔记同步项目，用于探索助记词恢复、实时协作与隐私优先的多设备同步体验。
 
@@ -25,11 +25,11 @@ Note Sync Now 是一个端到端加密笔记同步项目，用于探索助记词
 
 ```bash
 cd brave-sync-notes/server
-npm install
+npm ci
 node index.js
 
 cd ../client
-npm install
+npm ci
 npm run dev
 ```
 
@@ -38,10 +38,7 @@ npm run dev
 ## 文档入口
 
 - 项目首页：<https://lessup.github.io/brave-sync-notes/>
-- 架构说明：<https://lessup.github.io/brave-sync-notes/architecture/>
 - 部署与运行：<https://lessup.github.io/brave-sync-notes/deployment/>
-- 安全与同步机制：<https://lessup.github.io/brave-sync-notes/security-sync/>
-- 更新日志：<https://lessup.github.io/brave-sync-notes/changelog/>
 - 贡献指南：<https://lessup.github.io/brave-sync-notes/contributing/>
 
 ## 推荐阅读路径

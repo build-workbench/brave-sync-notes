@@ -32,7 +32,7 @@ jobs:
           cache-dependency-path: ./brave-sync-notes/client/package-lock.json
 
       - name: Install client dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run client tests
         run: npm test -- --run
@@ -58,7 +58,10 @@ jobs:
           cache-dependency-path: ./brave-sync-notes/server/package-lock.json
 
       - name: Install server dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run server tests
         run: npm test
+
+      - name: Run server property tests
+        run: npm run test:property

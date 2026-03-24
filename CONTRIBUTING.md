@@ -12,9 +12,6 @@ Thank you for your interest in contributing.
 
 - Docs home: <https://lessup.github.io/brave-sync-notes/>
 - Repository overview: <https://lessup.github.io/brave-sync-notes/overview/>
-- Architecture: <https://lessup.github.io/brave-sync-notes/architecture/>
-- Deployment & operations: <https://lessup.github.io/brave-sync-notes/deployment/>
-- Security & sync model: <https://lessup.github.io/brave-sync-notes/security-sync/>
 - Changelog: <https://lessup.github.io/brave-sync-notes/changelog/>
 
 ## Ways to contribute
@@ -29,8 +26,8 @@ Thank you for your interest in contributing.
    - `git checkout -b feature/your-feature-name`
 2. Make your changes in small, focused commits.
 3. Run the relevant validation locally:
-   - `cd brave-sync-notes/client && npm install && npm test -- --run && npm run build`
-   - `cd brave-sync-notes/server && npm install && npm test`
+   - `cd brave-sync-notes/client && npm ci && npm test -- --run && npm run build`
+   - `cd brave-sync-notes/server && npm ci && npm test`
    - `cd brave-sync-notes/server && npm run test:property` (recommended when touching sync, persistence, or validation logic)
 4. Add or update a record in `changelog/` for every submitted change set.
 5. Open a pull request with a clear description of the change and related issue(s).

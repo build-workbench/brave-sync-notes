@@ -6,7 +6,17 @@ import { ConflictManager } from '../utils/conflict';
 import debounce from 'lodash.debounce';
 import toast from 'react-hot-toast';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3002';
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL;
+  }
+
+  if (import.meta.env.DEV) {
+    return 'http://localhost:3002';
+  }
+
+  return null;
+};
 
 // Chunk size for large content (50KB)
 const CHUNK_SIZE = 50 * 1024;
@@ -187,6 +197,13 @@ export const useSocket = () => {
   const joinChain = useCallback((chainMnemonic, name) => {
     return new Promise((resolve) => {
       try {
+        const socketUrl = getSocketUrl();
+        if (!socketUrl) {
+          toast.error('VITE_SOCKET_URL is required outside development');
+          resolve(false);
+          return;
+        }
+
         const keys = deriveKeys(chainMnemonic);
         keysRef.current = keys;
 
@@ -210,7 +227,7 @@ export const useSocket = () => {
         }
         pendingChunksRef.current = {};
         
-        socketRef.current = io(SOCKET_URL, {
+        socketRef.current = io(socketUrl, {
           transports: ['websocket', 'polling'],
           reconnection: true,
           reconnectionAttempts: 10,

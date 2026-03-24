@@ -15,7 +15,7 @@ permalink: /deployment/
 
 ```bash
 cd brave-sync-notes/server
-npm install
+npm ci
 node index.js
 ```
 
@@ -24,7 +24,7 @@ node index.js
 常见环境变量：
 
 - `PORT`
-- `CORS_ORIGIN`
+- `CORS_ORIGIN`（开发环境默认 `http://localhost:5173`，生产环境必须显式设置）
 - `PRIMARY_STORAGE`
 - `FALLBACK_STORAGE`
 - `REDIS_HOST`
@@ -40,20 +40,24 @@ node index.js
 - `brave-sync-notes/server/start-local.sh`
 - `brave-sync-notes/server/.env.example`
 
+`start-local.sh` 现在要求依赖已提前安装，并默认以 `NODE_ENV=development` 启动；未显式设置 `CORS_ORIGIN` 时会使用 `http://localhost:5173` 作为本地开发默认值。为避免本地启动时卡在 Redis 连接，它还会默认将 `PRIMARY_STORAGE` 与 `FALLBACK_STORAGE` 设为 `sqlite`。
+
 ### 客户端
 
 ```bash
 cd brave-sync-notes/client
-npm install
+npm ci
 npm run dev
 ```
 
 默认开发地址通常为：`http://localhost:5173`
 
 关键配置：
-- `VITE_SOCKET_URL`
+- `VITE_SOCKET_URL`（开发环境可省略，生产环境必须显式设置）
 - `brave-sync-notes/client/vite.config.js`
 - `brave-sync-notes/client/package.json`
+
+本地开发时，客户端在未设置 `VITE_SOCKET_URL` 时会回退到 `http://localhost:3002`；非开发环境必须显式提供该变量，避免静默连接到错误地址。
 
 ## 服务端运行模型
 
@@ -97,8 +101,8 @@ Pages 主要用于：
 建议本地至少执行以下命令：
 
 ```bash
-cd brave-sync-notes/client && npm test -- --run && npm run build
-cd ../server && npm test
+cd brave-sync-notes/client && npm ci && npm test -- --run && npm run build
+cd ../server && npm ci && npm test
 ```
 
 如果修改了同步、持久化或验证逻辑，建议额外执行：
@@ -121,7 +125,8 @@ cd brave-sync-notes/server && npm run test:property
 
 重点确认：
 
-- `VITE_SOCKET_URL` 与开发环境一致
+- 本地开发允许 `VITE_SOCKET_URL` 回退到 `http://localhost:3002`
+- 生产环境缺少 `VITE_SOCKET_URL` 时会给出明确错误
 - 断线重连后会重新加入房间
 - 错误事件与状态提示没有失效
 
@@ -130,7 +135,7 @@ cd brave-sync-notes/server && npm run test:property
 重点确认：
 
 - Pages 能覆盖所有公开文档页面
-- CI 至少执行 client 测试、client 构建与 server 测试
+- CI 至少执行 client 测试、client 构建、server 测试与 server property test
 - 文档结构变化同步反映在 `changelog/` 中
 
 ## 推荐阅读顺序

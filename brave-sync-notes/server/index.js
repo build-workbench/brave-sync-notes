@@ -7,7 +7,23 @@ const cors = require('cors');
 const PersistenceManager = require('./src/persistence/PersistenceManager');
 const { DataValidator } = require('./src/persistence/PersistenceAdapter');
 
-const corsOrigin = process.env.CORS_ORIGIN || '*';
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const DEFAULT_DEV_ORIGIN = 'http://localhost:5173';
+
+function resolveCorsOrigin() {
+  if (process.env.CORS_ORIGIN) {
+    return process.env.CORS_ORIGIN;
+  }
+
+  if (NODE_ENV === 'production') {
+    throw new Error('CORS_ORIGIN must be set in production');
+  }
+
+  console.warn(`CORS_ORIGIN not set, defaulting to ${DEFAULT_DEV_ORIGIN} for ${NODE_ENV}`);
+  return DEFAULT_DEV_ORIGIN;
+}
+
+const corsOrigin = resolveCorsOrigin();
 
 const app = express();
 app.use(cors({ origin: corsOrigin }));

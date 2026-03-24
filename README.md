@@ -8,7 +8,7 @@ permalink: /overview/
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
-![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
 
 English | [简体中文](https://lessup.github.io/brave-sync-notes/zh/overview/) | [Docs](https://lessup.github.io/brave-sync-notes/)
 
@@ -25,11 +25,11 @@ Note Sync Now is an end-to-end encrypted note synchronization project for experi
 
 ```bash
 cd brave-sync-notes/server
-npm install
+npm ci
 node index.js
 
 cd ../client
-npm install
+npm ci
 npm run dev
 ```
 
@@ -38,10 +38,7 @@ Backend defaults to `http://localhost:3002`; the Vite dev server usually runs on
 ## Docs
 
 - Project docs: <https://lessup.github.io/brave-sync-notes/>
-- Architecture: <https://lessup.github.io/brave-sync-notes/architecture/>
 - Deployment & operations: <https://lessup.github.io/brave-sync-notes/deployment/>
-- Security & sync model: <https://lessup.github.io/brave-sync-notes/security-sync/>
-- Changelog: <https://lessup.github.io/brave-sync-notes/changelog/>
 - Contribution guide: <https://lessup.github.io/brave-sync-notes/contributing/>
 
 ## Suggested Reading Path
