@@ -52,15 +52,12 @@ class PersistenceManager {
             }
 
             this.isInitialized = true;
-            console.log(`Persistence manager initialized with primary adapter: ${this.options.primaryAdapter}`);
         } catch (error) {
             console.error('Failed to initialize persistence manager:', error);
 
-            // 尝试故障转移到备用适配器
             if (this.options.autoFailover && this.options.fallbackAdapter !== this.options.primaryAdapter) {
                 try {
                     await this._switchToAdapter(this.options.fallbackAdapter);
-                    console.log(`Switched to fallback adapter: ${this.options.fallbackAdapter}`);
                     this.isInitialized = true;
                 } catch (fallbackError) {
                     console.error('Failed to initialize fallback adapter:', fallbackError);
@@ -92,7 +89,6 @@ class PersistenceManager {
 
             this.currentAdapter = adapter;
             this.currentAdapterName = adapterName;
-            console.log(`Switched to adapter: ${adapterName}`);
         } catch (error) {
             console.error(`Failed to switch to adapter ${adapterName}:`, error);
             throw error;
@@ -139,7 +135,6 @@ class PersistenceManager {
             if (fallbackName && this.adapters.has(fallbackName)) {
                 try {
                     await this._switchToAdapter(fallbackName);
-                    console.log(`Successfully failed over to ${fallbackName}`);
                 } catch (error) {
                     console.error(`Failover to ${fallbackName} failed:`, error);
                 }
@@ -262,7 +257,6 @@ class PersistenceManager {
         }
 
         await this._switchToAdapter(adapterName);
-        console.log(`Manually switched to adapter: ${adapterName}`);
     }
 
     /**
@@ -298,8 +292,6 @@ class PersistenceManager {
         this.currentAdapter = null;
         this.currentAdapterName = null;
         this.isInitialized = false;
-
-        console.log('Persistence manager closed');
     }
 
     /**
@@ -313,12 +305,8 @@ class PersistenceManager {
             throw new Error('Source or target adapter not found');
         }
 
-        console.log(`Starting data migration from ${fromAdapter} to ${toAdapter}`);
-
         try {
-            // 这里需要实现具体的迁移逻辑
-            // 由于我们没有直接的方法来枚举所有房间，这个功能需要根据具体需求实现
-            console.log('Data migration completed');
+            // Migration logic implementation needed
         } catch (error) {
             console.error('Data migration failed:', error);
             throw error;

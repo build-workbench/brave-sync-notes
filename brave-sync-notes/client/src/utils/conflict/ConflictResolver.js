@@ -1,4 +1,5 @@
 import ConflictDetector from './ConflictDetector';
+import { generateUniqueId } from '../shared';
 
 /**
  * 冲突解决策略类型
@@ -42,8 +43,6 @@ class ConflictResolver {
                     return result.merged;
                 }
 
-                // 自动合并失败，降级到 last-write-wins
-                console.warn('Auto-merge failed, falling back to last-write-wins');
                 return this.detector.autoResolve(conflict, 'last-write-wins');
             }
 
@@ -66,7 +65,6 @@ class ConflictResolver {
             throw new Error('Resolved content is required for manual resolution');
         }
 
-        console.log('Conflict resolved manually');
         return resolvedContent;
     }
 
@@ -78,10 +76,8 @@ class ConflictResolver {
         this.conflictQueue.push({
             conflict,
             timestamp: Date.now(),
-            id: `conflict_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+            id: generateUniqueId('conflict_')
         });
-
-        console.log(`Conflict enqueued. Queue size: ${this.conflictQueue.length}`);
     }
 
     /**
@@ -98,7 +94,6 @@ class ConflictResolver {
      */
     removeConflict(conflictId) {
         this.conflictQueue = this.conflictQueue.filter(item => item.id !== conflictId);
-        console.log(`Conflict removed. Queue size: ${this.conflictQueue.length}`);
     }
 
     /**
@@ -114,7 +109,6 @@ class ConflictResolver {
      */
     clearQueue() {
         this.conflictQueue = [];
-        console.log('Conflict queue cleared');
     }
 
     /**

@@ -5,3 +5,6 @@
 export { default as ConflictDetector } from './ConflictDetector';
 export { default as ConflictResolver } from './ConflictResolver';
 export { default as ConflictManager } from './ConflictManager';
+
+// Re-export shared utilities for convenience
+export { hashContent, generateUniqueId } from '../shared';

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { generateUniqueId } from '../utils/shared';
 
 export const useAppStore = create(
   persist(
@@ -151,7 +152,7 @@ export const useAppStore = create(
 
       addNote: (note) => set((state) => {
         const newNote = {
-          id: note.id || `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: note.id || generateUniqueId('note_'),
           title: note.title || '未命名笔记',
           content: note.content || '',
           version: note.version || 1,
@@ -237,7 +238,7 @@ export const useAppStore = create(
 
       addNotebook: (notebook) => set((state) => {
         const newNotebook = {
-          id: notebook.id || `nb_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: notebook.id || generateUniqueId('nb_'),
           name: notebook.name || '未命名笔记本',
           createdAt: notebook.createdAt || Date.now(),
           updatedAt: notebook.updatedAt || Date.now(),

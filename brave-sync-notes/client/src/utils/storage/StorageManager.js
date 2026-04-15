@@ -32,7 +32,6 @@ class StorageManager {
                 await indexedDB.initialize();
                 this.storage = indexedDB;
                 this.storageType = 'IndexedDB';
-                console.log('✅ Using IndexedDB for storage');
             } else {
                 throw new Error('IndexedDB not available');
             }
@@ -48,7 +47,6 @@ class StorageManager {
                     await localStorage.initialize();
                     this.storage = localStorage;
                     this.storageType = 'LocalStorage';
-                    console.log('⚠️  Using LocalStorage as fallback');
                 } else {
                     throw new Error('LocalStorage not available');
                 }
@@ -225,7 +223,6 @@ class StorageManager {
                 stats.operations++;
             }
 
-            console.log('Data migration completed:', stats);
             return stats;
         } catch (error) {
             console.error('Data migration failed:', error);

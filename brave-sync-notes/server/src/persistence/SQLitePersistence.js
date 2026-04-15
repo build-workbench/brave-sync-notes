@@ -62,7 +62,6 @@ class SQLitePersistence extends PersistenceAdapter {
             await this._createTables();
 
             this.isConnected = true;
-            console.log(`SQLite persistence initialized: ${this.options.dbPath}`);
         } catch (error) {
             console.error('Failed to initialize SQLite:', error);
             this.isConnected = false;
@@ -114,8 +113,6 @@ class SQLitePersistence extends PersistenceAdapter {
         await this._runQuery('CREATE INDEX IF NOT EXISTS idx_logs_room_id ON operation_logs (room_id)');
         await this._runQuery('CREATE INDEX IF NOT EXISTS idx_logs_version ON operation_logs (room_id, version)');
         await this._runQuery('CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON operation_logs (timestamp)');
-
-        console.log('SQLite tables and indexes created successfully');
     }
 
     /**
@@ -211,7 +208,6 @@ class SQLitePersistence extends PersistenceAdapter {
           updated_at = excluded.updated_at
       `, [roomId, compressedData, data.timestamp, data.version, data.deviceName, data.hash || '', now]);
 
-            console.log(`Saved room data: ${roomId.substring(0, 8)}... (${compressedData.length} bytes)`);
         } catch (error) {
             console.error(`Failed to save room ${roomId}:`, error);
             throw new Error(`Failed to save room data: ${error.message}`);
@@ -250,7 +246,6 @@ class SQLitePersistence extends PersistenceAdapter {
                 [Date.now(), roomId]
             );
 
-            console.log(`Retrieved room data: ${roomId.substring(0, 8)}...`);
             return roomData;
         } catch (error) {
             console.error(`Failed to get room ${roomId}:`, error);
@@ -275,7 +270,6 @@ class SQLitePersistence extends PersistenceAdapter {
                 [cutoffTimestamp]
             );
 
-            console.log(`Cleaned up ${result.changes} expired rooms`);
             return result.changes;
         } catch (error) {
             console.error('Failed to cleanup expired data:', error);
@@ -328,7 +322,6 @@ class SQLitePersistence extends PersistenceAdapter {
         )
       `, [roomId, roomId]);
 
-            console.log(`Appended operation to log: ${roomId.substring(0, 8)}... op:${operation.type}`);
         } catch (error) {
             console.error(`Failed to append log for room ${roomId}:`, error);
             throw new Error(`Failed to append operation log: ${error.message}`);
@@ -367,7 +360,6 @@ class SQLitePersistence extends PersistenceAdapter {
                 version: row.version
             }));
 
-            console.log(`Retrieved ${operations.length} operations for room: ${roomId.substring(0, 8)}...`);
             return operations;
         } catch (error) {
             console.error(`Failed to get log for room ${roomId}:`, error);
@@ -404,8 +396,6 @@ class SQLitePersistence extends PersistenceAdapter {
                 this.db.close((err) => {
                     if (err) {
                         console.error('Error closing SQLite connection:', err);
-                    } else {
-                        console.log('SQLite connection closed');
                     }
                     this.db = null;
                     this.isConnected = false;
@@ -458,7 +448,6 @@ class SQLitePersistence extends PersistenceAdapter {
             // 分析表以优化查询计划
             await this._runQuery('ANALYZE');
 
-            console.log('SQLite maintenance completed');
         } catch (error) {
             console.error('SQLite maintenance failed:', error);
             throw new Error(`Database maintenance failed: ${error.message}`);

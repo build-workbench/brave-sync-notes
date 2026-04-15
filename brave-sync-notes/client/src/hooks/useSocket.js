@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { useAppStore } from '../store/useStore';
 import { deriveKeys, encryptData, decryptData } from '../utils/crypto';
 import { ConflictManager } from '../utils/conflict';
+import { generateUniqueId } from '../utils/shared';
 import debounce from 'lodash.debounce';
 import toast from 'react-hot-toast';
 
@@ -77,7 +78,7 @@ export const useSocket = () => {
     conflictManagerRef.current = new ConflictManager({ autoResolveStrategy: 'manual' });
   }
 
-  // Simple hash function for content comparison
+  // Hash function for content comparison (optimized for large content)
   const hashContent = useCallback((content) => {
     let hash = 0;
     for (let i = 0; i < Math.min(content.length, 1000); i++) {
@@ -328,10 +329,8 @@ export const useSocket = () => {
         });
 
         socket.on('disconnect', (reason) => {
-          console.log('Disconnected:', reason);
           setStatus('disconnected');
-          
-          // Only show toast if not intentional disconnect
+
           if (reason !== 'io client disconnect') {
             toast.error(t.disconnected);
           }

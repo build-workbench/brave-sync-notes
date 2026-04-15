@@ -37,7 +37,6 @@ class LocalStorageAdapter extends ClientStorage {
             localStorage.removeItem(testKey);
 
             this.isInitialized = true;
-            console.log('LocalStorage initialized successfully');
         } catch (error) {
             console.error('Failed to initialize LocalStorage:', error);
             throw new Error('LocalStorage is not available');
@@ -141,8 +140,6 @@ class LocalStorageAdapter extends ClientStorage {
             index.push(notebook.id);
             this._setJSON(indexKey, index);
         }
-
-        console.log(`Saved notebook to LocalStorage: ${notebook.id}`);
     }
 
     async getNotebook(id) {
@@ -196,8 +193,6 @@ class LocalStorageAdapter extends ClientStorage {
                 localStorage.removeItem(opKey);
             }
         }
-
-        console.log(`Deleted notebook from LocalStorage: ${id}`);
     }
 
     // ========== 笔记操作 ==========
@@ -238,8 +233,6 @@ class LocalStorageAdapter extends ClientStorage {
             index.push(note.id);
             this._setJSON(indexKey, index);
         }
-
-        console.log(`Saved note to LocalStorage: ${note.id}`);
     }
 
     async getNote(notebookId, noteId) {
@@ -288,8 +281,6 @@ class LocalStorageAdapter extends ClientStorage {
         // 删除历史索引
         const historyIndexKey = this._key('history', 'index', noteId);
         localStorage.removeItem(historyIndexKey);
-
-        console.log(`Deleted note from LocalStorage: ${noteId}`);
     }
 
     // ========== 历史记录操作 ==========
@@ -363,7 +354,6 @@ class LocalStorageAdapter extends ClientStorage {
         const newIndex = index.slice(0, keepCount);
         this._setJSON(indexKey, newIndex);
 
-        console.log(`Cleaned up ${toDelete.length} old history entries`);
         return toDelete.length;
     }
 
@@ -392,8 +382,6 @@ class LocalStorageAdapter extends ClientStorage {
             index.push(op.id);
             this._setJSON(indexKey, index);
         }
-
-        console.log(`Enqueued operation to LocalStorage: ${op.id}`);
     }
 
     async dequeueOperations() {
@@ -430,8 +418,6 @@ class LocalStorageAdapter extends ClientStorage {
 
         // 清空索引
         localStorage.removeItem(indexKey);
-
-        console.log('Cleared pending operations queue from LocalStorage');
     }
 
     async removeOperation(operationId) {
@@ -440,13 +426,10 @@ class LocalStorageAdapter extends ClientStorage {
         const key = this._key('op', operationId);
         localStorage.removeItem(key);
 
-        // 从索引中移除
         const indexKey = this._key('ops', 'index');
         const index = this._getJSON(indexKey) || [];
         const newIndex = index.filter(id => id !== operationId);
         this._setJSON(indexKey, newIndex);
-
-        console.log(`Removed operation from LocalStorage: ${operationId}`);
     }
 
     // ========== 存储管理 ==========
@@ -497,14 +480,11 @@ class LocalStorageAdapter extends ClientStorage {
             }
         }
 
-        console.log(`Cleanup freed ${totalFreed} history entries from LocalStorage`);
         return totalFreed;
     }
 
     async close() {
-        // LocalStorage 不需要关闭连接
         this.isInitialized = false;
-        console.log('LocalStorage adapter closed');
     }
 }
 

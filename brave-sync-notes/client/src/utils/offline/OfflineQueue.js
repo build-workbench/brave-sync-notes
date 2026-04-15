@@ -1,3 +1,5 @@
+import { generateUniqueId } from '../shared';
+
 /**
  * 离线操作队列
  * 管理离线时的编辑操作，网络恢复后自动同步
@@ -13,13 +15,6 @@ class OfflineQueue {
     }
 
     /**
-     * 生成唯一操作ID
-     */
-    generateId() {
-        return `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    }
-
-    /**
      * 添加操作到队列
      * @param {Object} operation - 操作对象
      * @param {string} operation.type - 操作类型: 'create' | 'update' | 'delete'
@@ -29,7 +24,7 @@ class OfflineQueue {
      */
     async enqueue(operation) {
         const op = {
-            id: operation.id || this.generateId(),
+            id: operation.id || generateUniqueId('op_'),
             type: operation.type,
             noteId: operation.noteId,
             notebookId: operation.notebookId,
@@ -39,7 +34,6 @@ class OfflineQueue {
         };
 
         await this.storage.enqueueOperation(op);
-        console.log(`Enqueued offline operation: ${op.id} (${op.type})`);
         return op.id;
     }
 
@@ -64,7 +58,6 @@ class OfflineQueue {
      */
     async processQueue(processor) {
         if (this.isProcessing) {
-            console.log('Queue is already being processed');
             return { processed: 0, failed: 0 };
         }
 
@@ -75,14 +68,11 @@ class OfflineQueue {
             const operations = await this.getAll();
 
             if (operations.length === 0) {
-                console.log('No operations in queue');
                 if (this.onQueueEmpty) {
                     this.onQueueEmpty();
                 }
                 return results;
             }
-
-            console.log(`Processing ${operations.length} offline operations`);
 
             for (const op of operations) {
                 try {
@@ -141,7 +131,6 @@ class OfflineQueue {
      */
     async clearQueue() {
         await this.storage.clearQueue();
-        console.log('Offline queue cleared');
     }
 
     /**

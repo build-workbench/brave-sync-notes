@@ -30,8 +30,6 @@ export const useOffline = () => {
             // 更新队列大小
             const size = await queueRef.current.getQueueSize();
             setQueueSize(size);
-
-            console.log('Offline queue initialized');
         } catch (error) {
             console.error('Failed to initialize offline queue:', error);
         }
@@ -108,12 +106,10 @@ export const useOffline = () => {
     // 监听网络状态变化
     useEffect(() => {
         const handleOnline = () => {
-            console.log('Network online');
             setIsOnline(true);
         };
 
         const handleOffline = () => {
-            console.log('Network offline');
             setIsOnline(false);
         };
 

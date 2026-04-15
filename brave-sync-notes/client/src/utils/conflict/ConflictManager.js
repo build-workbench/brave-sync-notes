@@ -42,7 +42,6 @@ class ConflictManager {
         const conflict = this.detector.detectConflict(local, remote);
 
         if (!conflict) {
-            // 没有冲突，使用远程版本
             return {
                 hasConflict: false,
                 resolved: remote.content,
@@ -50,9 +49,6 @@ class ConflictManager {
             };
         }
 
-        console.warn('Conflict detected:', conflict.type);
-
-        // 触发冲突检测回调
         if (this.onConflictDetected) {
             this.onConflictDetected(conflict);
         }
@@ -62,9 +58,6 @@ class ConflictManager {
             try {
                 const resolved = await this.resolver.resolve(conflict, this.autoResolveStrategy);
 
-                console.log('Conflict auto-resolved using strategy:', this.autoResolveStrategy);
-
-                // 触发冲突解决回调
                 if (this.onConflictResolved) {
                     this.onConflictResolved(conflict, resolved);
                 }

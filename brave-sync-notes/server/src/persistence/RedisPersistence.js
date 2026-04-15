@@ -69,19 +69,15 @@ class RedisPersistence extends PersistenceAdapter {
             });
 
             this.client.on('connect', () => {
-                console.log('Connected to Redis');
                 this.isConnected = true;
             });
 
             this.client.on('disconnect', () => {
-                console.log('Disconnected from Redis');
                 this.isConnected = false;
             });
 
             await this.client.connect();
             this.isConnected = true;
-
-            console.log(`Redis persistence initialized: ${this.options.host}:${this.options.port}`);
         } catch (error) {
             console.error('Failed to connect to Redis:', error);
             this.isConnected = false;
@@ -149,10 +145,7 @@ class RedisPersistence extends PersistenceAdapter {
                 hash: data.hash || ''
             });
 
-            // 设置 TTL
             await this.client.expire(key, this.options.defaultTTL);
-
-            console.log(`Saved room data: ${roomId.substring(0, 8)}... (${compressedData.length} bytes)`);
         } catch (error) {
             console.error(`Failed to save room ${roomId}:`, error);
             throw new Error(`Failed to save room data: ${error.message}`);
@@ -187,7 +180,6 @@ class RedisPersistence extends PersistenceAdapter {
             // 更新 TTL
             await this.client.expire(key, this.options.defaultTTL);
 
-            console.log(`Retrieved room data: ${roomId.substring(0, 8)}...`);
             return roomData;
         } catch (error) {
             console.error(`Failed to get room ${roomId}:`, error);
@@ -231,7 +223,6 @@ class RedisPersistence extends PersistenceAdapter {
                 }
             }
 
-            console.log(`Cleaned up ${deletedCount} expired rooms`);
             return deletedCount;
         } catch (error) {
             console.error('Failed to cleanup expired data:', error);
@@ -268,8 +259,6 @@ class RedisPersistence extends PersistenceAdapter {
 
             // 设置 TTL
             await this.client.expire(key, this.options.defaultTTL);
-
-            console.log(`Appended operation to log: ${roomId.substring(0, 8)}... op:${operation.type}`);
         } catch (error) {
             console.error(`Failed to append log for room ${roomId}:`, error);
             throw new Error(`Failed to append operation log: ${error.message}`);
@@ -310,7 +299,6 @@ class RedisPersistence extends PersistenceAdapter {
             // 按版本号排序
             operations.sort((a, b) => a.version - b.version);
 
-            console.log(`Retrieved ${operations.length} operations for room: ${roomId.substring(0, 8)}...`);
             return operations;
         } catch (error) {
             console.error(`Failed to get log for room ${roomId}:`, error);
@@ -345,7 +333,6 @@ class RedisPersistence extends PersistenceAdapter {
         if (this.client) {
             try {
                 await this.client.quit();
-                console.log('Redis connection closed');
             } catch (error) {
                 console.error('Error closing Redis connection:', error);
             } finally {

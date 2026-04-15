@@ -38,7 +38,6 @@ class IndexedDBStorage extends ClientStorage {
             request.onsuccess = () => {
                 this.db = request.result;
                 this.isInitialized = true;
-                console.log('IndexedDB initialized successfully');
                 resolve();
             };
 
@@ -74,8 +73,6 @@ class IndexedDBStorage extends ClientStorage {
                     opsStore.createIndex('timestamp', 'timestamp', { unique: false });
                     opsStore.createIndex('notebookId', 'notebookId', { unique: false });
                 }
-
-                console.log('IndexedDB schema created/upgraded');
             };
         });
     }
@@ -157,8 +154,6 @@ class IndexedDBStorage extends ClientStorage {
         await this._transaction('notebooks', 'readwrite', (store) => {
             return store.put(notebookData);
         });
-
-        console.log(`Saved notebook: ${notebook.id}`);
     }
 
     async getNotebook(id) {
@@ -223,7 +218,6 @@ class IndexedDBStorage extends ClientStorage {
             };
 
             transaction.oncomplete = () => {
-                console.log(`Deleted notebook and all associated data: ${id}`);
                 resolve();
             };
 
@@ -251,8 +245,6 @@ class IndexedDBStorage extends ClientStorage {
         await this._transaction('notes', 'readwrite', (store) => {
             return store.put(noteData);
         });
-
-        console.log(`Saved note: ${note.id} in notebook: ${notebookId}`);
     }
 
     async getNote(notebookId, noteId) {
@@ -315,7 +307,6 @@ class IndexedDBStorage extends ClientStorage {
             };
 
             transaction.oncomplete = () => {
-                console.log(`Deleted note and history: ${noteId}`);
                 resolve();
             };
 
@@ -398,7 +389,6 @@ class IndexedDBStorage extends ClientStorage {
                     }
                     cursor.continue();
                 } else {
-                    console.log(`Cleaned up ${deletedCount} old history entries for note: ${noteId}`);
                     resolve(deletedCount);
                 }
             };
@@ -423,8 +413,6 @@ class IndexedDBStorage extends ClientStorage {
         await this._transaction('pendingOps', 'readwrite', (store) => {
             return store.put(opData);
         });
-
-        console.log(`Enqueued operation: ${op.id}`);
     }
 
     async dequeueOperations() {
@@ -441,16 +429,12 @@ class IndexedDBStorage extends ClientStorage {
         await this._transaction('pendingOps', 'readwrite', (store) => {
             return store.clear();
         });
-
-        console.log('Cleared pending operations queue');
     }
 
     async removeOperation(operationId) {
         await this._transaction('pendingOps', 'readwrite', (store) => {
             return store.delete(operationId);
         });
-
-        console.log(`Removed operation: ${operationId}`);
     }
 
     // ========== 存储管理 ==========
@@ -505,7 +489,6 @@ class IndexedDBStorage extends ClientStorage {
             totalFreed += deleted;
         }
 
-        console.log(`Cleanup freed ${totalFreed} history entries`);
         return totalFreed;
     }
 
@@ -514,7 +497,6 @@ class IndexedDBStorage extends ClientStorage {
             this.db.close();
             this.db = null;
             this.isInitialized = false;
-            console.log('IndexedDB connection closed');
         }
     }
 }

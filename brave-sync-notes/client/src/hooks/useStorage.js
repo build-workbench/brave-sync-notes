@@ -32,7 +32,6 @@ export const useStorage = () => {
             setIsInitialized(true);
             setIsLoading(false);
 
-            console.log(`Storage initialized: ${storage.getStorageType()}`);
             return true;
         } catch (err) {
             console.error('Failed to initialize storage:', err);

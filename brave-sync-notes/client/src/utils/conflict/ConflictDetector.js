@@ -1,3 +1,5 @@
+import { hashContent as sharedHashContent } from '../shared';
+
 /**
  * 冲突检测器
  * 检测并处理多设备编辑冲突
@@ -42,7 +44,7 @@
 
 class ConflictDetector {
     constructor(options = {}) {
-        this.conflictWindow = options.conflictWindow || 5000; // 5秒内的更新视为并发
+        this.conflictWindow = options.conflictWindow || 5000;
     }
 
     /**
@@ -51,13 +53,7 @@ class ConflictDetector {
      * @returns {string} 哈希值
      */
     hashContent(content) {
-        let hash = 0;
-        for (let i = 0; i < content.length; i++) {
-            const char = content.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32bit integer
-        }
-        return hash.toString(36);
+        return sharedHashContent(content);
     }
 
     /**
