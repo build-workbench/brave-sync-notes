@@ -1,0 +1,436 @@
+/* Custom VitePress Theme Styles */
+
+/* ===== CSS Variables ===== */
+:root {
+  /* Brand Colors */
+  --vp-c-brand-1: #3b82f6;
+  --vp-c-brand-2: #2563eb;
+  --vp-c-brand-3: #1d4ed8;
+  --vp-c-brand-soft: rgba(59, 130, 246, 0.14);
+  
+  /* Font Family */
+  --vp-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  /* Custom Properties */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --vp-home-hero-image-background-image: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --vp-home-hero-image-filter: blur(60px);
+  
+  /* Shadows */
+  --vp-shadow-1: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --vp-shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --vp-shadow-3: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.dark {
+  --vp-c-brand-1: #60a5fa;
+  --vp-c-brand-2: #3b82f6;
+  --vp-c-brand-3: #2563eb;
+  --vp-c-brand-soft: rgba(96, 165, 250, 0.16);
+}
+
+/* ===== Typography Enhancements ===== */
+.vp-doc h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+.vp-doc h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc h3 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin-top: 2rem;
+}
+
+.vp-doc p {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--vp-c-text-2);
+}
+
+.vp-doc p strong {
+  color: var(--vp-c-text-1);
+}
+
+/* ===== Code Blocks ===== */
+.vp-doc div[class*='language-'] {
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  box-shadow: var(--vp-shadow-2);
+}
+
+.vp-doc div[class*='language-'] code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.vp-doc code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.85em;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  background: var(--vp-c-bg-soft);
+}
+
+/* ===== Custom Blocks ===== */
+.vp-doc .custom-block {
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
+  border: 1px solid transparent;
+}
+
+.vp-doc .custom-block.info {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.vp-doc .custom-block.tip {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.vp-doc .custom-block.warning {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.vp-doc .custom-block.danger {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* ===== Tables ===== */
+.vp-doc table {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--vp-shadow-1);
+  border: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc th {
+  background: var(--vp-c-bg-soft);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.vp-doc td {
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+/* ===== Links ===== */
+.vp-doc a {
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.vp-doc a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Homepage Styles ===== */
+.VPHome {
+  padding-bottom: 0 !important;
+}
+
+.VPHero {
+  padding: 96px 24px !important;
+}
+
+.VPHero .container {
+  max-width: 1200px;
+}
+
+.VPHero .name {
+  font-size: 4rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.1 !important;
+}
+
+.VPHero .text {
+  font-size: 1.5rem !important;
+  font-weight: 500 !important;
+  color: var(--vp-c-text-2) !important;
+  margin-top: 1rem !important;
+}
+
+.VPHero .tagline {
+  font-size: 1.125rem !important;
+  color: var(--vp-c-text-3) !important;
+  margin-top: 1.5rem !important;
+}
+
+.VPHero .actions {
+  margin-top: 2.5rem !important;
+  gap: 1rem !important;
+}
+
+.VPHero .VPButton {
+  border-radius: 10px !important;
+  padding: 0 2rem !important;
+  font-weight: 600 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.VPHero .VPButton:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--vp-shadow-3);
+}
+
+.VPHero .VPButton.brand {
+  background: linear-gradient(135deg, var(--vp-c-brand-1), #8b5cf6) !important;
+}
+
+/* ===== Features Section ===== */
+.VPFeatures {
+  padding: 80px 24px !important;
+  background: linear-gradient(180deg, var(--vp-c-bg) 0%, var(--vp-c-bg-soft) 100%);
+}
+
+.VPFeatures .container {
+  max-width: 1200px;
+}
+
+.VPFeature {
+  background: var(--vp-c-bg);
+  border-radius: 16px;
+  padding: 2rem !important;
+  border: 1px solid var(--vp-c-divider);
+  transition: all 0.3s ease;
+}
+
+.VPFeature:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--vp-shadow-3);
+  border-color: var(--vp-c-brand-1);
+}
+
+.VPFeature .icon {
+  font-size: 2.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.VPFeature .title {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.VPFeature .details {
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+  color: var(--vp-c-text-2) !important;
+}
+
+/* ===== Navbar ===== */
+.VPNav {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.dark .VPNav {
+  background: rgba(17, 24, 39, 0.85) !important;
+}
+
+.VPNavBarMenuLink {
+  font-weight: 500 !important;
+}
+
+/* ===== Sidebar ===== */
+.VPSidebar {
+  background: var(--vp-c-bg) !important;
+}
+
+.VPSidebarItem .item {
+  font-size: 0.95rem !important;
+}
+
+.VPSidebarItem.is-link.is-active .item {
+  color: var(--vp-c-brand-1) !important;
+  font-weight: 600 !important;
+}
+
+.VPSidebarItem .caret {
+  color: var(--vp-c-text-3) !important;
+}
+
+/* ===== Search ===== */
+.VPLocalSearchBox {
+  --vp-local-search-highlight-bg: var(--vp-c-brand-soft);
+  --vp-local-search-highlight-text: var(--vp-c-brand-1);
+}
+
+/* ===== Footer ===== */
+.VPFooter {
+  background: var(--vp-c-bg-soft) !important;
+  border-top: 1px solid var(--vp-c-divider);
+  padding: 2rem !important;
+}
+
+.VPFooter .message {
+  font-size: 0.875rem !important;
+  color: var(--vp-c-text-3) !important;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vp-c-text-3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vp-c-text-2);
+}
+
+/* ===== Selection ===== */
+::selection {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .VPHero {
+    padding: 64px 24px !important;
+  }
+  
+  .VPHero .name {
+    font-size: 2.5rem !important;
+  }
+  
+  .VPHero .text {
+    font-size: 1.125rem !important;
+  }
+  
+  .vp-doc h1 {
+    font-size: 2rem;
+  }
+  
+  .vp-doc h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* ===== Badge Styles ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--vp-c-brand-1);
+}
+
+.badge-green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.badge-purple {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.badge-orange {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+/* ===== Gradient Text ===== */
+.gradient-text {
+  background: linear-gradient(135deg, var(--vp-c-brand-1), #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== Code Group Tabs ===== */
+.vp-code-group .tabs {
+  background: var(--vp-c-bg-soft) !important;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 0.5rem 1rem !important;
+}
+
+.vp-code-group .tabs label {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease;
+}
+
+.vp-code-group .tabs label.active {
+  background: var(--vp-c-bg) !important;
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* ===== API Documentation Specific ===== */
+.api-method {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.api-method.get {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.api-method.post {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--vp-c-brand-1);
+}
+
+.api-method.put {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.api-method.delete {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.api-method.ws {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}

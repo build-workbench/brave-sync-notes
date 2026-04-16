@@ -1,0 +1,33 @@
+{
+  "name": "note-sync-now-docs",
+  "version": "2.2.0",
+  "description": "Note Sync Now Documentation - VitePress powered",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "lint": "markdownlint-cli2 '**/*.md' '#node_modules'"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.2",
+    "vue": "^3.4.21",
+    "markdownlint-cli2": "^0.12.1"
+  },
+  "dependencies": {
+    "sitemap-ts": "^1.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LessUp/brave-sync-notes.git",
+    "directory": "docs"
+  },
+  "keywords": [
+    "documentation",
+    "vitepress",
+    "notes",
+    "sync",
+    "encryption"
+  ],
+  "license": "MIT"
+}
