@@ -25,7 +25,7 @@ export const deriveKeys = (mnemonic) => {
   const salt = CryptoJS.SHA256("notesync-salt:" + mnemonic).toString(CryptoJS.enc.Hex);
   const encryptionKey = CryptoJS.PBKDF2(mnemonic, salt, {
     keySize: 256 / 32,
-    iterations: 10000
+    iterations: PBKDF2_ITERATIONS
   }).toString(CryptoJS.enc.Hex);
 
   return { roomId, encryptionKey };
@@ -38,10 +38,41 @@ export const encryptData = (data, key) => {
 export const decryptData = (ciphertext, key) => {
   try {
     const bytes = CryptoJS.AES.decrypt(ciphertext, key);
-    const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+
+    if (!decryptedStr) {
+      throw new Error('Decryption returned empty result - invalid key or corrupted data');
+    }
+
+    const decryptedData = JSON.parse(decryptedStr);
     return decryptedData;
   } catch (e) {
     console.error("Decryption failed", e);
-    return null;
+    // Throw error instead of returning null to prevent silent failures
+    throw new Error(`Decryption failed: ${e.message}`);
   }
 };
+
+/**
+ * Validate mnemonic format (BIP39)
+ * @param {string} mnemonic - The mnemonic to validate
+ * @returns {boolean} Whether the mnemonic is valid
+ */
+export const validateMnemonic = (mnemonic) => {
+  if (!mnemonic || typeof mnemonic !== 'string') {
+    return false;
+  }
+
+  const words = mnemonic.trim().split(/\s+/);
+  const validLengths = [12, 15, 18, 21, 24];
+
+  if (!validLengths.includes(words.length)) {
+    return false;
+  }
+
+  // Each word should be lowercase alphabetic
+  return words.every(word => /^[a-z]+$/.test(word));
+};
+
+// PBKDF2 iterations - configurable via environment
+export const PBKDF2_ITERATIONS = parseInt(import.meta.env.VITE_PBKDF2_ITERATIONS) || 10000;

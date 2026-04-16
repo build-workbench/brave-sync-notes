@@ -14,10 +14,12 @@ import {
   Globe,
   Eye,
   EyeOff,
+  AlertCircle,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useStore';
 import { useTranslation } from '../../utils/translations';
-import { generateSyncChain } from '../../utils/crypto';
+import { generateSyncChain, validateMnemonic } from '../../utils/crypto';
+import toast from 'react-hot-toast';
 
 const Landing = ({ onJoinChain }) => {
   const {
@@ -54,19 +56,35 @@ const Landing = ({ onJoinChain }) => {
       const autoName = deviceName.trim() || `Device-${Math.floor(Math.random() * 1000)}`;
       setDeviceName(autoName);
       await onJoinChain(newMnemonic, autoName);
+    } catch (error) {
+      console.error('Failed to start new chain:', error);
+      toast.error(lang === 'zh' ? '创建同步链失败' : 'Failed to create sync chain');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleJoinChain = async () => {
-    if (!inputMnemonic.trim()) return;
+    if (!inputMnemonic.trim()) {
+      toast.error(lang === 'zh' ? '请输入同步链代码' : 'Please enter a sync chain code');
+      return;
+    }
+
+    // Validate mnemonic format
+    if (!validateMnemonic(inputMnemonic.trim())) {
+      toast.error(lang === 'zh' ? '同步链代码格式无效' : 'Invalid sync chain code format');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const nameToUse = deviceName.trim() || `Device-${Math.floor(Math.random() * 1000)}`;
       setDeviceName(nameToUse);
       setMnemonic(inputMnemonic.trim());
       await onJoinChain(inputMnemonic.trim(), nameToUse);
+    } catch (error) {
+      console.error('Failed to join chain:', error);
+      toast.error(lang === 'zh' ? '加入同步链失败' : 'Failed to join sync chain');
     } finally {
       setIsLoading(false);
     }
