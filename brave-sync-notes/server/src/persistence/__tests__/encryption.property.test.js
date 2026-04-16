@@ -103,8 +103,8 @@ describe('Property Tests: Encryption Round Trip Consistency', () => {
                     // 验证往返一致性
                     expect(decompressed).toBe(repeatedString);
 
-                    // 当前实现不进行压缩，所以长度应该相等
-                    expect(compressed.length).toBe(repeatedString.length);
+                    // 压缩后的数据应该小于或等于原始数据
+                    expect(compressed.length).toBeLessThanOrEqual(repeatedString.length);
                 }
             ),
             { numRuns: 100 }

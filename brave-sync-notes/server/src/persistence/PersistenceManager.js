@@ -296,8 +296,14 @@ class PersistenceManager {
 
     /**
      * 执行数据迁移（从一个适配器迁移到另一个）
+     * @param {string} fromAdapter - 源适配器名称
+     * @param {string} toAdapter - 目标适配器名称
+     * @param {object} options - 迁移选项
+     * @param {number} options.batchSize - 批量处理大小，默认100
+     * @param {function} options.onProgress - 进度回调函数
+     * @returns {Promise<{migrated: number, errors: number, details: object}>}
      */
-    async migrateData(fromAdapter, toAdapter) {
+    async migrateData(fromAdapter, toAdapter, options = {}) {
         const sourceAdapter = this.adapters.get(fromAdapter);
         const targetAdapter = this.adapters.get(toAdapter);
 
@@ -305,9 +311,95 @@ class PersistenceManager {
             throw new Error('Source or target adapter not found');
         }
 
+        const { batchSize = 100, onProgress } = options;
+        const result = {
+            migrated: 0,
+            errors: 0,
+            details: {
+                startTime: Date.now(),
+                endTime: null,
+                errorDetails: []
+            }
+        };
+
         try {
-            // Migration logic implementation needed
+            console.log(`Starting migration from ${fromAdapter} to ${toAdapter}`);
+
+            // Step 1: Get all room IDs from source adapter
+            let roomIds = [];
+            if (typeof sourceAdapter.getAllRoomIds === 'function') {
+                roomIds = await sourceAdapter.getAllRoomIds();
+            } else {
+                // Fallback: try to get room IDs from stats or iterate
+                const stats = await sourceAdapter.getStats();
+                if (stats.roomIds) {
+                    roomIds = stats.roomIds;
+                } else if (stats.roomCount) {
+                    console.warn('Source adapter does not support listing room IDs. Migration may be incomplete.');
+                }
+            }
+
+            console.log(`Found ${roomIds.length} rooms to migrate`);
+
+            // Step 2: Migrate rooms in batches
+            for (let i = 0; i < roomIds.length; i += batchSize) {
+                const batch = roomIds.slice(i, i + batchSize);
+
+                for (const roomId of batch) {
+                    try {
+                        // Get data from source
+                        const roomData = await sourceAdapter.getRoom(roomId);
+
+                        if (roomData) {
+                            // Save to target
+                            await targetAdapter.saveRoom(roomId, roomData);
+                            result.migrated++;
+                        }
+                    } catch (error) {
+                        result.errors++;
+                        result.details.errorDetails.push({
+                            roomId,
+                            error: error.message
+                        });
+                        console.error(`Failed to migrate room ${roomId}:`, error.message);
+                    }
+                }
+
+                // Report progress
+                if (onProgress) {
+                    onProgress({
+                        total: roomIds.length,
+                        processed: Math.min(i + batchSize, roomIds.length),
+                        migrated: result.migrated,
+                        errors: result.errors
+                    });
+                }
+            }
+
+            // Step 3: Migrate operation logs if supported
+            if (typeof sourceAdapter.getAllLogs === 'function' && typeof targetAdapter.appendLog === 'function') {
+                try {
+                    const logs = await sourceAdapter.getAllLogs();
+                    for (const log of logs) {
+                        try {
+                            await targetAdapter.appendLog(log.roomId, log.operation);
+                        } catch (logError) {
+                            console.error(`Failed to migrate log for room ${log.roomId}:`, logError.message);
+                        }
+                    }
+                } catch (logError) {
+                    console.warn('Log migration not supported or failed:', logError.message);
+                }
+            }
+
+            result.details.endTime = Date.now();
+            const duration = (result.details.endTime - result.details.startTime) / 1000;
+
+            console.log(`Migration completed: ${result.migrated} rooms migrated, ${result.errors} errors in ${duration}s`);
+
+            return result;
         } catch (error) {
+            result.details.endTime = Date.now();
             console.error('Data migration failed:', error);
             throw error;
         }

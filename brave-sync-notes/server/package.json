@@ -1,18 +1,29 @@
 {
-  "name": "server",
+  "name": "brave-sync-server",
   "version": "2.2.0",
-  "description": "",
+  "description": "Secure end-to-end encrypted note sync server",
   "main": "index.js",
+  "keywords": [
+    "sync",
+    "notes",
+    "encrypted",
+    "websocket",
+    "real-time"
+  ],
+  "author": "NoteSync Team",
+  "license": "MIT",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:property": "jest --testPathPattern=property.test.js",
     "start": "node index.js",
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "lint": "eslint . --ext .js --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write \"**/*.js\"",
+    "format:check": "prettier --check \"**/*.js\""
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",

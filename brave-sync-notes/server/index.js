@@ -184,6 +184,9 @@ const roomCleanupTimer = setInterval(() => {
 }, 30 * 60 * 1000);
 roomCleanupTimer.unref?.();
 
+// Chunk size for validation (5MB in bytes)
+const MAX_DATA_SIZE_BYTES = 5 * 1024 * 1024;
+
 function handleSocketConnection(socket) {
   console.log(`[${new Date().toISOString()}] User connected: ${socket.id}`);
 
@@ -197,8 +200,11 @@ function handleSocketConnection(socket) {
         return;
       }
 
-      const safeDeviceName = (typeof deviceName === 'string' && deviceName.trim())
-        ? deviceName.trim().substring(0, 50)
+      // Sanitize device name - remove dangerous characters
+      const sanitizedDeviceName = (typeof deviceName === 'string' && deviceName.trim())
+        ? deviceName.trim()
+            .substring(0, 50)
+            .replace(/[<>'"&]/g, '') // Remove potentially dangerous characters
         : 'Unknown Device';
 
       // Leave previous room if any
@@ -212,11 +218,11 @@ function handleSocketConnection(socket) {
       // Store metadata for this socket
       socketMeta.set(socket.id, {
         roomId,
-        deviceName: safeDeviceName,
+        deviceName: sanitizedDeviceName,
         joinedAt: Date.now()
       });
 
-      console.log(`[${new Date().toISOString()}] Socket ${socket.id} (${safeDeviceName}) joined chain: ${roomId.substring(0, 8)}...`);
+      console.log(`[${new Date().toISOString()}] Socket ${socket.id} (${sanitizedDeviceName}) joined chain: ${roomId.substring(0, 8)}...`);
 
       // 1. Send existing data to the new device
       let existingData = null;
@@ -257,13 +263,15 @@ function handleSocketConnection(socket) {
         return;
       }
 
-      // Validate encryptedData size to prevent DoS (max 5MB)
+      // Validate encryptedData size to prevent DoS (max 5MB in bytes)
       if (!encryptedData || typeof encryptedData !== 'string') {
         socket.emit('error', { message: 'Invalid data format' });
         return;
       }
-      if (encryptedData.length > 5 * 1024 * 1024) {
-        socket.emit('error', { message: 'Data too large (max 5MB)' });
+      // Use Buffer.byteLength for accurate byte count (handles Unicode correctly)
+      const dataByteSize = Buffer.byteLength(encryptedData, 'utf8');
+      if (dataByteSize > MAX_DATA_SIZE_BYTES) {
+        socket.emit('error', { message: `Data too large (max ${MAX_DATA_SIZE_BYTES / 1024 / 1024}MB)` });
         return;
       }
 

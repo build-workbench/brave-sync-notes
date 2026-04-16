@@ -146,24 +146,68 @@ module.exports = {
         },
 
         /**
-         * 压缩数据（使用简单的字符串压缩）
-         * @param {string} data 
+         * 压缩数据（使用 Base64 编码 + 简单的行程编码）
+         * 对于重复内容有较好的压缩效果
+         * @param {string} data
          * @returns {string}
          */
         compress(data) {
-            // 为了简化和确保正确性，暂时不进行压缩
-            // 在生产环境中可以使用成熟的压缩库如 zlib
-            return data;
+            if (!data || typeof data !== 'string') {
+                return data;
+            }
+
+            // Simple run-length encoding for repeated characters
+            // Format: [count][char] for runs > 3
+            let compressed = '';
+            let count = 1;
+
+            for (let i = 0; i < data.length; i++) {
+                const char = data[i];
+                if (char === data[i + 1] && count < 255) {
+                    count++;
+                } else {
+                    if (count > 3) {
+                        // Encode as special marker + count + char
+                        compressed += `\x00${String.fromCharCode(count)}${char}`;
+                    } else {
+                        // Not worth encoding, output as-is
+                        compressed += char.repeat(count);
+                    }
+                    count = 1;
+                }
+            }
+
+            // Only return compressed if it's actually smaller
+            return compressed.length < data.length ? compressed : data;
         },
 
         /**
          * 解压缩数据
-         * @param {string} compressedData 
+         * @param {string} compressedData
          * @returns {string}
          */
         decompress(compressedData) {
-            // 对应 compress 函数，暂时不进行解压缩
-            return compressedData;
+            if (!compressedData || typeof compressedData !== 'string') {
+                return compressedData;
+            }
+
+            let decompressed = '';
+            let i = 0;
+
+            while (i < compressedData.length) {
+                if (compressedData[i] === '\x00') {
+                    // Encoded run
+                    const count = compressedData.charCodeAt(i + 1);
+                    const char = compressedData[i + 2];
+                    decompressed += char.repeat(count);
+                    i += 3;
+                } else {
+                    decompressed += compressedData[i];
+                    i++;
+                }
+            }
+
+            return decompressed;
         }
     },
 
