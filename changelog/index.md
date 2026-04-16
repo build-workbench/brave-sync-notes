@@ -1,55 +1,103 @@
 ---
 layout: default
-title: 更新日志
-description: 项目版本历史记录，基于 Keep a Changelog 格式，遵循语义化版本规范。
+title: Changelog
+description: Version history and release notes for Note Sync Now
 permalink: /changelog/
 ---
 
-# 更新日志
+# Changelog
 
-本项目的所有重要变更都记录在以下文件中：
+All notable changes to this project are documented here.
 
-- **[CHANGELOG.md](../CHANGELOG.md)** - English
-- **[CHANGELOG.zh-CN.md](../CHANGELOG.zh-CN.md)** - 中文版
+---
 
-格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+## 🌐 Language / 语言
 
-## 版本历史速览
+- [English Version](../CHANGELOG.md)
+- [中文版](../CHANGELOG.zh-CN.md)
 
-| 版本 | 日期 | 说明 |
-|------|------|------|
-| [2.2.0] | 2026-03-22 | 文档站闭环、CI 门禁、同步链路测试 |
-| [2.1.0] | 2026-03-13 | 文档信息架构规范化 |
-| [2.0.2] | 2026-03-10 | Workflow 深度标准化 |
-| [2.0.1] | 2026-03-09 | 安全修复 (Critical) |
-| [2.0.0] | 2025-11-25 | 全面升级 - 新编辑器、性能优化 |
-| [1.2.0] | 2025-12-19 | 客户端冲突管理 |
-| [1.1.0] | 2025-12-18 | 服务端异步修复 |
-| [1.0.1] | 2025-11-24 | 部署准备 |
-| [1.0.0] | 2025-02-13 | 项目基础设施 |
+---
 
-## 主要里程碑
+## 📋 Version Overview
 
-### v2.2.0 - 文档站闭环与测试补强 (2026-03-22)
+| Version | Date | Highlights |
+|---------|------|------------|
+| [2.2.0](./en/v2.2.0) | 2026-03-22 | Documentation site complete, CI enhancement, test coverage |
+| [2.1.0](./zh-CN/v2.1.0) | 2026-03-13 | Documentation architecture restructure |
+| [2.0.2](./zh-CN/v2.0.2) | 2026-03-10 | Workflow standardization |
+| [2.0.1](./zh-CN/v2.0.1) | 2026-03-09 | **Security fix - Critical** |
+| [2.0.0](./zh-CN/v2.0.0) | 2025-11-25 | Major upgrade: CodeMirror editor, chunked transfer |
+| [1.2.0](./zh-CN/v1.2.0) | 2025-12-19 | Client conflict management |
+| [1.1.0](./zh-CN/v1.1.0) | 2025-12-18 | Async handler fixes |
+| [1.0.1](./zh-CN/v1.0.1) | 2025-11-24 | Deployment preparation |
+| [1.0.0](./zh-CN/v1.0.0) | 2025-02-13 | Project foundation |
 
-- 📚 完整文档站导航与深度页面
-- 🔧 CI 流水线接入真实测试
-- ✅ 同步主链路测试覆盖
+---
 
-### v2.0.0 - 全面升级 (2025-11-25)
+## 🚀 Latest Release: v2.2.0 (2026-03-22)
 
-- ✨ CodeMirror 编辑器集成
-- 🚀 大文件分块传输
-- 🌙 深色模式支持
-- 📱 移动端扫码加入
+### What's New
 
-### v2.0.1 - 安全修复 (2026-03-09) ⚠️
+#### 📚 Documentation
+- Complete documentation site with navigation
+- Bilingual support (English/Chinese)
+- Architecture, deployment, and security guides
+- API reference documentation
 
-- 🔒 输入验证与速率限制
-- 🔑 PBKDF2 盐值改进 (**Breaking Change**)
-- 🧹 内存泄漏修复
+#### 🔧 CI/CD
+- Split CI into client/server jobs
+- Integrated test execution in pipeline
+- Enhanced workflow gates
 
-## 阅读完整日志
+#### ✅ Testing
+- Client socket tests (connection, sync-update, error handling)
+- Server integration tests (health, join-chain, push-update)
 
-- 👉 [English Version](../CHANGELOG.md)
-- 👉 [中文版](../CHANGELOG.zh-CN.md)
+### Upgrade Notes
+
+No breaking changes in this release. Safe to upgrade from v2.1.0.
+
+---
+
+## 🏷️ Versioning
+
+This project follows [Semantic Versioning](https://semver.org/):
+
+- **MAJOR** (X.0.0): Breaking changes requiring user action
+- **MINOR** (0.X.0): New features, backward compatible
+- **PATCH** (0.0.X): Bug fixes and security patches
+
+---
+
+## 📖 Format
+
+Changelogs follow the [Keep a Changelog](https://keepachangelog.com/) format:
+
+- **Added** - New features
+- **Changed** - Changes to existing functionality
+- **Deprecated** - Soon-to-be removed features
+- **Removed** - Removed features
+- **Fixed** - Bug fixes
+- **Security** - Vulnerability fixes
+
+---
+
+## 🔗 Quick Links
+
+| Resource | Link |
+|----------|------|
+| Full Changelog (EN) | [CHANGELOG.md](../CHANGELOG.md) |
+| 完整更新日志 | [CHANGELOG.zh-CN.md](../CHANGELOG.zh-CN.md) |
+| GitHub Releases | https://github.com/LessUp/brave-sync-notes/releases |
+
+---
+
+## 📅 Maintenance
+
+- **Active Support**: Current major version (v2.x)
+- **Security Updates**: 6 months after new major release
+- **End of Life**: 12 months after new major release
+
+---
+
+*Last updated: 2026-04-16*

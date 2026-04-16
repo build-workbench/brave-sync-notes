@@ -1,64 +1,120 @@
 ---
 layout: default
 title: Note Sync Now
-description: 端到端加密笔记同步工具的文档入口：项目定位、阅读路径与关键页面导航
+description: 端到端加密笔记同步工具 - 项目文档入口
 ---
 
 # Note Sync Now
 
 [![GitHub Pages](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml)
+[![CI](https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
-![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socketdotio&logoColor=white)
 
-Note Sync Now 面向“无需账号、保持私密、支持多设备实时同步”的笔记协作场景：客户端负责助记词恢复与端到端加密，服务端只转发加密后的同步数据。
+**端到端加密** | **实时同步** | **多设备协作** | **无需账号**
 
-## 项目定位
+---
 
-这是一个把隐私优先同步、实时协作体验和可维护工程结构放在一起的实验项目。仓库首页只保留最小启动信息，这个页面负责说明它是什么、适合谁以及应该从哪里开始阅读。
+## 快速开始
 
-## 适合谁
+```bash
+# 启动服务端
+cd brave-sync-notes/server && npm ci && node index.js
 
-- 想了解助记词恢复与客户端侧加密同步流程的开发者
-- 想参考 React + Express + Socket.IO 协作型应用拆分方式的工程师
-- 需要快速定位部署、贡献与历史变更入口的维护者
+# 启动客户端 (另一个终端)
+cd brave-sync-notes/client && npm ci && npm run dev
+```
 
-## 从哪里开始
+- 服务端: `http://localhost:3002`
+- 客户端: `http://localhost:5173`
 
-1. 先看 [仓库概览]({{ '/overview/' | relative_url }})，完成本地启动并了解仓库结构。
-2. 再看 [贡献指南]({{ '/contributing/' | relative_url }})，了解开发、验证与 changelog 约定。
-3. 想了解历史演进和部署相关调整时，继续查看 [更新日志]({{ '/changelog/' | relative_url }})。
+---
 
-## 推荐阅读路径
+## 文档导航
 
-### 我只想把项目跑起来
+| 文档 | 说明 |
+|------|------|
+| [仓库概览]({{ '/overview/' | relative_url }}) | 项目定位与快速启动 |
+| [架构说明]({{ '/architecture/' | relative_url }}) | 系统设计与模块关系 |
+| [部署与运行]({{ '/deployment/' | relative_url }}) | 环境配置与部署要点 |
+| [安全与同步]({{ '/security-sync/' | relative_url }}) | 加密边界与同步流程 |
+| [贡献指南]({{ '/contributing/' | relative_url }}) | 开发流程与规范 |
+| [更新日志]({{ '/changelog/' | relative_url }}) | 版本历史与变更 |
 
-- [仓库概览]({{ '/overview/' | relative_url }})
-- [部署与运行]({{ '/deployment/' | relative_url }})
-- [贡献指南]({{ '/contributing/' | relative_url }})
+---
 
-### 我想理解系统边界
+## 核心特性
 
-- [仓库概览]({{ '/overview/' | relative_url }})
-- [架构说明]({{ '/architecture/' | relative_url }})
-- [安全与同步机制]({{ '/security-sync/' | relative_url }})
+### 🔐 端到端加密
 
-### 我准备继续维护
+- 客户端 AES-256 加密
+- 服务端只转发密文，无法读取内容
+- 12 词助记词恢复密钥
 
-- [贡献指南]({{ '/contributing/' | relative_url }})
-- [部署与运行]({{ '/deployment/' | relative_url }})
-- [更新日志]({{ '/changelog/' | relative_url }})
+### ⚡ 实时同步
+
+- WebSocket 双向通信
+- 大文件自动分块传输
+- 断线自动重连
+
+### 🔄 冲突处理
+
+- 智能冲突检测
+- 三路合并算法
+- 手动解决界面
+
+### 💾 多层存储
+
+- 服务端: Redis / SQLite
+- 客户端: IndexedDB / LocalStorage
+- 自动降级与回退
+
+---
+
+## 项目结构
+
+```
+brave-sync-notes/
+├── client/                 # React + Vite 前端
+│   ├── src/
+│   │   ├── components/    # UI 组件
+│   │   ├── hooks/         # React Hooks
+│   │   ├── store/         # Zustand 状态
+│   │   └── utils/         # 工具模块
+│   └── package.json
+├── server/                 # Express + Socket.IO 后端
+│   ├── src/
+│   │   └── persistence/   # 持久化层
+│   └── package.json
+└── docs/                   # 文档站
+    ├── architecture.md
+    ├── deployment.md
+    └── ...
+```
+
+---
+
+## 阅读路径
+
+### 我想运行项目
+
+1. [仓库概览]({{ '/overview/' | relative_url }}) → 了解项目
+2. [部署与运行]({{ '/deployment/' | relative_url }}) → 本地启动
+
+### 我想理解架构
+
+1. [架构说明]({{ '/architecture/' | relative_url }}) → 系统设计
+2. [安全与同步]({{ '/security-sync/' | relative_url }}) → 加密与同步
+
+### 我想参与开发
+
+1. [贡献指南]({{ '/contributing/' | relative_url }}) → 开发规范
+2. [更新日志]({{ '/changelog/' | relative_url }}) → 变更历史
+
+---
+
+## 链接
+
 - [GitHub 仓库](https://github.com/LessUp/brave-sync-notes)
-
-## 核心入口
-
-| 类别 | 页面 | 说明 |
-|------|------|------|
-| 概览 | [仓库概览]({{ '/overview/' | relative_url }}) | 仓库定位、最小启动命令与文档入口 |
-| 架构 | [架构说明]({{ '/architecture/' | relative_url }}) | 客户端、服务端与同步数据流的结构说明 |
-| 部署 | [部署与运行]({{ '/deployment/' | relative_url }}) | 本地运行、环境变量、Pages 与 CI 调整要点 |
-| 安全 | [安全与同步机制]({{ '/security-sync/' | relative_url }}) | 端到端加密边界、冲突处理与服务端防护 |
-| 开发指南 | [贡献指南]({{ '/contributing/' | relative_url }}) | 开发流程、验证命令与 changelog 约定 |
-| 归档 | [更新日志]({{ '/changelog/' | relative_url }}) | Pages、部署、文档与功能演进记录 |
-| 外部链接 | [GitHub 仓库](https://github.com/LessUp/brave-sync-notes) | 源码、Issue 与协作入口 |
+- [Issue 追踪](https://github.com/LessUp/brave-sync-notes/issues)
