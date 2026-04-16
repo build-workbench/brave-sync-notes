@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173}
+      - PRIMARY_STORAGE=${PRIMARY_STORAGE:-redis}
+      - FALLBACK_STORAGE=${FALLBACK_STORAGE:-sqlite}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - ROOM_TTL_MS=${ROOM_TTL_MS:-86400000}
+      - MAX_MEMORY_ROOMS=${MAX_MEMORY_ROOMS:-10000}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    networks:
+      - notesync-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - notesync-network
+    command: redis-server --appendonly yes
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - VITE_SOCKET_URL=${VITE_SOCKET_URL:-http://localhost:3002}
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - notesync-network
+
+networks:
+  notesync-network:
+    driver: bridge
+
+volumes:
+  redis-data:
