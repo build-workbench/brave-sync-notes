@@ -1,0 +1,190 @@
+# Database Schema - Note Sync Now
+
+> **Status:** Active  
+> **Created:** 2026-04-17  
+> **Last Updated:** 2026-04-17
+
+## Overview
+
+This document defines the database schema for Note Sync Now's server-side persistence layer. The system supports both Redis and SQLite as storage backends.
+
+## Schema (DBML Format)
+
+```dbml
+// Note Sync Now Database Schema
+// Version: 1.0.0
+
+// Rooms represent sync chains (identified by room ID derived from mnemonic)
+Table rooms {
+  id varchar [pk]           // Room ID (hash of mnemonic)
+  created_at timestamp      // Room creation time
+  updated_at timestamp      // Last update time
+  expires_at timestamp      // Data expiration time (7 days TTL)
+  encrypted_data text       // Encrypted room state
+  version int               // Current version number
+}
+
+// Operations log tracks all sync operations for conflict detection
+Table operations {
+  id varchar [pk]           // Operation ID (UUID)
+  room_id varchar [ref: > rooms.id]  // Reference to room
+  type varchar              // Operation type: insert, delete, replace
+  position int              // Position in content
+  content text              // Operation content (if applicable)
+  length int                // Length of deletion (for delete/replace)
+  timestamp bigint          // Operation timestamp
+  device_id varchar         // Device that originated the operation
+  version int               // Version at time of operation
+}
+
+// History entries store version history for notes
+Table history {
+  id varchar [pk]           // History entry ID
+  note_id varchar           // Note identifier
+  room_id varchar [ref: > rooms.id]  // Reference to room
+  content text              // Content snapshot (or delta)
+  delta text                // Delta from previous version
+  version int               // Version number
+  timestamp bigint          // Creation timestamp
+  device_name varchar       // Device name that created this version
+  tags text                 // JSON array of tags
+}
+
+// Notebooks metadata (client-side storage, server doesn't store this)
+// This is stored in client IndexedDB, not on server
+Table notebooks_client {
+  id varchar [pk]           // Notebook ID
+  name varchar              // Notebook name
+  mnemonic text             // Encrypted mnemonic
+  encryption_key text       // Encrypted encryption key
+  room_id varchar           // Associated room ID
+  created_at bigint         // Creation timestamp
+  updated_at bigint         // Last update timestamp
+}
+
+// Notes metadata (client-side storage)
+Table notes_client {
+  id varchar [pk]           // Note ID
+  notebook_id varchar       // Parent notebook ID
+  title varchar             // Note title
+  tags text                 // JSON array of tags
+  created_at bigint         // Creation timestamp
+  updated_at bigint         // Last update timestamp
+  version int               // Current version
+}
+
+// Offline operation queue (client-side storage)
+Table offline_queue_client {
+  id varchar [pk]           // Operation ID
+  type varchar              // Operation type: update, create, delete
+  notebook_id varchar       // Notebook ID
+  note_id varchar           // Note ID (if applicable)
+  data text                 // JSON operation data
+  timestamp bigint          // Operation timestamp
+  retries int               // Number of retry attempts
+}
+
+// Remote cursors for collaboration (transient, in-memory)
+Table remote_cursors {
+  id varchar [pk]           // Cursor ID
+  room_id varchar [ref: > rooms.id]  // Reference to room
+  device_id varchar         // Device ID
+  device_name varchar       // Device display name
+  color varchar             // Cursor color
+  line int                  // Cursor line position
+  column int                // Cursor column position
+  selection_start text      // Selection start position (JSON)
+  selection_end text        // Selection end position (JSON)
+  timestamp bigint          // Last update timestamp
+}
+```
+
+## Storage Backend Implementations
+
+### Redis Schema
+
+```
+# Room storage (Hash)
+room:{id} = {
+  "encrypted_data": "...",
+  "version": 42,
+  "created_at": 1713369600000,
+  "updated_at": 1713456000000,
+  "expires_at": 1714060800000
+}
+
+# Operations log (List)
+operations:{room_id} = [
+  "{\"id\":\"op1\",\"type\":\"insert\",...}",
+  "{\"id\":\"op2\",\"type\":\"delete\",...}"
+]
+
+# TTL for automatic cleanup
+EXPIRE room:{id} 604800  # 7 days
+```
+
+### SQLite Schema
+
+```sql
+CREATE TABLE rooms (
+  id TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  encrypted_data TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE operations (
+  id TEXT PRIMARY KEY,
+  room_id TEXT NOT NULL REFERENCES rooms(id),
+  type TEXT NOT NULL CHECK(type IN ('insert', 'delete', 'replace')),
+  position INTEGER NOT NULL,
+  content TEXT,
+  length INTEGER,
+  timestamp INTEGER NOT NULL,
+  device_id TEXT NOT NULL,
+  version INTEGER NOT NULL
+);
+
+CREATE TABLE history (
+  id TEXT PRIMARY KEY,
+  note_id TEXT NOT NULL,
+  room_id TEXT NOT NULL REFERENCES rooms(id),
+  content TEXT,
+  delta TEXT,
+  version INTEGER NOT NULL,
+  timestamp INTEGER NOT NULL,
+  device_name TEXT NOT NULL,
+  tags TEXT
+);
+
+-- Indexes for performance
+CREATE INDEX idx_operations_room ON operations(room_id);
+CREATE INDEX idx_operations_timestamp ON operations(timestamp);
+CREATE INDEX idx_history_note ON history(note_id);
+CREATE INDEX idx_history_room ON history(room_id);
+```
+
+## Data Retention Policy
+
+| Data Type | Retention Period | Cleanup Method |
+|-----------|------------------|----------------|
+| Active rooms | 7 days after last update | Automatic TTL expiration |
+| Operations log | 24 hours | Periodic cleanup job |
+| History entries | 50 entries per note | FIFO eviction |
+| Remote cursors | Session lifetime | In-memory, cleared on disconnect |
+
+## Migration Strategy
+
+When schema changes are required:
+1. Create new migration file in `server/migrations/`
+2. Apply migration during server startup
+3. Support backward compatibility for one major version
+
+---
+
+## Related Documents
+
+- [Product Requirements](../product/note-sync-system.md)
+- [Core Architecture](../rfc/0001-core-architecture.md)

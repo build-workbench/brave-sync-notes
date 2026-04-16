@@ -1,0 +1,332 @@
+# WebSocket API Specification
+
+> **Status:** Active  
+> **Created:** 2026-04-17  
+> **Last Updated:** 2026-04-17
+
+## Overview
+
+Note Sync Now uses Socket.IO for real-time bidirectional communication. This document defines all WebSocket events and their payloads.
+
+## Base URL
+
+```
+Development: ws://localhost:3002
+Production: wss://your-domain.com
+```
+
+## Authentication
+
+Clients authenticate by joining a sync chain using a room ID derived from their 12-word mnemonic.
+
+## Client Events
+
+### join-chain
+
+Join a sync chain (sync room).
+
+**Payload:**
+```typescript
+{
+  roomId: string;          // Room ID (hash of mnemonic)
+  deviceName: string;      // Human-readable device name
+  deviceId: string;        // Unique device identifier
+  encryptionVersion: number; // Encryption version (default: 1)
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  data?: {
+    encryptedContent: string;  // Current encrypted content (if exists)
+    version: number;           // Current version
+    members: Array<{
+      deviceId: string;
+      deviceName: string;
+      connectedAt: number;
+    }>;
+  };
+  error?: string;
+}
+```
+
+### push-update
+
+Push an update to the sync chain.
+
+**Payload:**
+```typescript
+{
+  roomId: string;
+  operation: {
+    id: string;              // Unique operation ID (UUID)
+    type: 'insert' | 'delete' | 'replace';
+    position: number;        // Position in content
+    content?: string;        // Content to insert (for insert/replace)
+    length?: number;         // Length to delete (for delete/replace)
+    timestamp: number;       // Operation timestamp
+    deviceId: string;        // Device that originated the operation
+    version: number;         // Version at time of operation
+  };
+  encryptedContent: string;  // New encrypted content
+  version: number;           // New version number
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  ack?: {
+    operationId: string;
+    newVersion: number;
+  };
+  error?: string;
+}
+```
+
+### request-sync
+
+Request full sync state (used after reconnection).
+
+**Payload:**
+```typescript
+{
+  roomId: string;
+  sinceVersion?: number;     // Optional: get updates since this version
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  data?: {
+    encryptedContent: string;
+    version: number;
+    operations?: Array<Operation>;  // If sinceVersion provided
+  };
+  error?: string;
+}
+```
+
+### update-cursor
+
+Broadcast cursor position to other devices.
+
+**Payload:**
+```typescript
+{
+  roomId: string;
+  cursor: {
+    line: number;
+    column: number;
+    selection?: {
+      start: { line: number; column: number };
+      end: { line: number; column: number };
+    };
+  };
+}
+```
+
+### leave-chain
+
+Leave the sync chain (disconnect from room).
+
+**Payload:**
+```typescript
+{
+  roomId: string;
+  deviceId: string;
+}
+```
+
+## Server Events
+
+### sync-update
+
+Broadcast update to all other devices in the room.
+
+**Payload:**
+```typescript
+{
+  operation: {
+    id: string;
+    type: 'insert' | 'delete' | 'replace';
+    position: number;
+    content?: string;
+    length?: number;
+    timestamp: number;
+    deviceId: string;
+    deviceName: string;
+    version: number;
+  };
+  encryptedContent: string;
+  version: number;
+}
+```
+
+### room-info
+
+Broadcast room member information.
+
+**Payload:**
+```typescript
+{
+  roomId: string;
+  members: Array<{
+    deviceId: string;
+    deviceName: string;
+    connectedAt: number;
+    cursor?: {
+      line: number;
+      column: number;
+    };
+    typing?: boolean;
+  }>;
+}
+```
+
+### update-ack
+
+Acknowledge receipt of an update.
+
+**Payload:**
+```typescript
+{
+  operationId: string;
+  newVersion: number;
+}
+```
+
+### cursor-update
+
+Broadcast cursor position from another device.
+
+**Payload:**
+```typescript
+{
+  deviceId: string;
+  deviceName: string;
+  color: string;
+  cursor: {
+    line: number;
+    column: number;
+    selection?: {
+      start: { line: number; column: number };
+      end: { line: number; column: number };
+    };
+  };
+  timestamp: number;
+}
+```
+
+### error
+
+Error response.
+
+**Payload:**
+```typescript
+{
+  code: string;
+  message: string;
+  details?: Record<string, any>;
+}
+```
+
+**Error Codes:**
+
+| Code | Description |
+|------|-------------|
+| INVALID_ROOM | Room ID is invalid |
+| NOT_MEMBER | Device is not a member of this room |
+| INVALID_OPERATION | Operation payload is invalid |
+| VERSION_CONFLICT | Version number mismatch |
+| RATE_LIMIT | Rate limit exceeded |
+| QUOTA_EXCEEDED | Storage quota exceeded |
+| SERVER_ERROR | Internal server error |
+
+## REST API Endpoints
+
+### GET /health
+
+Health check endpoint.
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "uptime": 12345,
+  "timestamp": 1713369600000,
+  "rooms": 42,
+  "connections": 15
+}
+```
+
+### GET /stats
+
+Server statistics endpoint.
+
+**Response:**
+```json
+{
+  "totalRooms": 42,
+  "activeConnections": 15,
+  "operationsPerMinute": 150,
+  "memoryUsage": {
+    "rss": 123456789,
+    "heapUsed": 98765432,
+    "heapTotal": 123456789
+  }
+}
+```
+
+### POST /api/backup
+
+Create a backup of room data (admin only).
+
+**Request:**
+```json
+{
+  "roomId": "string",
+  "adminKey": "string"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "backupId": "string",
+  "timestamp": 1713369600000
+}
+```
+
+## Rate Limiting
+
+| Event | Limit | Window |
+|-------|-------|--------|
+| push-update | 100 | 1 minute |
+| join-chain | 10 | 1 minute |
+| update-cursor | 60 | 1 second |
+| request-sync | 10 | 1 minute |
+
+## Message Size Limits
+
+| Field | Max Size |
+|-------|----------|
+| encryptedContent | 10 MB |
+| operation.content | 1 MB |
+| deviceName | 100 characters |
+| roomId | 256 characters |
+
+For content larger than 50KB, use chunked transfer (handled automatically by the sync engine).
+
+---
+
+## Related Documents
+
+- [Product Requirements](../product/note-sync-system.md)
+- [Core Architecture](../rfc/0001-core-architecture.md)
