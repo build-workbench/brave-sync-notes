@@ -1,86 +1,16 @@
-title: Note Sync Now
-description: End-to-end encrypted note synchronization - Real-time collaboration and multi-device sync
-remote_theme: pages-themes/cayman@v0.2.0
-plugins:
-  - jekyll-remote-theme
-  - jekyll-seo-tag
-  - jekyll-sitemap
-repository: LessUp/brave-sync-notes
-show_downloads: false
+# GitHub Pages Configuration
+# This file is kept for reference but Jekyll is no longer used.
+# Documentation is now built with VitePress and deployed via GitHub Actions.
+#
+# To preview locally:
+#   cd docs && npm install && npm run dev
+#
+# To build for production:
+#   cd docs && npm install && npm run build
 
-# SEO & metadata
-url: https://lessup.github.io
-baseurl: /brave-sync-notes
-author: LessUp
+title: Note Sync Now (VitePress)
+description: Documentation now built with VitePress - See docs/ directory
 
-# Default language
-lang: zh-CN
-
-# Multilingual support
-languages:
-  - code: en
-    name: English
-    url: /docs/en/
-  - code: zh-CN
-    name: 简体中文
-    url: /docs/zh-CN/
-
-# Navigation
-nav:
-  - title: Home
-    url: /
-  - title: Docs (English)
-    url: /docs/en/
-  - title: 文档 (中文)
-    url: /docs/zh-CN/
-  - title: Changelog
-    url: /changelog/
-  - title: GitHub
-    url: https://github.com/LessUp/brave-sync-notes
-
-# Markdown rendering
-markdown: kramdown
-kramdown:
-  input: GFM
-  hard_wrap: false
-  syntax_highlighter: rouge
-
-# Default layout for all pages
-defaults:
-  - scope:
-      path: ""
-    values:
-      layout: default
-  - scope:
-      path: "docs"
-    values:
-      layout: default
-  - scope:
-      path: "changelog"
-    values:
-      layout: default
-
-# Exclude irrelevant files from Jekyll build
+# Disable Jekyll builds - we use VitePress now
 exclude:
-  - .git
-  - .github
-  - .kiro
-  - .vscode
-  - brave-sync-notes
-  - node_modules
-  - package-lock.json
-  - IMPLEMENTATION_PROGRESS.md
-  - TEST_RESULTS.md
-  - .editorconfig
-  - .gitignore
-  - Gemfile
-  - Gemfile.lock
-  - vendor
-  - LICENSE
-  - README.zh-CN.md
-
-# Collections for documentation
-collections:
-  docs:
-    output: true
-    permalink: /:collection/:path/
+  - "*"
