@@ -98,7 +98,19 @@ For detailed setup instructions, see our [Getting Started Guide](./docs/en/getti
 
 We provide comprehensive documentation in both **English** and **简体中文**.
 
-### English Documentation
+### Specifications (Single Source of Truth)
+
+| Spec | Description |
+|------|-------------|
+| [Product Requirements](./specs/product/note-sync-system.md) | Feature definitions & acceptance criteria |
+| [Core Architecture](./specs/rfc/0001-core-architecture.md) | System design & technical decisions |
+| [API Specification](./specs/api/websocket-api.yaml) | WebSocket & REST API definitions |
+| [Database Schema](./specs/db/schema-v1.dbml) | Data models & storage structure |
+| [Testing Strategy](./specs/testing/test-strategy.md) | Test frameworks & correctness properties |
+
+### User & Developer Guides
+
+#### English Documentation
 
 | Document | Description |
 |----------|-------------|

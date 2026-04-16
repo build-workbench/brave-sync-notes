@@ -11,43 +11,119 @@ permalink: /zh/overview/
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socket.io&logoColor=white)
 
 Note Sync Now 是一个端到端加密笔记同步项目，用于探索助记词恢复、实时协作与隐私优先的多设备同步体验。
 
-## 仓库概览
+## ✨ 核心特性
 
-- `brave-sync-notes/client`：React + Vite 前端
-- `brave-sync-notes/server`：Express + Socket.IO 后端
-- 客户端侧 AES-256 加密与助记词恢复流程
-- GitHub Pages 文档站负责项目导读、架构说明、部署说明与更新归档
+- **端到端加密**：使用 AES-256 加密，服务器无法解密内容
+- **助记词恢复**：BIP39 标准，12个单词即可恢复同步链
+- **实时同步**：WebSocket 实现多设备即时同步
+- **大文件支持**：分块传输，支持最大 5MB 内容
+- **离线支持**：离线队列，网络恢复后自动同步
+- **多笔记管理**：支持创建多个笔记和笔记本
+- **深色模式**：护眼的深色主题
+- **国际化**：支持中英文界面
 
-## 快速开始
+## 📁 仓库结构
+
+```
+brave-sync-notes/
+├── client/                 # React + Vite 前端
+│   ├── src/
+│   │   ├── components/    # UI 组件
+│   │   ├── hooks/         # 自定义 Hooks
+│   │   ├── store/         # Zustand 状态管理
+│   │   └── utils/         # 工具函数
+│   └── tests/             # 测试文件
+├── server/                 # Express + Socket.IO 后端
+│   ├── src/
+│   │   ├── persistence/   # 持久化存储
+│   │   └── utils/         # 工具函数
+│   └── tests/             # 测试文件
+└── docs/                   # GitHub Pages 文档站
+```
+
+## 🚀 快速开始
+
+### 环境要求
+
+- Node.js 18+
+- npm 9+ 或 pnpm
+- Redis (可选，用于持久化存储)
+
+### 安装运行
 
 ```bash
+# 克隆仓库
+git clone https://github.com/your-repo/brave-sync-notes.git
+cd brave-sync-notes
+
+# 安装并启动后端
 cd brave-sync-notes/server
 npm ci
-node index.js
+cp .env.example .env
+npm start
 
+# 新终端安装并启动前端
 cd ../client
 npm ci
+cp .env.example .env
 npm run dev
 ```
 
-后端默认监听 `http://localhost:3002`，前端开发服务通常运行在 `http://localhost:5173`。
+后端默认监听 `http://localhost:3002`，前端开发服务运行在 `http://localhost:5173`。
 
-## 文档入口
+### Docker 部署
 
-- 项目首页：<https://lessup.github.io/brave-sync-notes/>
-- 部署与运行：<https://lessup.github.io/brave-sync-notes/deployment/>
-- 贡献指南：<https://lessup.github.io/brave-sync-notes/contributing/>
+```bash
+cd brave-sync-notes
+docker-compose up -d
+```
 
-## 推荐阅读路径
+## 📖 文档入口
 
-1. 先看文档站首页了解整体入口。
-2. 再看架构说明理解前后端边界与同步链路。
-3. 修改部署或工作流前先看部署与运行页。
-4. 提交改动前查看贡献指南与更新日志约定。
+- [项目首页](https://lessup.github.io/brave-sync-notes/)
+- [架构说明](https://lessup.github.io/brave-sync-notes/architecture/)
+- [部署指南](https://lessup.github.io/brave-sync-notes/deployment/)
+- [贡献指南](https://lessup.github.io/brave-sync-notes/contributing/)
 
-## 许可
+## ⌨️ 键盘快捷键
 
-MIT License
+| 快捷键 | 功能 |
+|--------|------|
+| `Ctrl/⌘ + S` | 保存 |
+| `Ctrl/⌘ + B` | 切换侧边栏 |
+| `Ctrl/⌘ + P` | 切换预览 |
+| `Ctrl/⌘ + H` | 切换历史 |
+| `Ctrl/⌘ + N` | 新建笔记 |
+| `Ctrl/⌘ + /` | 切换深色模式 |
+| `Esc` | 关闭弹窗 |
+
+## 🧪 测试
+
+```bash
+# 前端测试
+cd client
+npm test
+
+# 后端测试
+cd server
+npm test
+
+# 测试覆盖率
+npm run test:coverage
+```
+
+## 📝 更新日志
+
+查看 [CHANGELOG.md](CHANGELOG.md) 了解版本历史。
+
+## 🤝 贡献
+
+欢迎贡献代码！请查看 [贡献指南](CONTRIBUTING.md) 了解详情。
+
+## 📄 许可
+
+[MIT License](LICENSE)

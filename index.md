@@ -1,120 +1,70 @@
----
-layout: default
-title: Note Sync Now
-description: 端到端加密笔记同步工具 - 项目文档入口
----
+# Note Sync Now - Documentation Index
 
-# Note Sync Now
+Welcome to the Note Sync Now project documentation. This index provides quick access to all documentation resources.
 
-[![GitHub Pages](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml)
-[![CI](https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
-![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+## 📋 Specifications (Single Source of Truth)
 
-**端到端加密** | **实时同步** | **多设备协作** | **无需账号**
+All technical and product specifications are in the `/specs` directory:
 
----
+| Document | Description |
+|----------|-------------|
+| [Product Requirements](./specs/product/note-sync-system.md) | Feature definitions, user stories, and acceptance criteria |
+| [Core Architecture](./specs/rfc/0001-core-architecture.md) | System architecture, data flow, and component design |
+| [WebSocket API](./specs/api/websocket-api.yaml) | Socket.IO events and payloads |
+| [Database Schema](./specs/db/schema-v1.dbml) | Server-side persistence data model |
+| [Testing Strategy](./specs/testing/test-strategy.md) | Test frameworks and correctness properties |
 
-## 快速开始
+**Full specs index**: [specs/README.md](./specs/README.md)
 
-```bash
-# 启动服务端
-cd brave-sync-notes/server && npm ci && node index.js
+## 📚 User & Developer Guides
 
-# 启动客户端 (另一个终端)
-cd brave-sync-notes/client && npm ci && npm run dev
-```
+### Quick Start
 
-- 服务端: `http://localhost:3002`
-- 客户端: `http://localhost:5173`
+- [README.md](./README.md) - Project overview and quick start
+- [Getting Started](./docs/en/getting-started.md) - Installation and setup
+  - [中文版](./docs/zh-CN/getting-started.md)
 
----
+### Architecture & Design
 
-## 文档导航
+- [Architecture](./architecture.md) - System boundary and core modules
+- [Security & Sync](./security-sync.md) - Encryption and synchronization details
+- [Deployment](./deployment.md) - Production deployment guide
 
-| 文档 | 说明 |
-|------|------|
-| [仓库概览]({{ '/overview/' | relative_url }}) | 项目定位与快速启动 |
-| [架构说明]({{ '/architecture/' | relative_url }}) | 系统设计与模块关系 |
-| [部署与运行]({{ '/deployment/' | relative_url }}) | 环境配置与部署要点 |
-| [安全与同步]({{ '/security-sync/' | relative_url }}) | 加密边界与同步流程 |
-| [贡献指南]({{ '/contributing/' | relative_url }}) | 开发流程与规范 |
-| [更新日志]({{ '/changelog/' | relative_url }}) | 版本历史与变更 |
+### Contributing
 
----
+- [Contributing Guide](./CONTRIBUTING.md) - How to contribute
+- [AI Agent Configuration](./AGENTS.md) - Spec-driven development workflow for AI assistants
 
-## 核心特性
+### Releases
 
-### 🔐 端到端加密
+- [CHANGELOG.md](./CHANGELOG.md) - Version history
+  - [中文版](./CHANGELOG.zh-CN.md)
+- [Release Notes v2.2.0](./RELEASE_NOTES_v2.2.0.md)
 
-- 客户端 AES-256 加密
-- 服务端只转发密文，无法读取内容
-- 12 词助记词恢复密钥
+## 🤖 For AI Agents
 
-### ⚡ 实时同步
+If you're an AI assistant working on this project, read [AGENTS.md](./AGENTS.md) first. It contains:
 
-- WebSocket 双向通信
-- 大文件自动分块传输
-- 断线自动重连
+- Spec-Driven Development workflow rules
+- Project conventions and coding standards
+- Key file locations and important paths
+- Code generation guidelines
 
-### 🔄 冲突处理
+## 📁 Documentation Directories
 
-- 智能冲突检测
-- 三路合并算法
-- 手动解决界面
+- `/specs/` - Technical and product specifications
+- `/docs/` - User guides, tutorials, and supplementary docs
+  - `/docs/setup/` - Environment setup guides
+  - `/docs/tutorials/` - User tutorials
+  - `/docs/architecture/` - High-level architecture
+  - `/docs/assets/` - Images and static resources
+  - `/docs/en/` - English documentation (legacy)
+  - `/docs/zh-CN/` - Chinese documentation (legacy)
+  - `/docs/api/` - API reference documentation
 
-### 💾 多层存储
+## 🌐 External Resources
 
-- 服务端: Redis / SQLite
-- 客户端: IndexedDB / LocalStorage
-- 自动降级与回退
-
----
-
-## 项目结构
-
-```
-brave-sync-notes/
-├── client/                 # React + Vite 前端
-│   ├── src/
-│   │   ├── components/    # UI 组件
-│   │   ├── hooks/         # React Hooks
-│   │   ├── store/         # Zustand 状态
-│   │   └── utils/         # 工具模块
-│   └── package.json
-├── server/                 # Express + Socket.IO 后端
-│   ├── src/
-│   │   └── persistence/   # 持久化层
-│   └── package.json
-└── docs/                   # 文档站
-    ├── architecture.md
-    ├── deployment.md
-    └── ...
-```
-
----
-
-## 阅读路径
-
-### 我想运行项目
-
-1. [仓库概览]({{ '/overview/' | relative_url }}) → 了解项目
-2. [部署与运行]({{ '/deployment/' | relative_url }}) → 本地启动
-
-### 我想理解架构
-
-1. [架构说明]({{ '/architecture/' | relative_url }}) → 系统设计
-2. [安全与同步]({{ '/security-sync/' | relative_url }}) → 加密与同步
-
-### 我想参与开发
-
-1. [贡献指南]({{ '/contributing/' | relative_url }}) → 开发规范
-2. [更新日志]({{ '/changelog/' | relative_url }}) → 变更历史
-
----
-
-## 链接
-
-- [GitHub 仓库](https://github.com/LessUp/brave-sync-notes)
-- [Issue 追踪](https://github.com/LessUp/brave-sync-notes/issues)
+- **Documentation Site**: https://lessup.github.io/brave-sync-notes/
+- **GitHub Repository**: https://github.com/LessUp/brave-sync-notes
+- **Issues**: https://github.com/LessUp/brave-sync-notes/issues
+- **Discussions**: https://github.com/LessUp/brave-sync-notes/discussions

@@ -41,3 +41,6 @@ Gemfile.lock
 # Coverage
 coverage/
 *.lcov
+
+# AI Assistant Directories (legacy)
+.kiro/

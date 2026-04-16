@@ -22,21 +22,36 @@ Thank you for your interest in contributing.
 
 ## Workflow
 
+### Spec-Driven Development
+
+This project follows Spec-Driven Development (SDD). Before writing code:
+
+1. **Review existing specs**: Check `/specs` directory for relevant product requirements, RFCs, and API definitions.
+2. **Update specs first**: If introducing new features or changing interfaces, update the relevant spec documents first.
+3. **Get spec approval**: Ensure spec changes are reviewed and approved before implementation.
+4. **Implement to spec**: Write code that strictly follows the specifications.
+5. **Test against specs**: Ensure tests verify all acceptance criteria defined in specs.
+
+### Development Steps
+
 1. Fork the repository and create a feature branch:
    - `git checkout -b feature/your-feature-name`
-2. Make your changes in small, focused commits.
-3. Run the relevant validation locally:
+2. Review and update specs in `/specs` directory if needed
+3. Make your changes in small, focused commits.
+4. Run the relevant validation locally:
    - `cd brave-sync-notes/client && npm ci && npm test -- --run && npm run build`
    - `cd brave-sync-notes/server && npm ci && npm test`
    - `cd brave-sync-notes/server && npm run test:property` (recommended when touching sync, persistence, or validation logic)
-4. Add or update a record in `changelog/` for every submitted change set.
-5. Open a pull request with a clear description of the change and related issue(s).
+5. Add or update a record in `changelog/` for every submitted change set.
+6. Open a pull request with a clear description of the change and related issue(s).
 
 ## Documentation expectations
 
-- Keep root documentation aligned with the GitHub Pages site.
-- Prefer updating the relevant overview / architecture / deployment / security page instead of duplicating explanations across files.
-- When changing workflows or project structure, update both the docs page and the changelog entry in the same change set.
+- **Specs are the source of truth**: All product requirements, architecture decisions, and API definitions must be in `/specs`.
+- **Keep docs in sync**: Update relevant specs when changing functionality. Code and specs must always match.
+- **User documentation**: Place tutorials, guides, and how-to content in `/docs/setup` or `/docs/tutorials`.
+- **Architecture docs**: High-level architecture goes in `/docs/architecture` (can link to detailed RFCs in `/specs/rfc`).
+- **Changelog**: Update both `CHANGELOG.md` and `CHANGELOG.zh-CN.md` for user-facing changes.
 
 ## Code style
 
