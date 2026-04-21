@@ -53,7 +53,7 @@ cd brave-sync-notes
 ### 2. Start the Server
 
 ```bash
-cd brave-sync-notes/server
+cd apps/api
 npm ci
 node index.js
 ```
@@ -68,7 +68,7 @@ Health check available at http://localhost:3002/health
 ### 3. Start the Client (New Terminal)
 
 ```bash
-cd brave-sync-notes/client
+cd apps/web
 npm ci
 npm run dev
 ```
@@ -94,7 +94,7 @@ Navigate to `http://localhost:5173` in your browser.
 
 #### Environment Variables
 
-Create a `.env` file in `brave-sync-notes/server/`:
+Create a `.env` file in `apps/api/`:
 
 ```bash
 # Server Configuration
@@ -130,7 +130,7 @@ MAX_MEMORY_ROOMS=10000
 
 ### Client Configuration
 
-Create a `.env` file in `brave-sync-notes/client/`:
+Create a `.env` file in `apps/web/`:
 
 ```bash
 # For development, this is optional (defaults to localhost:3002)
@@ -143,8 +143,8 @@ Create a `.env` file in `brave-sync-notes/client/`:
 
 ```
 brave-sync-notes/
-├── brave-sync-notes/
-│   ├── client/               # React + Vite frontend
+├── apps/
+│   ├── web/                  # React + Vite frontend
 │   │   ├── src/
 │   │   │   ├── components/  # React UI components
 │   │   │   ├── hooks/       # Custom React hooks (useSocket, etc.)
@@ -155,7 +155,7 @@ brave-sync-notes/
 │   │   ├── index.html       # HTML entry point
 │   │   ├── package.json     # Client dependencies
 │   │   └── vite.config.js   # Vite configuration
-│   └── server/               # Express + Socket.IO backend
+│   └── api/                  # Express + Socket.IO backend
 │       ├── src/
 │       │   └── persistence/ # Storage adapters (Redis, SQLite, Memory)
 │       ├── tests/           # Test files
@@ -294,8 +294,8 @@ nvm use 20
 
 ### Customize
 
-- Modify the theme: Edit `brave-sync-notes/client/src/styles/`
-- Add features: Extend `brave-sync-notes/server/src/`
+- Modify the theme: Edit `apps/web/src/styles/`
+- Add features: Extend `apps/api/src/`
 - Change storage: Configure different persistence adapters
 
 ### Contribute

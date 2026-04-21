@@ -30,14 +30,15 @@ Note Sync Now 是一个端到端加密笔记同步项目，用于探索助记词
 
 ```
 brave-sync-notes/
-├── client/                 # React + Vite 前端
+├── apps/
+│   ├── web/               # React + Vite 前端
 │   ├── src/
 │   │   ├── components/    # UI 组件
 │   │   ├── hooks/         # 自定义 Hooks
 │   │   ├── store/         # Zustand 状态管理
 │   │   └── utils/         # 工具函数
 │   └── tests/             # 测试文件
-├── server/                 # Express + Socket.IO 后端
+│   └── api/               # Express + Socket.IO 后端
 │   ├── src/
 │   │   ├── persistence/   # 持久化存储
 │   │   └── utils/         # 工具函数
@@ -57,17 +58,17 @@ brave-sync-notes/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-repo/brave-sync-notes.git
+git clone https://github.com/LessUp/brave-sync-notes.git
 cd brave-sync-notes
 
 # 安装并启动后端
-cd brave-sync-notes/server
+cd apps/api
 npm ci
 cp .env.example .env
 npm start
 
 # 新终端安装并启动前端
-cd ../client
+cd ../web
 npm ci
 cp .env.example .env
 npm run dev
@@ -105,11 +106,11 @@ docker-compose up -d
 
 ```bash
 # 前端测试
-cd client
+cd apps/web
 npm test
 
 # 后端测试
-cd server
+cd apps/api
 npm test
 
 # 测试覆盖率

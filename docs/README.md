@@ -32,4 +32,4 @@ Technical specifications (product requirements, RFCs, API definitions, database 
 - `/specs/db/` - Database schemas
 - `/specs/testing/` - Testing strategy
 
-See [AGENTS.md](../AGENTS.md) for the spec-driven development workflow.
+See [AGENTS.md](https://github.com/LessUp/brave-sync-notes/blob/main/AGENTS.md) for the spec-driven development workflow.

@@ -113,13 +113,13 @@ Branch naming conventions:
 
 ```bash
 # Client validation
-cd brave-sync-notes/client
+cd apps/web
 npm ci
 npm test -- --run
 npm run build
 
 # Server validation
-cd ../server
+cd ../api
 npm ci
 npm test
 
@@ -129,7 +129,7 @@ npm run test:property
 
 ### 5. Update Changelog
 
-Every change set should include a changelog entry. See [Changelog Update Guide](../changelog/README.md).
+Every change set should include a changelog entry. See [Changelog](/changelog/).
 
 ### 6. Submit Pull Request
 
@@ -144,8 +144,8 @@ Every change set should include a changelog entry. See [Changelog Update Guide](
 
 ```
 brave-sync-notes/
-├── brave-sync-notes/
-│   ├── client/               # React + Vite frontend
+├── apps/
+│   ├── web/                  # React + Vite frontend
 │   │   ├── src/
 │   │   │   ├── components/  # React components
 │   │   │   ├── hooks/       # Custom React hooks
@@ -153,7 +153,7 @@ brave-sync-notes/
 │   │   │   └── utils/       # Utility functions
 │   │   ├── tests/           # Test files
 │   │   └── package.json
-│   └── server/               # Express + Socket.IO backend
+│   └── api/                  # Express + Socket.IO backend
 │       ├── src/
 │       │   └── persistence/ # Storage adapters
 │       ├── tests/           # Test files
@@ -177,12 +177,12 @@ brave-sync-notes/
 
 ```bash
 # Terminal 1: Start server
-cd brave-sync-notes/server
+cd apps/api
 npm ci
 node index.js
 
 # Terminal 2: Start client
-cd brave-sync-notes/client
+cd apps/web
 npm ci
 npm run dev
 ```

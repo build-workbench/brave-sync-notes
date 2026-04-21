@@ -53,7 +53,7 @@ cd brave-sync-notes
 ### 2. 启动服务端
 
 ```bash
-cd brave-sync-notes/server
+cd apps/api
 npm ci
 node index.js
 ```
@@ -68,7 +68,7 @@ Health check available at http://localhost:3002/health
 ### 3. 启动客户端（新建终端）
 
 ```bash
-cd brave-sync-notes/client
+cd apps/web
 npm ci
 npm run dev
 ```
@@ -94,7 +94,7 @@ VITE v5.x.x  ready in xxx ms
 
 #### 环境变量
 
-在 `brave-sync-notes/server/` 中创建 `.env` 文件：
+在 `apps/api/` 中创建 `.env` 文件：
 
 ```bash
 # 服务端配置
@@ -130,7 +130,7 @@ MAX_MEMORY_ROOMS=10000
 
 ### 客户端配置
 
-在 `brave-sync-notes/client/` 中创建 `.env` 文件：
+在 `apps/web/` 中创建 `.env` 文件：
 
 ```bash
 # 开发环境此项为可选（默认 localhost:3002）
@@ -143,8 +143,8 @@ MAX_MEMORY_ROOMS=10000
 
 ```
 brave-sync-notes/
-├── brave-sync-notes/
-│   ├── client/               # React + Vite 前端
+├── apps/
+│   ├── web/                  # React + Vite 前端
 │   │   ├── src/
 │   │   │   ├── components/  # React UI 组件
 │   │   │   ├── hooks/       # 自定义 React hooks（useSocket 等）
@@ -155,7 +155,7 @@ brave-sync-notes/
 │   │   ├── index.html       # HTML 入口
 │   │   ├── package.json     # 客户端依赖
 │   │   └── vite.config.js   # Vite 配置
-│   └── server/               # Express + Socket.IO 后端
+│   └── api/                  # Express + Socket.IO 后端
 │       ├── src/
 │       │   └── persistence/ # 存储适配器（Redis、SQLite、Memory）
 │       ├── tests/           # 测试文件
@@ -294,8 +294,8 @@ nvm use 20
 
 ### 自定义
 
-- 修改主题：编辑 `brave-sync-notes/client/src/styles/`
-- 添加功能：扩展 `brave-sync-notes/server/src/`
+- 修改主题：编辑 `apps/web/src/styles/`
+- 添加功能：扩展 `apps/api/src/`
 - 更改存储：配置不同的持久化适配器
 
 ### 贡献

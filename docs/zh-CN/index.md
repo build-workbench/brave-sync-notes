@@ -8,9 +8,9 @@ lang: zh-CN
 
 # Note Sync Now 文档中心
 
-[![GitHub Pages](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml)
+[![GitHub Pages](https://github.com/LessUp/brave-sync-notes/actions/workflows/docs.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/docs.yml)
 [![CI](https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../../LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/LessUp/brave-sync-notes/blob/main/LICENSE)
 
 **端到端加密** | **实时同步** | **多设备协作** | **无需账号**
 
@@ -26,10 +26,10 @@ lang: zh-CN
 
 ```bash
 # 启动服务端
-cd brave-sync-notes/server && npm ci && node index.js
+cd apps/api && npm ci && node index.js
 
 # 启动客户端（另一个终端）
-cd brave-sync-notes/client && npm ci && npm run dev
+cd apps/web && npm ci && npm run dev
 ```
 
 - 服务端：`http://localhost:3002`
@@ -43,12 +43,12 @@ cd brave-sync-notes/client && npm ci && npm run dev
 
 | 文档 | 说明 |
 |------|------|
-| [快速入门指南](./getting-started.md) | 详细的安装和设置指南 |
-| [架构说明](./architecture.md) | 系统设计与模块关系 |
-| [部署指南](./deployment.md) | 生产环境部署与配置 |
-| [安全与同步机制](./security-sync.md) | 加密边界与同步流程 |
-| [贡献指南](./contributing.md) | 开发流程与规范 |
-| [API 参考](../api/) | WebSocket 和 REST API 文档 |
+| [快速入门指南](./getting-started) | 详细的安装和设置指南 |
+| [架构说明](./architecture) | 系统设计与模块关系 |
+| [部署指南](./deployment) | 生产环境部署与配置 |
+| [安全与同步机制](./security-sync) | 加密边界与同步流程 |
+| [贡献指南](./contributing) | 开发流程与规范 |
+| [API 参考](/api/) | WebSocket 和 REST API 文档 |
 
 ---
 
@@ -84,23 +84,23 @@ cd brave-sync-notes/client && npm ci && npm run dev
 
 ### 我想运行项目
 
-1. [仓库概览](../../README.md) → 了解项目
-2. [快速入门指南](./getting-started.md) → 本地开发设置
+1. [仓库概览](https://github.com/LessUp/brave-sync-notes) → 了解项目
+2. [快速入门指南](./getting-started) → 本地开发设置
 
 ### 我想理解架构
 
-1. [架构说明](./architecture.md) → 系统设计
-2. [安全与同步机制](./security-sync.md) → 加密与同步详情
+1. [架构说明](./architecture) → 系统设计
+2. [安全与同步机制](./security-sync) → 加密与同步详情
 
 ### 我想部署到生产环境
 
-1. [部署指南](./deployment.md) → 生产环境配置
-2. [API 参考](../api/) → 集成详情
+1. [部署指南](./deployment) → 生产环境配置
+2. [API 参考](/api/) → 集成详情
 
 ### 我想参与贡献
 
-1. [贡献指南](./contributing.md) → 开发规范
-2. [更新日志](../../changelog/) → 版本历史
+1. [贡献指南](./contributing) → 开发规范
+2. [更新日志](/changelog/) → 版本历史
 
 ---
 
@@ -123,9 +123,9 @@ brave-sync-notes/
 │   ├── en/                   # 英文文档
 │   ├── zh-CN/                # 中文文档
 │   └── api/                  # API 文档
-├── brave-sync-notes/
-│   ├── client/               # React + Vite 前端
-│   └── server/               # Express + Socket.IO 后端
+├── apps/
+│   ├── web/                  # React + Vite 前端
+│   └── api/                  # Express + Socket.IO 后端
 ├── changelog/                 # 版本历史
 ├── README.md                  # 主仓库入口
 └── _config.yml               # Jekyll 配置
@@ -135,7 +135,7 @@ brave-sync-notes/
 
 ## 📄 许可证
 
-[MIT License](../../LICENSE)
+[MIT License](https://github.com/LessUp/brave-sync-notes/blob/main/LICENSE)
 
 ---
 

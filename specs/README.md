@@ -17,23 +17,34 @@ specs/
 
 ### Product Requirements
 
-- [Note Sync System](./product/note-sync-system.md) - Core product requirements, user stories, and acceptance criteria
+| Document | Status | Description |
+|----------|--------|-------------|
+| [Note Sync System](./product/note-sync-system.md) | Active | Core product requirements, user stories, and acceptance criteria |
 
 ### Technical Design (RFCs)
 
-- [RFC 0001: Core Architecture](./rfc/0001-core-architecture.md) - System architecture, data flow, and component design
+| RFC | Status | Description |
+|-----|--------|-------------|
+| [RFC 0001: Core Architecture](./rfc/0001-core-architecture.md) | Accepted | System architecture, data flow, and component design |
+| [RFC 0002: Comprehensive Refactor](./rfc/0002-comprehensive-refactor.md) | Active | Integration of storage, conflict management, offline queue, and multi-note support |
 
 ### API Specifications
 
-- [WebSocket API](./api/websocket-api.yaml) - Socket.IO events and payloads for real-time synchronization
+| Document | Status | Description |
+|----------|--------|-------------|
+| [WebSocket API](./api/websocket-api.yaml) | Active | Socket.IO events and payloads for real-time synchronization |
 
 ### Database Schema
 
-- [Schema v1](./db/schema-v1.dbml) - Server-side persistence layer data model
+| Document | Status | Description |
+|----------|--------|-------------|
+| [Schema v1](./db/schema-v1.dbml) | Active | Server-side persistence layer data model |
 
 ### Testing
 
-- [Testing Strategy](./testing/test-strategy.md) - Test frameworks, coverage targets, and correctness properties
+| Document | Status | Description |
+|----------|--------|-------------|
+| [Testing Strategy](./testing/test-strategy.md) | Active | Test frameworks, coverage targets, and correctness properties |
 
 ## Workflow
 
@@ -56,10 +67,61 @@ When creating new specs:
 4. Use tables, code blocks, and diagrams where helpful
 5. Follow naming conventions:
    - Product specs: `feature-name.md`
-   - RFCs: `NNNN-short-description.md` (e.g., `0002-oauth2-implementation.md`)
+   - RFCs: `NNNN-short-description.md` (e.g., `0003-pwa-support.md`)
    - API specs: Descriptive names with `.yaml` or `.md` extension
    - DB specs: `schema-version.dbml`
 
-## Archive
+## RFC Naming Convention
 
-Historical specification documents from the old `.kiro` directory have been migrated to this structure. The original files in `.kiro/specs/` are kept for reference but should not be used as the source of truth.
+RFCs are numbered sequentially and should follow this format:
+
+```
+NNNN-short-description.md
+```
+
+Where:
+- `NNNN` is a 4-digit zero-padded number (0001, 0002, etc.)
+- `short-description` is a kebab-case summary of the RFC topic
+
+## Spec Statuses
+
+| Status | Description |
+|--------|-------------|
+| Draft | Work in progress, not yet approved |
+| Active | Approved and currently in effect |
+| Accepted | Approved and implemented |
+| Deprecated | Superseded by newer specs, kept for reference |
+| Rejected | Not approved, kept for historical record |
+
+## Relationship Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    specs/ (Single Source of Truth)          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
+│  │  product/   │───►│    rfc/     │───►│    api/     │     │
+│  │  (What)     │    │  (How)      │    │ (Interface) │     │
+│  └─────────────┘    └─────────────┘    └─────────────┘     │
+│         │                  │                  │             │
+│         │                  ▼                  │             │
+│         │           ┌─────────────┐           │             │
+│         └──────────►│    db/      │◄──────────┘             │
+│                     │  (Storage)  │                         │
+│                     └─────────────┘                         │
+│                           │                                 │
+│                           ▼                                 │
+│                     ┌─────────────┐                         │
+│                     │  testing/   │                         │
+│                     │ (Verify)    │                         │
+│                     └─────────────┘                         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Quick Links
+
+- [AGENTS.md](../AGENTS.md) - AI Agent workflow configuration
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
+- [docs/](../docs/) - User and developer documentation

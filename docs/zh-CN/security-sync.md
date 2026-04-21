@@ -21,9 +21,9 @@ Note Sync Now 的核心价值不只是“实时同步”，而是“在不把明
 - 本地历史记录与状态更新
 
 相关代码：
-- `brave-sync-notes/client/src/hooks/useSocket.js`
-- `brave-sync-notes/client/src/utils/crypto`
-- `brave-sync-notes/client/src/store/useStore.js`
+- `apps/web/src/hooks/useSocket.js`
+- `apps/web/src/utils/crypto`
+- `apps/web/src/store/useStore.js`
 
 ### 服务端负责
 
@@ -34,9 +34,9 @@ Note Sync Now 的核心价值不只是“实时同步”，而是“在不把明
 - 健康检查与统计信息
 
 相关代码：
-- `brave-sync-notes/server/index.js`
-- `brave-sync-notes/server/src/persistence/PersistenceAdapter.js`
-- `brave-sync-notes/server/src/persistence/PersistenceManager.js`
+- `apps/api/index.js`
+- `apps/api/src/persistence/PersistenceAdapter.js`
+- `apps/api/src/persistence/PersistenceManager.js`
 
 服务端不负责明文编辑逻辑，也不应依赖客户端内容语义来进行协作处理。
 
@@ -87,7 +87,7 @@ Note Sync Now 的核心价值不只是“实时同步”，而是“在不把明
 
 这部分逻辑的核心入口在：
 - `brave-sync-notes/client/src/hooks/useSocket.js`
-- `brave-sync-notes/client/src/utils/conflict`
+- `apps/web/src/utils/conflict`
 
 ## 服务端防护边界
 

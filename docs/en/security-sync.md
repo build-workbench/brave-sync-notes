@@ -24,9 +24,9 @@ The system follows the principle of "client-side encryption, server-side ciphert
 - Local history and state updates
 
 Related code:
-- `brave-sync-notes/client/src/hooks/useSocket.js`
-- `brave-sync-notes/client/src/utils/crypto`
-- `brave-sync-notes/client/src/store/useStore.js`
+- `apps/web/src/hooks/useSocket.js`
+- `apps/web/src/utils/crypto`
+- `apps/web/src/store/useStore.js`
 
 ### Server Responsibilities
 
@@ -37,9 +37,9 @@ Related code:
 - Health checks and statistics
 
 Related code:
-- `brave-sync-notes/server/index.js`
-- `brave-sync-notes/server/src/persistence/PersistenceAdapter.js`
-- `brave-sync-notes/server/src/persistence/PersistenceManager.js`
+- `apps/api/index.js`
+- `apps/api/src/persistence/PersistenceAdapter.js`
+- `apps/api/src/persistence/PersistenceManager.js`
 
 The server does not handle plaintext editing logic and should not rely on client content semantics for collaboration processing.
 
@@ -130,7 +130,7 @@ The current implementation is not simply "last write wins." The client integrate
 
 Core entry points:
 - `brave-sync-notes/client/src/hooks/useSocket.js`
-- `brave-sync-notes/client/src/utils/conflict`
+- `apps/web/src/utils/conflict`
 
 ### Conflict Resolution Flow
 
@@ -300,12 +300,12 @@ Next priorities for security and sync enhancement:
 ## Recommended Reading Order
 
 1. [Documentation Home](../)
-2. [Quick Start Guide](../getting-started.md)
-3. [Architecture Overview](./architecture.md)
+2. [Quick Start Guide](./getting-started)
+3. [Architecture Overview](./architecture)
 4. Current page: Security & Synchronization
-5. [Deployment Guide](./deployment.md)
-6. [Contributing Guide](./contributing.md)
-7. [Changelog](../../changelog/)
+5. [Deployment Guide](./deployment)
+6. [Contributing Guide](./contributing)
+7. [Changelog](/changelog/)
 
 ---
 

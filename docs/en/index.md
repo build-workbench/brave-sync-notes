@@ -8,9 +8,9 @@ lang: en
 
 # Note Sync Now Documentation
 
-[![GitHub Pages](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml)
+[![GitHub Pages](https://github.com/LessUp/brave-sync-notes/actions/workflows/docs.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/docs.yml)
 [![CI](https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml/badge.svg)](https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../../LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/LessUp/brave-sync-notes/blob/main/LICENSE)
 
 **End-to-End Encryption** | **Real-time Sync** | **Multi-Device Collaboration** | **No Account Required**
 
@@ -26,10 +26,10 @@ lang: en
 
 ```bash
 # Start the server
-cd brave-sync-notes/server && npm ci && node index.js
+cd apps/api && npm ci && node index.js
 
 # Start the client (another terminal)
-cd brave-sync-notes/client && npm ci && npm run dev
+cd apps/web && npm ci && npm run dev
 ```
 
 - Server: `http://localhost:3002`
@@ -43,12 +43,12 @@ For detailed setup instructions, see [Getting Started](./getting-started.md).
 
 | Document | Description |
 |----------|-------------|
-| [Getting Started](./getting-started.md) | Detailed installation and setup guide |
-| [Architecture Overview](./architecture.md) | System design and module relationships |
-| [Deployment Guide](./deployment.md) | Production deployment and configuration |
-| [Security & Synchronization](./security-sync.md) | Encryption boundaries and sync mechanisms |
-| [Contributing Guide](./contributing.md) | Development workflow and standards |
-| [API Reference](../api/) | WebSocket and REST API documentation |
+| [Getting Started](./getting-started) | Detailed installation and setup guide |
+| [Architecture Overview](./architecture) | System design and module relationships |
+| [Deployment Guide](./deployment) | Production deployment and configuration |
+| [Security & Synchronization](./security-sync) | Encryption boundaries and sync mechanisms |
+| [Contributing Guide](./contributing) | Development workflow and standards |
+| [API Reference](/api/) | WebSocket and REST API documentation |
 
 ---
 
@@ -84,23 +84,23 @@ For detailed setup instructions, see [Getting Started](./getting-started.md).
 
 ### I Want to Run the Project
 
-1. [Repository Overview](../../README.md) → Understand the project
-2. [Getting Started](./getting-started.md) → Local development setup
+1. [Repository Overview](https://github.com/LessUp/brave-sync-notes) → Understand the project
+2. [Getting Started](./getting-started) → Local development setup
 
 ### I Want to Understand the Architecture
 
-1. [Architecture Overview](./architecture.md) → System design
-2. [Security & Synchronization](./security-sync.md) → Encryption and sync details
+1. [Architecture Overview](./architecture) → System design
+2. [Security & Synchronization](./security-sync) → Encryption and sync details
 
 ### I Want to Deploy to Production
 
-1. [Deployment Guide](./deployment.md) → Production configuration
-2. [API Reference](../api/) → Integration details
+1. [Deployment Guide](./deployment) → Production configuration
+2. [API Reference](/api/) → Integration details
 
 ### I Want to Contribute
 
-1. [Contributing Guide](./contributing.md) → Development standards
-2. [Changelog](../../changelog/) → Version history
+1. [Contributing Guide](./contributing) → Development standards
+2. [Changelog](/changelog/) → Version history
 
 ---
 
@@ -123,9 +123,9 @@ brave-sync-notes/
 │   ├── en/                   # English documentation
 │   ├── zh-CN/                # Chinese documentation
 │   └── api/                  # API documentation
-├── brave-sync-notes/
-│   ├── client/               # React + Vite frontend
-│   └── server/               # Express + Socket.IO backend
+├── apps/
+│   ├── web/                  # React + Vite frontend
+│   └── api/                  # Express + Socket.IO backend
 ├── changelog/                 # Version history
 ├── README.md                  # Main repository entry
 └── _config.yml               # Jekyll configuration
@@ -135,7 +135,7 @@ brave-sync-notes/
 
 ## 📄 License
 
-[MIT License](../../LICENSE)
+[MIT License](https://github.com/LessUp/brave-sync-notes/blob/main/LICENSE)
 
 ---
 

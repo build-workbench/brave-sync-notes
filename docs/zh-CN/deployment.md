@@ -14,7 +14,7 @@ permalink: /deployment/
 ### 服务端
 
 ```bash
-cd brave-sync-notes/server
+cd apps/api
 npm ci
 node index.js
 ```
@@ -36,16 +36,16 @@ node index.js
 - `MAX_MEMORY_ROOMS`
 
 关键入口：
-- `brave-sync-notes/server/index.js`
-- `brave-sync-notes/server/start-local.sh`
-- `brave-sync-notes/server/.env.example`
+- `apps/api/index.js`
+- `apps/api/start-local.sh`
+- `apps/api/.env.example`
 
 `start-local.sh` 现在要求依赖已提前安装，并默认以 `NODE_ENV=development` 启动；未显式设置 `CORS_ORIGIN` 时会使用 `http://localhost:5173` 作为本地开发默认值。为避免本地启动时卡在 Redis 连接，它还会默认将 `PRIMARY_STORAGE` 与 `FALLBACK_STORAGE` 设为 `sqlite`。
 
 ### 客户端
 
 ```bash
-cd brave-sync-notes/client
+cd apps/web
 npm ci
 npm run dev
 ```
@@ -54,8 +54,8 @@ npm run dev
 
 关键配置：
 - `VITE_SOCKET_URL`（开发环境可省略，生产环境必须显式设置）
-- `brave-sync-notes/client/vite.config.js`
-- `brave-sync-notes/client/package.json`
+- `apps/web/vite.config.js`
+- `apps/web/package.json`
 
 本地开发时，客户端在未设置 `VITE_SOCKET_URL` 时会回退到 `http://localhost:3002`；非开发环境必须显式提供该变量，避免静默连接到错误地址。
 
@@ -101,14 +101,14 @@ Pages 主要用于：
 建议本地至少执行以下命令：
 
 ```bash
-cd brave-sync-notes/client && npm ci && npm test -- --run && npm run build
-cd ../server && npm ci && npm test
+cd apps/web && npm ci && npm test -- --run && npm run build
+cd ../api && npm ci && npm test
 ```
 
 如果修改了同步、持久化或验证逻辑，建议额外执行：
 
 ```bash
-cd brave-sync-notes/server && npm run test:property
+cd apps/api && npm run test:property
 ```
 
 ## 修改部署 / workflow 时的检查点

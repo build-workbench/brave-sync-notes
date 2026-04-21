@@ -1,0 +1,21 @@
+# Global fallback - requires review from at least one maintainer
+* @LessUp
+
+# Documentation
+/docs/ @LessUp
+*.md @LessUp
+
+# Client-side code (Web App)
+/apps/web/ @LessUp
+
+# Server-side code (API)
+/apps/api/ @LessUp
+
+# Specifications
+/specs/ @LessUp
+
+# CI/CD and GitHub configurations
+/.github/ @LessUp
+
+# Package configurations
+package*.json @LessUp

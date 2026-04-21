@@ -1,19 +1,14 @@
 import { defineConfig } from 'vitepress'
 
-// https://vitepress.dev/reference/site-config
 export default defineConfig({
-  // Site Metadata
   title: 'Note Sync Now',
   titleTemplate: ':title | Note Sync Now',
   description: 'End-to-end encrypted note synchronization - Real-time collaboration and multi-device sync',
   
-  // Clean URLs
   cleanUrls: true,
   
-  // Base URL for GitHub Pages
   base: '/brave-sync-notes/',
   
-  // Head - SEO & Meta
   head: [
     ['meta', { charset: 'UTF-8' }],
     ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }],
@@ -22,23 +17,19 @@ export default defineConfig({
     ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }],
     
-    // Open Graph
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:locale', content: 'en_US' }],
     ['meta', { property: 'og:site_name', content: 'Note Sync Now' }],
     ['meta', { property: 'og:image', content: 'https://lessup.github.io/brave-sync-notes/og-image.png' }],
     
-    // Twitter Card
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:site', content: '@LessUp' }],
     ['meta', { name: 'twitter:image', content: 'https://lessup.github.io/brave-sync-notes/og-image.png' }],
     
-    // Fonts
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     ['link', { href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap', rel: 'stylesheet' }],
     
-    // Structured Data
     ['script', { type: 'application/ld+json' }, JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
@@ -53,7 +44,6 @@ export default defineConfig({
     })]
   ],
   
-  // Last Updated
   lastUpdated: {
     text: 'Last updated',
     formatOptions: {
@@ -62,7 +52,6 @@ export default defineConfig({
     }
   },
   
-  // Markdown Settings
   markdown: {
     theme: {
       light: 'github-light',
@@ -71,19 +60,16 @@ export default defineConfig({
     lineNumbers: true
   },
 
-  // Ignore dead links during build to prevent build failures
-  // TODO: Fix these dead links in a future PR
-  ignoreDeadLinks: true,
+  ignoreDeadLinks: [
+    'http://localhost:5173',
+    'http://localhost:3002'
+  ],
   
-  // Theme Configuration
   themeConfig: {
-    // Logo
     logo: '/logo.svg',
     
-    // Site Title
     siteTitle: 'Note Sync Now',
     
-    // Navigation
     nav: [
       { text: 'Guide', link: '/en/getting-started', activeMatch: '/en/' },
       { text: 'API', link: '/api/websocket-api', activeMatch: '/api/' },
@@ -98,7 +84,6 @@ export default defineConfig({
       }
     ],
     
-    // Sidebar for English docs
     sidebar: {
       '/en/': [
         {
@@ -175,36 +160,29 @@ export default defineConfig({
       ]
     },
     
-    // Social Links
     socialLinks: [
       { icon: 'github', link: 'https://github.com/LessUp/brave-sync-notes' }
     ],
     
-    // Search Configuration
     search: {
       provider: 'local'
     },
     
-    // Footer
     footer: {
       message: 'Released under the MIT License.',
       copyright: 'Copyright © 2026 LessUp'
     },
     
-    // Outline
     outline: {
       level: [2, 4],
       label: 'On this page'
     },
     
-    // Dark mode switch
     darkModeSwitchLabel: 'Appearance',
     
-    // External link icon
     externalLinkIcon: true
   },
   
-  // Vite Configuration
   vite: {
     css: {
       devSourcemap: true

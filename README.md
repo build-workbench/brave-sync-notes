@@ -80,10 +80,10 @@ git clone https://github.com/LessUp/brave-sync-notes.git
 cd brave-sync-notes
 
 # 2. Start the server
-cd brave-sync-notes/server && npm ci && node index.js
+cd apps/api && npm ci && node index.js
 
 # 3. Start the client (new terminal)
-cd brave-sync-notes/client && npm ci && npm run dev
+cd apps/web && npm ci && npm run dev
 ```
 
 **Access the application:**
@@ -179,24 +179,24 @@ For detailed architecture, see [Architecture Documentation](./docs/en/architectu
 
 ```bash
 # Client tests
-cd brave-sync-notes/client && npm test -- --run
+cd apps/web && npm test -- --run
 
 # Server tests
-cd brave-sync-notes/server && npm test
+cd apps/api && npm test
 
 # Property-based tests
-cd brave-sync-notes/server && npm run test:property
+cd apps/api && npm run test:property
 ```
 
 ### Project Structure
 
 ```
 brave-sync-notes/
-├── brave-sync-notes/
-│   ├── client/          # React + Vite frontend
+├── apps/
+│   ├── web/             # React + Vite frontend
 │   │   ├── src/         # Source code
 │   │   └── tests/       # Test files
-│   └── server/          # Express + Socket.IO backend
+│   └── api/             # Express + Socket.IO backend
 │       ├── src/         # Source code
 │       └── tests/       # Test files
 ├── docs/                # Documentation (EN/ZH)

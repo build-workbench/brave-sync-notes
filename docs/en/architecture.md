@@ -24,12 +24,12 @@ Note Sync Now consists of a React + Vite client, an Express + Socket.IO server, 
 - **Local storage**: Handles IndexedDB / LocalStorage capabilities
 
 Key files:
-- `brave-sync-notes/client/src/App.jsx`
-- `brave-sync-notes/client/src/hooks/useSocket.js`
-- `brave-sync-notes/client/src/store/useStore.js`
-- `brave-sync-notes/client/src/utils/crypto`
-- `brave-sync-notes/client/src/utils/conflict`
-- `brave-sync-notes/client/src/utils/storage`
+- `apps/web/src/App.jsx`
+- `apps/web/src/hooks/useSocket.js`
+- `apps/web/src/store/useStore.js`
+- `apps/web/src/utils/crypto`
+- `apps/web/src/utils/conflict`
+- `apps/web/src/utils/storage`
 
 ### Server Layer
 
@@ -40,9 +40,9 @@ Key files:
 - **In-memory Map**: Fallback storage when other options are unavailable
 
 Key files:
-- `brave-sync-notes/server/index.js`
-- `brave-sync-notes/server/src/persistence/PersistenceManager.js`
-- `brave-sync-notes/server/src/persistence/PersistenceAdapter.js`
+- `apps/api/index.js`
+- `apps/api/src/persistence/PersistenceManager.js`
+- `apps/api/src/persistence/PersistenceAdapter.js`
 
 ---
 
@@ -180,12 +180,12 @@ Based on the existing design documentation and code implementation, this project
 ## Recommended Reading Order
 
 1. [Documentation Home](../)
-2. [Quick Start Guide](../getting-started.md)
+2. [Quick Start Guide](./getting-started)
 3. Current page: Architecture Overview
-4. [Deployment Guide](./deployment.md)
-5. [Security & Synchronization](./security-sync.md)
-6. [Contributing Guide](./contributing.md)
-7. [Changelog](../../changelog/)
+4. [Deployment Guide](./deployment)
+5. [Security & Synchronization](./security-sync)
+6. [Contributing Guide](./contributing)
+7. [Changelog](/changelog/)
 
 ---
 

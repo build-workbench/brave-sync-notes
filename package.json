@@ -1,0 +1,57 @@
+{
+  "name": "brave-sync-notes",
+  "version": "2.2.0",
+  "private": true,
+  "description": "End-to-End Encrypted Note Synchronization System - Monorepo",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LessUp/brave-sync-notes.git"
+  },
+  "author": "LessUp <https://github.com/LessUp>",
+  "license": "MIT",
+  "keywords": [
+    "notes",
+    "sync",
+    "encryption",
+    "websocket",
+    "real-time",
+    "collaboration"
+  ],
+  "scripts": {
+    "install:all": "npm run install:web && npm run install:api && npm run install:docs",
+    "install:web": "cd apps/web && npm ci",
+    "install:api": "cd apps/api && npm ci",
+    "install:docs": "cd docs && npm ci",
+    "dev:web": "cd apps/web && npm run dev",
+    "dev:api": "cd apps/api && npm run dev",
+    "dev:docs": "cd docs && npm run dev",
+    "build": "npm run build:web && npm run build:api && npm run build:docs",
+    "build:web": "cd apps/web && npm run build",
+    "build:api": "cd apps/api && npm run build || true",
+    "build:docs": "cd docs && npm run build",
+    "test": "npm run test:web && npm run test:api",
+    "test:web": "cd apps/web && npm test -- --run",
+    "test:api": "cd apps/api && npm test",
+    "test:property": "cd apps/api && npm run test:property",
+    "lint": "npm run lint:web && npm run lint:api",
+    "lint:web": "cd apps/web && npm run lint",
+    "lint:api": "cd apps/api && npm run lint",
+    "lint:fix": "npm run lint:fix:web && npm run lint:fix:api",
+    "lint:fix:web": "cd apps/web && npm run lint:fix",
+    "lint:fix:api": "cd apps/api && npm run lint:fix",
+    "format": "npm run format:web && npm run format:api",
+    "format:web": "cd apps/web && npm run format",
+    "format:api": "cd apps/api && npm run format",
+    "clean": "npm run clean:web && npm run clean:api && npm run clean:docs",
+    "clean:web": "cd apps/web && rm -rf node_modules dist coverage",
+    "clean:api": "cd apps/api && rm -rf node_modules coverage",
+    "clean:docs": "cd docs && rm -rf node_modules .vitepress/dist",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  }
+}

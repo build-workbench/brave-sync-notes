@@ -17,7 +17,7 @@ This guide covers how to run Note Sync Now locally, in production, and key confi
 ### Server Setup
 
 ```bash
-cd brave-sync-notes/server
+cd apps/api
 npm ci
 node index.js
 ```
@@ -41,16 +41,16 @@ Default port: `3002`
 | `MAX_MEMORY_ROOMS` | Maximum number of rooms in memory | `10000` |
 
 Key entry points:
-- `brave-sync-notes/server/index.js`
-- `brave-sync-notes/server/start-local.sh`
-- `brave-sync-notes/server/.env.example`
+- `apps/api/index.js`
+- `apps/api/start-local.sh`
+- `apps/api/.env.example`
 
 The `start-local.sh` script requires dependencies to be pre-installed and starts with `NODE_ENV=development` by default. If `CORS_ORIGIN` is not explicitly set, it uses `http://localhost:5173` as the local development default. To avoid blocking on Redis connection, it defaults both `PRIMARY_STORAGE` and `FALLBACK_STORAGE` to `sqlite`.
 
 ### Client Setup
 
 ```bash
-cd brave-sync-notes/client
+cd apps/web
 npm ci
 npm run dev
 ```
@@ -64,8 +64,8 @@ Default development address: `http://localhost:5173`
 | `VITE_SOCKET_URL` | WebSocket server URL | `http://localhost:3002` (dev only) |
 
 Key files:
-- `brave-sync-notes/client/vite.config.js`
-- `brave-sync-notes/client/package.json`
+- `apps/web/vite.config.js`
+- `apps/web/package.json`
 
 In local development, if `VITE_SOCKET_URL` is not set, the client falls back to `http://localhost:3002`. In non-development environments, this variable must be explicitly provided to avoid silently connecting to the wrong address.
 
@@ -118,7 +118,7 @@ services:
       - redis-data:/data
 
   server:
-    build: ./brave-sync-notes/server
+    build: ./apps/api
     restart: unless-stopped
     environment:
       - NODE_ENV=production
@@ -197,13 +197,13 @@ bundle exec jekyll serve
 
 ```bash
 # Client tests and build
-cd brave-sync-notes/client && npm ci && npm test -- --run && npm run build
+cd apps/web && npm ci && npm test -- --run && npm run build
 
 # Server tests
-cd ../server && npm ci && npm test
+cd ../api && npm ci && npm test
 
 # Property-based tests (recommended for sync/persistence changes)
-cd ../server && npm run test:property
+cd ../api && npm run test:property
 ```
 
 ### CI/CD Pipeline
@@ -273,11 +273,11 @@ Verify:
 ## Recommended Reading Order
 
 1. [Documentation Home](../)
-2. [Quick Start Guide](../getting-started.md)
-3. [Architecture Overview](./architecture.md)
+2. [Quick Start Guide](./getting-started)
+3. [Architecture Overview](./architecture)
 4. Current page: Deployment Guide
-5. [Security & Synchronization](./security-sync.md)
-6. [Contributing Guide](./contributing.md)
+5. [Security & Synchronization](./security-sync)
+6. [Contributing Guide](./contributing)
 
 ---
 

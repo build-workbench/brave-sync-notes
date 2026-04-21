@@ -113,13 +113,13 @@ git checkout -b fix/bug-描述
 
 ```bash
 # 客户端验证
-cd brave-sync-notes/client
+cd apps/web
 npm ci
 npm test -- --run
 npm run build
 
 # 服务端验证
-cd ../server
+cd ../api
 npm ci
 npm test
 
@@ -129,7 +129,7 @@ npm run test:property
 
 ### 5. 更新更新日志
 
-每个变更集都应包含更新日志条目。参见[更新日志更新指南](../changelog/README.md)。
+每个变更集都应包含更新日志条目。参见[更新日志](/changelog/)。
 
 ### 6. 提交 Pull Request
 
@@ -144,8 +144,8 @@ npm run test:property
 
 ```
 brave-sync-notes/
-├── brave-sync-notes/
-│   ├── client/               # React + Vite 前端
+├── apps/
+│   ├── web/                  # React + Vite 前端
 │   │   ├── src/
 │   │   │   ├── components/  # React 组件
 │   │   │   ├── hooks/       # 自定义 React hooks
@@ -153,7 +153,7 @@ brave-sync-notes/
 │   │   │   └── utils/       # 工具函数
 │   │   ├── tests/           # 测试文件
 │   │   └── package.json
-│   └── server/               # Express + Socket.IO 后端
+│   └── api/                  # Express + Socket.IO 后端
 │       ├── src/
 │       │   └── persistence/ # 存储适配器
 │       ├── tests/           # 测试文件
@@ -177,12 +177,12 @@ brave-sync-notes/
 
 ```bash
 # 终端 1：启动服务端
-cd brave-sync-notes/server
+cd apps/api
 npm ci
 node index.js
 
 # 终端 2：启动客户端
-cd brave-sync-notes/client
+cd apps/web
 npm ci
 npm run dev
 ```

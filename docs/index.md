@@ -104,10 +104,10 @@ git clone https://github.com/LessUp/brave-sync-notes.git
 cd brave-sync-notes
 
 # Start server
-cd brave-sync-notes/server && npm ci && node index.js
+cd apps/api && npm ci && node index.js
 
 # Start client (new terminal)
-cd brave-sync-notes/client && npm ci && npm run dev
+cd apps/web && npm ci && npm run dev
 ```
 
 That's it! Open [http://localhost:5173](http://localhost:5173) in your browser.

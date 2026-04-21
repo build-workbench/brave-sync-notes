@@ -9,7 +9,8 @@ All technical and product specifications are in the `/specs` directory:
 | Document | Description |
 |----------|-------------|
 | [Product Requirements](./specs/product/note-sync-system.md) | Feature definitions, user stories, and acceptance criteria |
-| [Core Architecture](./specs/rfc/0001-core-architecture.md) | System architecture, data flow, and component design |
+| [Core Architecture (RFC 0001)](./specs/rfc/0001-core-architecture.md) | System architecture, data flow, and component design |
+| [Comprehensive Refactor (RFC 0002)](./specs/rfc/0002-comprehensive-refactor.md) | Storage integration, offline mode, multi-note support |
 | [WebSocket API](./specs/api/websocket-api.yaml) | Socket.IO events and payloads |
 | [Database Schema](./specs/db/schema-v1.dbml) | Server-side persistence data model |
 | [Testing Strategy](./specs/testing/test-strategy.md) | Test frameworks and correctness properties |
@@ -20,15 +21,19 @@ All technical and product specifications are in the `/specs` directory:
 
 ### Quick Start
 
-- [README.md](./README.md) - Project overview and quick start
+- [README.md](./README.md) - Project overview and quick start (English)
+- [README.zh-CN.md](./README.zh-CN.md) - 项目概述和快速开始 (中文)
 - [Getting Started](./docs/en/getting-started.md) - Installation and setup
   - [中文版](./docs/zh-CN/getting-started.md)
 
 ### Architecture & Design
 
-- [Architecture](./architecture.md) - System boundary and core modules
-- [Security & Sync](./security-sync.md) - Encryption and synchronization details
-- [Deployment](./deployment.md) - Production deployment guide
+- [Architecture](./docs/en/architecture.md) - System boundary and core modules
+  - [中文版](./docs/zh-CN/architecture.md)
+- [Security & Sync](./docs/en/security-sync.md) - Encryption and synchronization details
+  - [中文版](./docs/zh-CN/security-sync.md)
+- [Deployment](./docs/en/deployment.md) - Production deployment guide
+  - [中文版](./docs/zh-CN/deployment.md)
 
 ### Contributing
 
@@ -37,9 +42,9 @@ All technical and product specifications are in the `/specs` directory:
 
 ### Releases
 
-- [CHANGELOG.md](./CHANGELOG.md) - Version history
+- [CHANGELOG.md](./CHANGELOG.md) - Version history (English)
   - [中文版](./CHANGELOG.zh-CN.md)
-- [Release Notes v2.2.0](./RELEASE_NOTES_v2.2.0.md)
+- [Changelog Directory](./changelog/) - Detailed release notes
 
 ## 🤖 For AI Agents
 
@@ -52,15 +57,29 @@ If you're an AI assistant working on this project, read [AGENTS.md](./AGENTS.md)
 
 ## 📁 Documentation Directories
 
-- `/specs/` - Technical and product specifications
-- `/docs/` - User guides, tutorials, and supplementary docs
-  - `/docs/setup/` - Environment setup guides
-  - `/docs/tutorials/` - User tutorials
-  - `/docs/architecture/` - High-level architecture
-  - `/docs/assets/` - Images and static resources
-  - `/docs/en/` - English documentation (legacy)
-  - `/docs/zh-CN/` - Chinese documentation (legacy)
-  - `/docs/api/` - API reference documentation
+```
+brave-sync-notes/
+├── specs/                  # 📋 Specifications (Single Source of Truth)
+│   ├── product/            # Product requirements
+│   ├── rfc/                # Technical design documents (RFCs)
+│   ├── api/                # API interface definitions
+│   ├── db/                 # Database schema definitions
+│   └── testing/            # Testing strategy
+├── docs/                   # 📚 User & Developer Guides
+│   ├── en/                 # English documentation
+│   ├── zh-CN/              # Chinese documentation
+│   ├── api/                # API reference
+│   ├── setup/              # Setup guides
+│   ├── tutorials/          # Tutorials
+│   └── architecture/       # Architecture docs
+├── changelog/              # 📜 Version history
+│   ├── en/                 # English changelog
+│   └── zh-CN/              # Chinese changelog
+├── AGENTS.md               # 🤖 AI Agent configuration
+├── CONTRIBUTING.md         # 🤝 Contributing guide
+├── README.md               # 📖 Project overview (English)
+└── README.zh-CN.md         # 📖 项目概述 (中文)
+```
 
 ## 🌐 External Resources
 

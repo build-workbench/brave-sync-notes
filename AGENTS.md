@@ -1,6 +1,4 @@
-# AI Agent Configuration - Note Sync Now
-
-## Project Philosophy: Spec-Driven Development (SDD)
+# Project Philosophy: Spec-Driven Development (SDD)
 
 This project strictly follows the **Spec-Driven Development (SDD)** paradigm. All code implementations must use the specification documents in the `/specs` directory as the Single Source of Truth.
 
@@ -18,12 +16,12 @@ When you (the AI) are asked to develop a new feature, modify an existing feature
 
 ### Step 1: Review Specs
 
-- First, read the relevant documents in the `/specs` directory (product specs, RFCs, and API definitions).
+- Before writing any code, first read the relevant documents in the `/specs` directory (product specs, RFCs, and API definitions).
 - If the user's request conflicts with the existing specs, **immediately stop coding** and point out the conflict, asking the user whether to update the specs first.
 
 ### Step 2: Spec-First Update
 
-- If this is a new feature, or if it requires changes to existing interfaces/database structures, **you must first propose modifying or creating the corresponding spec documents** (e.g., API specs, RFC documents, or product specs).
+- If this is a new feature, or if it requires changes to existing interfaces/database structures, **you must first propose modifying or creating the corresponding spec documents** (e.g., `openapi.yaml` or RFC documents).
 - Wait for user confirmation of the spec modifications before proceeding to the code implementation phase.
 
 ### Step 3: Implementation
@@ -39,8 +37,8 @@ When you (the AI) are asked to develop a new feature, modify an existing feature
 
 ## Code Generation Rules
 
-- Any API changes exposed externally must synchronize modifications to `/specs/api/`.
-- Any database schema changes must synchronize modifications to `/specs/db/`.
+- Any API changes exposed externally must synchronize modifications to `/specs/api/websocket-api.yaml`.
+- Any database schema changes must synchronize modifications to `/specs/db/schema-v1.dbml`.
 - If uncertain about technical details, consult the architectural conventions in `/specs/rfc/`. Do not invent design patterns on your own.
 - All new features must have corresponding product spec in `/specs/product/`.
 
@@ -91,12 +89,12 @@ When you (the AI) are asked to develop a new feature, modify an existing feature
 
 ### Key Files
 
-- Client entry: `brave-sync-notes/client/src/App.jsx`
-- Socket hook: `brave-sync-notes/client/src/hooks/useSocket.js`
-- State store: `brave-sync-notes/client/src/store/useStore.js`
-- Crypto module: `brave-sync-notes/client/src/utils/crypto`
-- Server entry: `brave-sync-notes/server/index.js`
-- Persistence manager: `brave-sync-notes/server/src/persistence/PersistenceManager.js`
+- Client entry: `apps/web/src/App.jsx`
+- Socket hook: `apps/web/src/hooks/useSocket.js`
+- State store: `apps/web/src/store/useStore.js`
+- Crypto module: `apps/web/src/utils/crypto`
+- Server entry: `apps/api/index.js`
+- Persistence manager: `apps/api/src/persistence/PersistenceManager.js`
 
 ### Important Specs
 

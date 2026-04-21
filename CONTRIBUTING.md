@@ -24,13 +24,24 @@ Thank you for your interest in contributing.
 
 ### Spec-Driven Development
 
-This project follows Spec-Driven Development (SDD). Before writing code:
+This project follows **Spec-Driven Development (SDD)**. Before writing code:
 
 1. **Review existing specs**: Check `/specs` directory for relevant product requirements, RFCs, and API definitions.
 2. **Update specs first**: If introducing new features or changing interfaces, update the relevant spec documents first.
 3. **Get spec approval**: Ensure spec changes are reviewed and approved before implementation.
 4. **Implement to spec**: Write code that strictly follows the specifications.
 5. **Test against specs**: Ensure tests verify all acceptance criteria defined in specs.
+
+### Spec Directory Structure
+
+```
+specs/
+├── product/            # Product requirements (What to build)
+├── rfc/                # Technical design (How to build)
+├── api/                # API interface definitions
+├── db/                 # Database schema definitions
+└── testing/            # Testing strategy and properties
+```
 
 ### Development Steps
 
@@ -39,9 +50,9 @@ This project follows Spec-Driven Development (SDD). Before writing code:
 2. Review and update specs in `/specs` directory if needed
 3. Make your changes in small, focused commits.
 4. Run the relevant validation locally:
-   - `cd brave-sync-notes/client && npm ci && npm test -- --run && npm run build`
-   - `cd brave-sync-notes/server && npm ci && npm test`
-   - `cd brave-sync-notes/server && npm run test:property` (recommended when touching sync, persistence, or validation logic)
+   - `cd apps/web && npm ci && npm test -- --run && npm run build`
+   - `cd apps/api && npm ci && npm test`
+   - `cd apps/api && npm run test:property` (recommended when touching sync, persistence, or validation logic)
 5. Add or update a record in `changelog/` for every submitted change set.
 6. Open a pull request with a clear description of the change and related issue(s).
 
@@ -53,11 +64,67 @@ This project follows Spec-Driven Development (SDD). Before writing code:
 - **Architecture docs**: High-level architecture goes in `/docs/architecture` (can link to detailed RFCs in `/specs/rfc`).
 - **Changelog**: Update both `CHANGELOG.md` and `CHANGELOG.zh-CN.md` for user-facing changes.
 
+## Creating New Specs
+
+### Product Specs
+
+Place in `/specs/product/`. Use this structure:
+
+```markdown
+# Feature Name - Product Requirements
+
+> **Status:** Draft|Active|Deprecated
+> **Created:** YYYY-MM-DD
+> **Last Updated:** YYYY-MM-DD
+
+## Overview
+
+## Requirements
+
+### Requirement N: Requirement Title
+
+**User Story:** As a [user], I want [goal] so that [benefit].
+
+#### Acceptance Criteria
+
+1. WHEN [condition] THEN the System SHALL [behavior]
+```
+
+### RFCs (Technical Design)
+
+Place in `/specs/rfc/`. Use naming convention: `NNNN-short-description.md`
+
+```markdown
+# RFC NNNN: Title
+
+> **Status:** Draft|Active|Accepted|Deprecated|Rejected
+> **Created:** YYYY-MM-DD
+> **Last Updated:** YYYY-MM-DD
+> **Supersedes:** Previous RFC (if any)
+
+## Summary
+
+## Motivation
+
+## Architecture
+
+## Components and Interfaces
+
+## Data Models
+
+## Correctness Properties
+
+## Implementation Phases
+```
+
 ## Code style
 
 - Keep functions small and focused.
 - Prefer clear naming over short names.
 - Reuse existing test frameworks and project structure before introducing new tooling.
+- Use JSDoc comments for function documentation.
+- Follow ESLint configuration in project root.
+- Use `async/await` for asynchronous operations.
 
 ## Commit messages
 
