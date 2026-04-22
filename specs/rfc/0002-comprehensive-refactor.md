@@ -550,13 +550,13 @@ interface PendingOperation {
 ### Phase 2: Storage System Integration
 
 - [x] 2.1 Create useStorage Hook
-- [ ] 2.2 Write property tests for storage round-trip
+- [x] 2.2 Write property tests for storage round-trip
 - [x] 2.3 Implement note CRUD operations
 - [x] 2.4 Implement history operations
-- [ ] 2.5 Write property tests for history version limit
+- [x] 2.5 Write property tests for history version limit
 - [x] 2.6 Integrate storage to Zustand Store
-- [ ] 2.7 Initialize storage in App.jsx
-- [ ] 2.8 Implement auto-save feature
+- [x] 2.7 Initialize storage in App.jsx
+- [x] 2.8 Implement auto-save feature
 - [ ] 2.9 Implement data recovery feature
 - [ ] 2.10 Checkpoint - Storage integration validation
 
