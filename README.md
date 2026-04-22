@@ -239,6 +239,29 @@ brave-sync-notes/
 
 ---
 
+## 🔄 OpenSpec Integration
+
+This project uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) for **spec-driven development** with AI assistance.
+
+### Quick Commands
+
+| Command | Description |
+|---------|-------------|
+| `/opsx:propose` | Create a new change proposal |
+| `/opsx:explore` | Explore ideas before committing |
+| `/opsx:apply` | Implement tasks from a change |
+| `/opsx:archive` | Archive a completed change |
+
+### Workflow
+
+```
+/opsx:propose "feature-name"  →  /opsx:apply  →  /opsx:archive
+```
+
+See [OpenSpec Integration Guide](./openspec/README.md) for details.
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](./docs/en/contributing.md) for details.

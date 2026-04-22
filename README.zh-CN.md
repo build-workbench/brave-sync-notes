@@ -223,6 +223,31 @@ npm run test:coverage
 
 查看 [CHANGELOG.md](CHANGELOG.md) 了解版本历史。
 
+---
+
+## 🔄 OpenSpec 集成
+
+本项目使用 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 进行 AI 辅助的**规范驱动开发**。
+
+### 快捷命令
+
+| 命令 | 描述 |
+|------|------|
+| `/opsx:propose` | 创建新的变更提案 |
+| `/opsx:explore` | 在提交前探索想法 |
+| `/opsx:apply` | 实现变更任务 |
+| `/opsx:archive` | 归档已完成的变更 |
+
+### 工作流程
+
+```
+/opsx:propose "功能名称"  →  /opsx:apply  →  /opsx:archive
+```
+
+详见 [OpenSpec 集成指南](./openspec/README.md)。
+
+---
+
 ## 🤝 贡献
 
 欢迎贡献代码！请查看 [贡献指南](CONTRIBUTING.md) 了解详情。
