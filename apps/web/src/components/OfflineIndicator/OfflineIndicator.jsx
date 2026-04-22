@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Wifi,
   WifiOff,
-  Cloud,
   CloudOff,
-  AlertCircle,
   RefreshCw,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useStore';
-import { useTranslation } from '../../utils/translations';
 
 /**
  * OfflineIndicator Component
@@ -17,7 +14,6 @@ import { useTranslation } from '../../utils/translations';
  */
 const OfflineIndicator = () => {
   const {
-    darkMode,
     lang,
     isOnline,
     status,
@@ -25,14 +21,10 @@ const OfflineIndicator = () => {
     setIsOnline,
   } = useAppStore();
 
-  const t = useTranslation(lang);
-  const [showRetry, setShowRetry] = useState(false);
-
   // Monitor online/offline status
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      setShowRetry(false);
     };
 
     const handleOffline = () => {
@@ -123,8 +115,7 @@ const OfflineIndicator = () => {
  * Shows a small status indicator in the header
  */
 export const ConnectionStatus = () => {
-  const { darkMode, lang, isOnline, status } = useAppStore();
-  const t = useTranslation(lang);
+  const { lang, isOnline, status } = useAppStore();
 
   const isConnected = isOnline && status === 'connected';
   const isSyncing = status === 'syncing';

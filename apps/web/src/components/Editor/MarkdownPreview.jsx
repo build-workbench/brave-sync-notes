@@ -9,7 +9,7 @@ const MarkdownPreview = ({ content }) => {
   const { darkMode } = useAppStore();
 
   const components = {
-    code({ node, inline, className, children, ...props }) {
+    code({ node: _node, inline, className, children, ...props }) {
       const match = /language-(\w+)/.exec(className || '');
       const language = match ? match[1] : '';
       

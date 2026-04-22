@@ -6,13 +6,11 @@ import {
   Trash2,
   Edit3,
   FolderOpen,
-  ChevronRight,
   Search,
   MoreHorizontal,
   Clock,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useStore';
-import { useTranslation } from '../../utils/translations';
 
 /**
  * NoteList Component
@@ -36,7 +34,6 @@ const NoteList = () => {
     setActiveNotebookId,
   } = useAppStore();
 
-  const t = useTranslation(lang);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
@@ -169,7 +166,7 @@ const NoteList = () => {
   // Truncate content for preview
   const truncateContent = (content, maxLength = 50) => {
     if (!content) return '';
-    const stripped = content.replace(/[#*_`\[\]]/g, '').trim();
+    const stripped = content.replace(/[#*_`[\]]/g, '').trim();
     return stripped.length > maxLength
       ? stripped.substring(0, maxLength) + '...'
       : stripped;

@@ -33,7 +33,6 @@ const Sidebar = ({ socketId }) => {
     clearHistory,
     deleteHistoryItem,
     restoreFromHistory,
-    setNote,
   } = useAppStore();
   
   const t = useTranslation(lang);

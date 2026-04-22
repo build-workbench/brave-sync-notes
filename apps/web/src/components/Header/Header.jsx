@@ -27,7 +27,6 @@ const Header = ({ onLeave }) => {
     toggleLang,
     status,
     toggleSidebar,
-    showSidebar,
     note,
     setNote,
     editorMode,

@@ -80,7 +80,7 @@ class ClientStorage {
      * @param {Notebook} notebook - 笔记本数据
      * @returns {Promise<void>}
      */
-    async saveNotebook(notebook) {
+    async saveNotebook(_notebook) {
         throw new Error('saveNotebook method must be implemented');
     }
 
@@ -89,7 +89,7 @@ class ClientStorage {
      * @param {string} id - 笔记本ID
      * @returns {Promise<Notebook|null>}
      */
-    async getNotebook(id) {
+    async getNotebook(_id) {
         throw new Error('getNotebook method must be implemented');
     }
 
@@ -106,7 +106,7 @@ class ClientStorage {
      * @param {string} id - 笔记本ID
      * @returns {Promise<void>}
      */
-    async deleteNotebook(id) {
+    async deleteNotebook(_id) {
         throw new Error('deleteNotebook method must be implemented');
     }
 
@@ -118,7 +118,7 @@ class ClientStorage {
      * @param {Note} note - 笔记数据
      * @returns {Promise<void>}
      */
-    async saveNote(notebookId, note) {
+    async saveNote(_notebookId, _note) {
         throw new Error('saveNote method must be implemented');
     }
 
@@ -128,7 +128,7 @@ class ClientStorage {
      * @param {string} noteId - 笔记ID
      * @returns {Promise<Note|null>}
      */
-    async getNote(notebookId, noteId) {
+    async getNote(_notebookId, _noteId) {
         throw new Error('getNote method must be implemented');
     }
 
@@ -137,7 +137,7 @@ class ClientStorage {
      * @param {string} notebookId - 笔记本ID
      * @returns {Promise<Note[]>}
      */
-    async listNotes(notebookId) {
+    async listNotes(_notebookId) {
         throw new Error('listNotes method must be implemented');
     }
 
@@ -147,7 +147,7 @@ class ClientStorage {
      * @param {string} noteId - 笔记ID
      * @returns {Promise<void>}
      */
-    async deleteNote(notebookId, noteId) {
+    async deleteNote(_notebookId, _noteId) {
         throw new Error('deleteNote method must be implemented');
     }
 
@@ -159,7 +159,7 @@ class ClientStorage {
      * @param {HistoryEntry} entry - 历史记录条目
      * @returns {Promise<void>}
      */
-    async saveHistory(noteId, entry) {
+    async saveHistory(_noteId, _entry) {
         throw new Error('saveHistory method must be implemented');
     }
 
@@ -169,7 +169,7 @@ class ClientStorage {
      * @param {number} [limit] - 限制返回数量
      * @returns {Promise<HistoryEntry[]>}
      */
-    async getHistory(noteId, limit) {
+    async getHistory(_noteId, _limit) {
         throw new Error('getHistory method must be implemented');
     }
 
@@ -179,7 +179,7 @@ class ClientStorage {
      * @param {number} keepCount - 保留的记录数量
      * @returns {Promise<number>} 删除的记录数量
      */
-    async cleanupHistory(noteId, keepCount) {
+    async cleanupHistory(_noteId, _keepCount) {
         throw new Error('cleanupHistory method must be implemented');
     }
 
@@ -190,7 +190,7 @@ class ClientStorage {
      * @param {PendingOperation} op - 待处理操作
      * @returns {Promise<void>}
      */
-    async enqueueOperation(op) {
+    async enqueueOperation(_op) {
         throw new Error('enqueueOperation method must be implemented');
     }
 
@@ -215,7 +215,7 @@ class ClientStorage {
      * @param {string} operationId - 操作ID
      * @returns {Promise<void>}
      */
-    async removeOperation(operationId) {
+    async removeOperation(_operationId) {
         throw new Error('removeOperation method must be implemented');
     }
 

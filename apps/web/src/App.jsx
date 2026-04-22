@@ -39,7 +39,6 @@ function App() {
   } = useSocket();
   const t = useTranslation(lang);
   const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
-  const [isLoading, setIsLoading] = useState(false);
   const [activeConflictId, setActiveConflictId] = useState(null);
 
   const activeConflict = useMemo(() => {

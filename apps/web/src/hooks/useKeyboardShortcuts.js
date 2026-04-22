@@ -22,8 +22,6 @@ export const useKeyboardShortcuts = () => {
     setShowHistory,
     showHistory,
     addNote,
-    note,
-    status,
   } = useAppStore();
 
   const handleKeyDown = useCallback((event) => {

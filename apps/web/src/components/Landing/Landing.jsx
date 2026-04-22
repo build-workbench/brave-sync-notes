@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { QRCodeSVG } from 'qrcode.react';
 import {
   Shield,
   Moon,
@@ -8,13 +7,11 @@ import {
   RefreshCw,
   Smartphone,
   Laptop,
-  QrCode,
   Lock,
   Zap,
   Globe,
   Eye,
   EyeOff,
-  AlertCircle,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useStore';
 import { useTranslation } from '../../utils/translations';

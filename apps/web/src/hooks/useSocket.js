@@ -3,7 +3,6 @@ import { io } from 'socket.io-client';
 import { useAppStore } from '../store/useStore';
 import { deriveKeys, encryptData, decryptData } from '../utils/crypto';
 import { ConflictManager } from '../utils/conflict';
-import { generateUniqueId } from '../utils/shared';
 import debounce from 'lodash.debounce';
 import toast from 'react-hot-toast';
 
