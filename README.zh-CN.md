@@ -227,7 +227,7 @@ npm run test:coverage
 
 ## 🔄 OpenSpec 集成
 
-本项目使用 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 进行 AI 辅助的**规范驱动开发**。
+本项目使用 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 进行 AI 辅助的**规范驱动开发**。所有变更都通过结构化的提案进行管理。
 
 ### 快捷命令
 
@@ -244,7 +244,14 @@ npm run test:coverage
 /opsx:propose "功能名称"  →  /opsx:apply  →  /opsx:archive
 ```
 
-详见 [OpenSpec 集成指南](./openspec/README.md)。
+### 两层规范体系
+
+| 目录 | 用途 |
+|------|------|
+| `specs/` | 稳定的、已批准的规范（Single Source of Truth）|
+| `openspec/` | 变更管理和增量规范 |
+
+详见 [AGENTS.md](./AGENTS.md) 了解详细工作流程。
 
 ---
 

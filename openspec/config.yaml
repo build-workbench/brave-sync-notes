@@ -2,29 +2,123 @@
 
 schema: spec-driven
 
-# Project-specific settings
+# Project Context
 project:
   name: Note Sync Now
   description: End-to-end encrypted note synchronization system
+  tech_stack:
+    frontend: React 18 + Vite + Tailwind CSS
+    state: Zustand
+    editor: CodeMirror 6
+    backend: Node.js + Express 5 + Socket.IO 4
+    storage_server: Redis / SQLite
+    storage_client: IndexedDB / LocalStorage
+    testing: Vitest + Jest + fast-check
 
-# Integration with existing specs
-# Your existing specs/ directory contains:
-# - product/ - Product requirements
-# - rfc/ - Technical design documents
-# - api/ - API interface definitions
-# - db/ - Database schema
-# - testing/ - Testing strategy
+# Reference to stable specs
+specs_dir: specs
 
-# OpenSpec creates changes in openspec/changes/
-# After implementation, changes are archived to openspec/changes/archive/
-# Delta specs can be merged into openspec/specs/ (or linked to specs/)
+# Capabilities - functional areas of the system
+# Each capability references multiple specs
+capabilities:
+  sync-core:
+    name: Core Synchronization
+    description: Real-time note sync with WebSocket
+    refs:
+      - specs/product/note-sync-system.md#requirement-1
+      - specs/rfc/0001-core-architecture.md
+      - specs/api/websocket-api.yaml
 
-# For this project, we use two-tier specs:
-# 1. specs/ - Stable, approved specifications (Single Source of Truth)
-# 2. openspec/specs/ - Delta specs from ongoing changes
+  conflict-resolution:
+    name: Conflict Detection & Resolution
+    description: Three-way merge and manual resolution
+    refs:
+      - specs/product/note-sync-system.md#requirement-2
+      - specs/testing/test-strategy.md#properties-3-4
 
-# Commands available:
-# /opsx:propose - Create a new change proposal
-# /opsx:explore - Explore ideas before committing
-# /opsx:apply - Implement tasks from a change
-# /opsx:archive - Archive a completed change
+  multi-notebook:
+    name: Multi-Notebook Support
+    description: Multiple notebooks with separate sync chains
+    refs:
+      - specs/product/note-sync-system.md#requirement-3
+      - specs/rfc/0002-comprehensive-refactor.md#phase-4
+
+  offline-mode:
+    name: Offline Mode & PWA
+    description: Offline queue and Progressive Web App
+    refs:
+      - specs/product/note-sync-system.md#requirement-4
+      - specs/rfc/0002-comprehensive-refactor.md#phase-3
+
+  version-history:
+    name: Version History
+    description: Note versioning and restoration
+    refs:
+      - specs/product/note-sync-system.md#requirement-5
+      - specs/testing/test-strategy.md#properties-6-10
+
+  encryption:
+    name: End-to-End Encryption
+    description: AES-256-GCM with mnemonic recovery
+    refs:
+      - specs/rfc/0001-core-architecture.md#encryption
+      - specs/testing/test-strategy.md
+
+  storage:
+    name: Multi-Layer Storage
+    description: Redis/SQLite server, IndexedDB client
+    refs:
+      - specs/db/schema-v1.dbml
+      - specs/product/note-sync-system.md#requirement-1
+
+# Workflow rules for AI agents
+rules:
+  proposal:
+    - Reference existing specs in specs/ directory
+    - Identify affected capabilities
+    - Check for related RFCs in specs/rfc/
+    - Consider impact on existing tests
+
+  specs:
+    - Use RFC 2119 keywords (SHALL, MUST, SHOULD, MAY)
+    - Write scenarios in WHEN/THEN format
+    - Link to existing specs for context
+    - For API changes, use api-delta.yaml format
+    - For DB changes, use db-delta.dbml format
+
+  design:
+    - Consider offline implications
+    - Document encryption/decryption flow if relevant
+    - List affected components (client/server/both)
+    - Consider backward compatibility
+
+  tasks:
+    - Group by: Core, Client, Server, Tests, Docs
+    - Each task should be completable in one session
+    - Include test tasks for each feature
+
+  apply:
+    - Read proposal and design before implementing
+    - Mark tasks complete as you progress
+    - Update delta specs if design changes
+    - Run tests after each task group
+
+# Delta spec formats
+delta_formats:
+  api:
+    file: api-delta.yaml
+    description: YAML patch for WebSocket API changes
+
+  db:
+    file: db-delta.dbml
+    description: DBML patch for database changes
+
+  capability:
+    file: spec.md
+    description: Markdown capability specification
+
+# Archive behavior
+archive:
+  merge_specs: true
+  update_readme: false
+  date_prefix: true

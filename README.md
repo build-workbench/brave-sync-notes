@@ -241,7 +241,7 @@ brave-sync-notes/
 
 ## 🔄 OpenSpec Integration
 
-This project uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) for **spec-driven development** with AI assistance.
+This project uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) for **spec-driven development** with AI assistance. All changes are managed through structured proposals.
 
 ### Quick Commands
 
@@ -258,7 +258,14 @@ This project uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) for **spec-
 /opsx:propose "feature-name"  →  /opsx:apply  →  /opsx:archive
 ```
 
-See [OpenSpec Integration Guide](./openspec/README.md) for details.
+### Two-Tier Specification System
+
+| Directory | Purpose |
+|-----------|---------|
+| `specs/` | Stable, approved specifications (Single Source of Truth) |
+| `openspec/` | Change management and delta specs |
+
+See [AGENTS.md](./AGENTS.md) for detailed workflow instructions.
 
 ---
 

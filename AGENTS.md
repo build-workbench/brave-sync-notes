@@ -1,105 +1,207 @@
-# Project Philosophy: Spec-Driven Development (SDD)
+# Project Philosophy: Spec-Driven Development with OpenSpec
 
-This project strictly follows the **Spec-Driven Development (SDD)** paradigm. All code implementations must use the specification documents in the `/specs` directory as the Single Source of Truth.
+This project follows **Spec-Driven Development (SDD)** powered by **OpenSpec** for change management. All code implementations must use the specification documents in `/specs` as the Single Source of Truth.
 
 ## Directory Context
 
-- `/specs/product/`: Product feature definitions and acceptance criteria
-- `/specs/rfc/`: Technical design documents (Architecture RFCs)
-- `/specs/api/`: API interface definitions (WebSocket and REST APIs)
-- `/specs/db/`: Database model and schema definitions
-- `/specs/testing/`: Testing strategy and correctness properties
+### Tier 1: Stable Specifications (`/specs/`)
+- `/specs/product/` - Product feature definitions and acceptance criteria
+- `/specs/rfc/` - Technical design documents (Architecture RFCs)
+- `/specs/api/` - API interface definitions (WebSocket and REST APIs)
+- `/specs/db/` - Database model and schema definitions
+- `/specs/testing/` - Testing strategy and correctness properties
+
+### Tier 2: Change Management (`/openspec/`)
+- `/openspec/changes/` - Active change proposals
+- `/openspec/specs/` - Delta specs during development
+- `/openspec/schemas/` - Custom schema definitions
 
 ## AI Agent Workflow Instructions
 
-When you (the AI) are asked to develop a new feature, modify an existing feature, or fix a bug, **you must strictly follow this workflow without skipping any steps**:
+When you (the AI) are asked to develop a new feature, modify an existing feature, or fix a bug, **follow the appropriate workflow below**:
 
-### Step 1: Review Specs
+### Workflow A: New Feature or Significant Change
 
-- Before writing any code, first read the relevant documents in the `/specs` directory (product specs, RFCs, and API definitions).
-- If the user's request conflicts with the existing specs, **immediately stop coding** and point out the conflict, asking the user whether to update the specs first.
+Use OpenSpec to manage the change through its full lifecycle:
 
-### Step 2: Spec-First Update
+#### 1. Explore (Optional)
+If requirements are unclear, use exploration mode:
+```
+/opsx:explore
+```
+Have a conversation to clarify requirements before creating a formal proposal.
 
-- If this is a new feature, or if it requires changes to existing interfaces/database structures, **you must first propose modifying or creating the corresponding spec documents** (e.g., `openapi.yaml` or RFC documents).
-- Wait for user confirmation of the spec modifications before proceeding to the code implementation phase.
+#### 2. Propose the Change
+```
+/opsx:propose "<change-name>"
+```
+This creates a structured change proposal with:
+- `proposal.md` - What & Why
+- `design.md` - How (technical approach)
+- `tasks.md` - Implementation checklist
+- `specs/` - Delta specs for this change
 
-### Step 3: Implementation
+#### 3. Review References
+Check `proposal.md` for related specs. Read referenced specs in `/specs/` before designing.
 
-- When writing code, **100% comply with the spec definitions** (including variable naming, API paths, data types, status codes, etc.).
-- **Do not add features not defined in the specs** (No Gold-Plating).
+#### 4. Implement
+```
+/opsx:apply
+```
+Work through tasks in `tasks.md`, marking each complete as you progress.
 
-### Step 4: Test against Spec
+#### 5. Archive
+```
+/opsx:archive
+```
+- Moves change to `openspec/changes/archive/`
+- Merges verified delta specs into stable specs
 
-- Write unit tests and integration tests based on the acceptance criteria in the `/specs` directory.
-- Ensure test cases cover all boundary conditions described in the specs.
-- Verify correctness properties defined in `/specs/testing/test-strategy.md`.
+### Workflow B: Bug Fix or Minor Change
+
+For small fixes that don't require full change management:
+
+1. **Review relevant specs** in `/specs/` first
+2. **If interface changes needed** → Use Workflow A
+3. **If code-only fix** → Implement and verify tests pass
+4. **Update spec** if the fix reveals spec was incorrect
+
+### Workflow C: Spec Conflict Resolution
+
+If user's request conflicts with existing specs:
+
+1. **Stop coding immediately**
+2. Point out the conflict with specific spec references
+3. Ask user whether to:
+   - Update specs first (use Workflow A)
+   - Modify the request to comply with specs
+   - Proceed with explicit spec exception
+
+## Spec Reference Quick Guide
+
+| What You're Building | Primary Spec | Related Specs |
+|---------------------|--------------|---------------|
+| New user feature | `/specs/product/note-sync-system.md` | Related RFC |
+| API endpoint/event | `/specs/api/websocket-api.yaml` | RFC, DB schema |
+| Database changes | `/specs/db/schema-v1.dbml` | API spec |
+| Test requirements | `/specs/testing/test-strategy.md` | Product specs |
+| Architecture guidance | `/specs/rfc/0001-core-architecture.md` | All specs |
+
+## Capabilities
+
+This project is organized into capabilities, each referencing multiple specs:
+
+| Capability | Product Req | RFC | API | Tests |
+|------------|-------------|-----|-----|-------|
+| sync-core | Req 1 | RFC 0001 | websocket-api.yaml | Props 1-2 |
+| conflict-resolution | Req 2 | RFC 0001 §2 | - | Props 3-4 |
+| multi-notebook | Req 3 | RFC 0002 §4 | - | Prop 5 |
+| offline-mode | Req 4 | RFC 0002 §3 | - | Prop 4 |
+| version-history | Req 5 | RFC 0002 §5 | - | Props 6-10 |
+| encryption | - | RFC 0001 | - | Props |
+| storage | Req 1 | - | - | schema-v1.dbml |
+
+See `/openspec/specs/capabilities/` for detailed capability specs.
+
+## Delta Specs Format
+
+When proposing changes that affect existing specs, use delta format:
+
+### API Changes (`specs/api-delta.yaml`)
+```yaml
+base: specs/api/websocket-api.yaml
+change_type: extend  # extend | modify | deprecate
+
+additions:
+  events:
+    client:
+      - name: new-event-name
+        payload: { field: type }
+    server:
+      - name: server-event-name
+        payload: { field: type }
+```
+
+### Database Changes (`specs/db-delta.dbml`)
+```dbml
+// Base: specs/db/schema-v1.dbml
+
+Table new_table {
+  id varchar [pk]
+  field type
+  created_at timestamp
+}
+```
 
 ## Code Generation Rules
 
-- Any API changes exposed externally must synchronize modifications to `/specs/api/websocket-api.yaml`.
-- Any database schema changes must synchronize modifications to `/specs/db/schema-v1.dbml`.
-- If uncertain about technical details, consult the architectural conventions in `/specs/rfc/`. Do not invent design patterns on your own.
-- All new features must have corresponding product spec in `/specs/product/`.
+1. **Reference specs before coding** - Always read related specs first
+2. **100% spec compliance** - Follow interface definitions exactly
+3. **No gold-plating** - Don't add features not in specs
+4. **Test against properties** - Verify correctness properties in `/specs/testing/`
+5. **Update specs when design changes** - Keep specs and code synchronized
+6. **Use RFC 2119 keywords** - SHALL, MUST, SHOULD, MAY in specs
 
-## Why This Declaration?
-
-1. **Prevent AI Hallucinations**: AI tends to "freely improvise" without context. Forcing it to read `/specs` in the first step anchors its thinking scope.
-2. **Constrain Modification Path**: Declaring "modify specs before modifying code" ensures documentation and code stay synchronized (Document-Code Synchronization).
-3. **Improve PR Quality**: When AI helps generate Pull Requests, the implementation will be highly aligned with business logic because it's developed based on the acceptance criteria you defined in the specs.
-
----
-
-## Project-Specific Conventions
+## Project Conventions
 
 ### Technology Stack
-
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 18 + Vite + Tailwind CSS |
 | State Management | Zustand |
 | Editor | CodeMirror 6 |
-| Backend | Node.js + Express + Socket.IO |
+| Backend | Node.js + Express 5 + Socket.IO 4 |
 | Storage | Redis / SQLite / IndexedDB |
 | Testing | Vitest + Jest + fast-check |
 
 ### Code Style
-
 - JavaScript (not TypeScript) for current implementation
 - Use JSDoc comments for function documentation
 - Follow ESLint configuration in project root
 - Use `async/await` for asynchronous operations
 
 ### Naming Conventions
-
-- Files: kebab-case (e.g., `useSocket.js`, `persistence-manager.js`)
-- Functions: camelCase (e.g., `joinChain`, `pushUpdate`)
-- Constants: UPPER_SNAKE_CASE (e.g., `MAX_CHUNK_SIZE`)
-- Classes: PascalCase (e.g., `PersistenceManager`)
+- Files: `kebab-case.js`
+- Functions: `camelCase`
+- Constants: `UPPER_SNAKE_CASE`
+- Classes: `PascalCase`
 
 ### Error Handling
-
-- Use structured error objects with `type`, `message`, `code`, and `recoverable` fields
+- Use structured error objects: `{ type, message, code, recoverable }`
+- Never expose encryption keys in error messages
 - Follow error types defined in architecture spec
-- Never expose encryption keys or sensitive data in error messages
 
----
+## OpenSpec Commands
 
-## Quick Reference
+| Command | Purpose |
+|---------|---------|
+| `/opsx:propose <name>` | Create new change proposal |
+| `/opsx:explore` | Explore ideas before proposing |
+| `/opsx:apply` | Implement tasks from active change |
+| `/opsx:archive` | Archive completed change |
 
-### Key Files
+## Key Files
 
-- Client entry: `apps/web/src/App.jsx`
-- Socket hook: `apps/web/src/hooks/useSocket.js`
-- State store: `apps/web/src/store/useStore.js`
-- Crypto module: `apps/web/src/utils/crypto`
-- Server entry: `apps/api/index.js`
-- Persistence manager: `apps/api/src/persistence/PersistenceManager.js`
+| Purpose | File |
+|---------|------|
+| Client entry | `apps/web/src/App.jsx` |
+| Socket hook | `apps/web/src/hooks/useSocket.js` |
+| State store | `apps/web/src/store/useStore.js` |
+| Crypto module | `apps/web/src/utils/crypto` |
+| Server entry | `apps/api/index.js` |
+| Persistence | `apps/api/src/persistence/PersistenceManager.js` |
 
-### Important Specs
+## Important Specs
 
 - [Product Requirements](./specs/product/note-sync-system.md)
 - [Core Architecture](./specs/rfc/0001-core-architecture.md)
 - [API Specification](./specs/api/websocket-api.yaml)
 - [Database Schema](./specs/db/schema-v1.dbml)
 - [Testing Strategy](./specs/testing/test-strategy.md)
+
+## Why This Declaration?
+
+1. **Prevent AI Hallucinations**: Forcing AI to read `/specs` first anchors its thinking scope
+2. **Constrain Modification Path**: "Modify specs before code" ensures documentation-code synchronization
+3. **Improve PR Quality**: Implementation aligns with business logic defined in specs
+4. **Change Tracking**: OpenSpec provides audit trail of all changes
