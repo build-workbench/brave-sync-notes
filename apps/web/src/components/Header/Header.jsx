@@ -14,6 +14,10 @@ import {
   Code,
   LogOut,
   X,
+  Save,
+  Check,
+  Loader2,
+  HardDrive,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useStore';
 import { useTranslation } from '../../utils/translations';
@@ -37,11 +41,16 @@ const Header = ({ onLeave }) => {
     setLineNumbers,
     wordWrap,
     setWordWrap,
+    autoSave,
+    setAutoSave,
+    storageType,
+    storageInitialized,
   } = useAppStore();
-  
+
   const t = useTranslation(lang);
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('saved'); // 'saved' | 'saving' | 'error'
 
   const statusConfig = {
     connected: {
@@ -61,8 +70,28 @@ const Header = ({ onLeave }) => {
     },
   };
 
+  const saveStatusConfig = {
+    saved: {
+      icon: Check,
+      color: 'text-green-500',
+      label: lang === 'zh' ? '已保存' : 'Saved',
+    },
+    saving: {
+      icon: Loader2,
+      color: 'text-blue-500 animate-spin',
+      label: lang === 'zh' ? '保存中...' : 'Saving...',
+    },
+    error: {
+      icon: Save,
+      color: 'text-red-500',
+      label: lang === 'zh' ? '保存失败' : 'Save failed',
+    },
+  };
+
   const currentStatus = statusConfig[status] || statusConfig.disconnected;
   const StatusIcon = currentStatus.icon;
+  const currentSaveStatus = saveStatusConfig[saveStatus] || saveStatusConfig.saved;
+  const SaveStatusIcon = currentSaveStatus.icon;
 
   const handleExport = (format) => {
     const filename = `note-${new Date().toISOString().split('T')[0]}`;
@@ -157,6 +186,33 @@ const Header = ({ onLeave }) => {
             >
               <Settings size={20} />
             </button>
+
+            {/* Save Status Indicator */}
+            {storageInitialized && (
+              <div
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium ${currentSaveStatus.color} ${
+                  darkMode ? 'bg-slate-700/50' : 'bg-slate-100'
+                }`}
+                title={currentSaveStatus.label}
+              >
+                <SaveStatusIcon size={14} />
+                <span className="hidden md:inline">{currentSaveStatus.label}</span>
+              </div>
+            )}
+
+            {/* Storage Type Indicator */}
+            {storageInitialized && storageType && (
+              <div
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs ${
+                  storageType === 'IndexedDB'
+                    ? 'text-blue-500 bg-blue-500/10'
+                    : 'text-yellow-500 bg-yellow-500/10'
+                }`}
+                title={`Storage: ${storageType}`}
+              >
+                <HardDrive size={12} />
+              </div>
+            )}
 
             {/* Status */}
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${currentStatus.color}`}>
@@ -285,6 +341,32 @@ const Header = ({ onLeave }) => {
                   >
                     <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
                       lineNumbers ? 'translate-x-7' : 'translate-x-1'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* Auto Save */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className={`text-sm font-medium ${
+                      darkMode ? 'text-slate-300' : 'text-slate-700'
+                    }`}>
+                      {lang === 'zh' ? '自动保存' : 'Auto Save'}
+                    </label>
+                    <p className={`text-xs ${
+                      darkMode ? 'text-slate-500' : 'text-slate-400'
+                    }`}>
+                      {lang === 'zh' ? '编辑后自动保存到本地存储' : 'Auto-save to local storage after editing'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setAutoSave(!autoSave)}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${
+                      autoSave ? 'bg-orange-500' : darkMode ? 'bg-slate-600' : 'bg-slate-300'
+                    }`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                      autoSave ? 'translate-x-7' : 'translate-x-1'
                     }`} />
                   </button>
                 </div>

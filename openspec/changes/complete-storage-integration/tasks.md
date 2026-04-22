@@ -10,8 +10,8 @@
 
 - [x] 2.1 Create auto-save middleware for Zustand store
 - [x] 2.2 Implement debounce utility with configurable interval
-- [ ] 2.3 Add auto-save toggle to settings
-- [ ] 2.4 Add save status indicator in UI
+- [x] 2.3 Add auto-save toggle to settings
+- [x] 2.4 Add save status indicator in UI
 
 ## 3. Data Recovery
 
@@ -35,10 +35,13 @@
 - [ ] 5.5 Manual testing of auto-save feature
 - [ ] 5.6 Manual testing of data recovery
 
-## Property Tests Required
+## Progress Summary
 
-| Property ID | Description | File | Status |
-|-------------|-------------|------|--------|
-| Property 1 | Storage round-trip consistency | `apps/web/src/utils/storage/__tests__/storage.property.test.js` | ✅ |
-| Property 9 | History version limit (50 max) | `apps/web/src/utils/storage/__tests__/history.property.test.js` | ✅ |
-| Property 12 | Data validation rejects invalid input | `apps/web/src/utils/storage/__tests__/storage.property.test.js` | ✅ |
+| Task Group | Completed | Total |
+|------------|-----------|-------|
+| 1. Storage Initialization | 3 | 3 ✅ |
+| 2. Auto-Save Feature | 4 | 4 ✅ |
+| 3. Data Recovery | 0 | 4 |
+| 4. Property Tests | 3 | 3 ✅ |
+| 5. Integration & Validation | 3 | 6 |
+| **Total** | **13** | **20** |

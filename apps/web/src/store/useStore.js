@@ -169,6 +169,7 @@ export const useAppStore = create(
       setLineNumbers: (lineNumbers) => set({ lineNumbers }),
       setWordWrap: (wordWrap) => set({ wordWrap }),
       setSyncDebounceMs: (syncDebounceMs) => set({ syncDebounceMs }),
+      setAutoSave: (autoSave) => set({ autoSave }),
 
       // Storage Actions
       setStorageInitialized: (initialized, type) => set({
@@ -351,6 +352,7 @@ export const useAppStore = create(
         wordWrap: state.wordWrap,
         syncDebounceMs: state.syncDebounceMs,
         editorMode: state.editorMode,
+        autoSave: state.autoSave,
       }),
     }
   )
