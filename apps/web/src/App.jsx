@@ -1,13 +1,14 @@
 import React, { useEffect, useCallback, useState, useMemo, Suspense, lazy } from 'react';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from './store/useStore';
+import { useAppStore, setAutoSaveCallback } from './store/useStore';
 import { useSocket } from './hooks/useSocket';
+import { useStorage } from './hooks/useStorage';
 import { useTranslation } from './utils/translations';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import { LoadingOverlay, EditorSkeleton } from './components/Loading/LoadingSpinner';
 import { ConflictDialog, ConflictIndicator } from './components/Conflict';
-import { Eye, Edit3, Columns } from 'lucide-react';
+import { Eye, Edit3, Columns, HardDrive, AlertCircle } from 'lucide-react';
 
 // Lazy load heavy components
 const Landing = lazy(() => import('./components/Landing/Landing'));
@@ -25,6 +26,17 @@ function App() {
   const setNote = useAppStore((state) => state.setNote);
   const resetConnection = useAppStore((state) => state.resetConnection);
   const showSidebar = useAppStore((state) => state.showSidebar);
+  const setStorageInitialized = useAppStore((state) => state.setStorageInitialized);
+
+  // Storage initialization
+  const {
+    isInitialized: storageReady,
+    storageType,
+    error: storageError,
+    isLoading: storageLoading,
+    initialize: initStorage,
+    saveNote,
+  } = useStorage();
 
   const {
     joinChain,
@@ -40,6 +52,60 @@ function App() {
   const t = useTranslation(lang);
   const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
   const [activeConflictId, setActiveConflictId] = useState(null);
+  const [storageInitAttempted, setStorageInitAttempted] = useState(false);
+
+  // Setup auto-save callback
+  useEffect(() => {
+    setAutoSaveCallback(async (noteData) => {
+      if (storageReady && noteData.notebookId && noteData.noteId) {
+        try {
+          await saveNote(noteData.notebookId, {
+            id: noteData.noteId,
+            content: noteData.content,
+            version: noteData.version,
+            updatedAt: noteData.updatedAt,
+          });
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+          toast.error(lang === 'zh' ? '自动保存失败' : 'Auto-save failed', {
+            duration: 3000,
+          });
+        }
+      }
+    });
+  }, [storageReady, saveNote, lang]);
+
+  // Initialize storage on mount
+  useEffect(() => {
+    const initStorageOnMount = async () => {
+      if (storageInitAttempted) return;
+      setStorageInitAttempted(true);
+
+      try {
+        const success = await initStorage();
+        if (success) {
+          setStorageInitialized(true, storageType);
+          if (storageType === 'LocalStorage') {
+            toast.success(lang === 'zh' ? '使用 LocalStorage 存储（IndexedDB 不可用）' : 'Using LocalStorage (IndexedDB unavailable)', {
+              icon: '💾',
+              duration: 4000,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Storage initialization failed:', error);
+        toast.error(lang === 'zh' ? '存储初始化失败' : 'Storage initialization failed', {
+          icon: '❌',
+          duration: 5000,
+        });
+      }
+    };
+
+    initStorageOnMount();
+  }, [initStorage, storageType, setStorageInitialized, lang, storageInitAttempted]);
+
+  // Show storage error state
+  const showStorageError = storageInitAttempted && storageError && !storageReady;
 
   const activeConflict = useMemo(() => {
     if (!activeConflictId) return null;
@@ -111,6 +177,44 @@ function App() {
   const wordCount = useMemo(() => {
     return note.split(/\s+/).filter(Boolean).length;
   }, [note]);
+
+  // Show loading state during storage initialization
+  if (storageLoading && !storageInitAttempted) {
+    return (
+      <div className={`h-screen flex items-center justify-center ${
+        darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'
+      }`}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+          <p className="text-sm text-slate-500">{lang === 'zh' ? '正在初始化存储...' : 'Initializing storage...'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show storage error state
+  if (showStorageError) {
+    return (
+      <div className={`h-screen flex items-center justify-center ${
+        darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'
+      }`}>
+        <div className="flex flex-col items-center gap-4 max-w-md text-center p-6">
+          <AlertCircle size={48} className="text-red-500" />
+          <h2 className="text-xl font-semibold">{lang === 'zh' ? '存储初始化失败' : 'Storage Initialization Failed'}</h2>
+          <p className="text-sm text-slate-500">{storageError}</p>
+          <button
+            onClick={() => {
+              setStorageInitAttempted(false);
+              initStorage();
+            }}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            {lang === 'zh' ? '重试' : 'Retry'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Landing Page
   if (view === 'landing') {

@@ -1,6 +1,35 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateUniqueId } from '../utils/shared';
+import { debounce } from '../utils/debounce';
+
+// Auto-save callback (set externally)
+let autoSaveCallback = null;
+
+/**
+ * Set the auto-save callback function
+ * @param {Function} callback - Async function to save note
+ */
+export const setAutoSaveCallback = (callback) => {
+  autoSaveCallback = callback;
+};
+
+// Create debounced auto-save function
+const debouncedAutoSave = debounce(async (state) => {
+  if (autoSaveCallback && state.autoSave && state.activeNoteId && state.storageInitialized) {
+    try {
+      await autoSaveCallback({
+        notebookId: state.activeNotebookId,
+        noteId: state.activeNoteId,
+        content: state.note,
+        version: state.noteVersion,
+        updatedAt: Date.now(),
+      });
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    }
+  }
+}, 300);
 
 export const useAppStore = create(
   persist(
@@ -72,12 +101,16 @@ export const useAppStore = create(
       setDeviceName: (deviceName) => set({ deviceName }),
       setMembers: (members) => set({ members }),
 
-      setNote: (note, meta) => set((state) => ({
-        note,
-        noteVersion: meta?.version ?? state.noteVersion,
-        noteTimestamp: meta?.timestamp ?? Date.now(),
-        noteDeviceId: meta?.deviceId ?? (state.deviceName || state.noteDeviceId || 'local'),
-      })),
+      setNote: (note, meta) => {
+        set((state) => ({
+          note,
+          noteVersion: meta?.version ?? state.noteVersion,
+          noteTimestamp: meta?.timestamp ?? Date.now(),
+          noteDeviceId: meta?.deviceId ?? (state.deviceName || state.noteDeviceId || 'local'),
+        }));
+        // Trigger auto-save
+        debouncedAutoSave(get());
+      },
       setCurrentFileType: (currentFileType) => set({ currentFileType }),
 
       // History Management
