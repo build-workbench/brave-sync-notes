@@ -71,6 +71,7 @@
 
 - [Node.js](https://nodejs.org/) 18+ (20 LTS recommended)
 - [npm](https://www.npmjs.com/) 9+
+- [Redis](https://redis.io/) (optional, for persistent storage)
 
 ### Installation
 
@@ -80,17 +81,38 @@ git clone https://github.com/LessUp/brave-sync-notes.git
 cd brave-sync-notes
 
 # 2. Start the server
-cd apps/api && npm ci && node index.js
+cd apps/api && npm ci && cp .env.example .env && node index.js
 
 # 3. Start the client (new terminal)
-cd apps/web && npm ci && npm run dev
+cd apps/web && npm ci && cp .env.example .env && npm run dev
 ```
 
 **Access the application:**
 - Client: http://localhost:5173
 - Server: http://localhost:3002
 
+### Docker Deployment
+
+```bash
+cd brave-sync-notes
+docker-compose up -d
+```
+
 For detailed setup instructions, see our [Getting Started Guide](./docs/en/getting-started.md).
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/⌘ + S` | Save |
+| `Ctrl/⌘ + B` | Toggle sidebar |
+| `Ctrl/⌘ + P` | Toggle preview |
+| `Ctrl/⌘ + H` | Toggle history |
+| `Ctrl/⌘ + N` | New note |
+| `Ctrl/⌘ + /` | Toggle dark mode |
+| `Esc` | Close modal |
 
 ---
 
@@ -232,25 +254,36 @@ Quick links:
 
 This project is licensed under the [MIT License](./LICENSE).
 
-```
-MIT License
+---
 
-Copyright (c) 2026 LessUp
+## ❓ FAQ
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+### Is Redis required?
+No, the system automatically falls back to SQLite or in-memory storage if Redis is unavailable.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+### What's the maximum note size?
+Notes up to 5MB are supported through automatic chunked transfer.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-```
+### How does the 12-word recovery work?
+The mnemonic follows the BIP39 standard. Your encryption key is derived from these 12 words, enabling secure recovery on any device.
+
+---
+
+## 🔧 Troubleshooting
+
+### Connection Failed
+- Ensure the backend server is running on port 3002
+- Check if the port is occupied: `lsof -i :3002`
+- Verify firewall settings allow WebSocket connections
+
+### Sync Not Working
+- Confirm both devices use the same mnemonic
+- Check browser console for errors
+- Ensure WebSocket connection is established (green indicator)
+
+### Redis Connection Error
+- Verify Redis is running: `redis-cli ping`
+- Or let the system fall back to SQLite automatically
 
 ---
 
