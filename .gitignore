@@ -44,3 +44,7 @@ coverage/
 
 # AI Assistant Directories (legacy)
 .kiro/
+
+# BMad Method V6
+_bmad/
+_bmad-output/
