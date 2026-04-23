@@ -8,6 +8,7 @@ import { useTranslation } from './utils/translations';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import { LoadingOverlay, EditorSkeleton } from './components/Loading/LoadingSpinner';
 import { ConflictDialog, ConflictIndicator } from './components/Conflict';
+import OfflineIndicator, { ConnectionStatus } from './components/OfflineIndicator/OfflineIndicator';
 import { Eye, Edit3, Columns, HardDrive, AlertCircle } from 'lucide-react';
 
 // Lazy load heavy components
@@ -48,8 +49,25 @@ function App() {
     pendingConflicts,
     resolveConflict,
     clearConflicts,
+    queueSize,
+    isProcessingQueue,
+    isOffline,
   } = useSocket();
   const t = useTranslation(lang);
+
+  // Get store actions for offline status sync
+  const setOfflineQueueSize = useAppStore((state) => state.setOfflineQueueSize);
+  const setIsOnline = useAppStore((state) => state.setIsOnline);
+
+  // Sync offline queue size from socket to store
+  useEffect(() => {
+    setOfflineQueueSize(queueSize);
+  }, [queueSize, setOfflineQueueSize]);
+
+  // Sync offline status to store
+  useEffect(() => {
+    setIsOnline(!isOffline());
+  }, [isOffline, setIsOnline]);
   const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
   const [activeConflictId, setActiveConflictId] = useState(null);
   const [storageInitAttempted, setStorageInitAttempted] = useState(false);
@@ -240,6 +258,9 @@ function App() {
       <div className={`h-screen flex flex-col overflow-hidden transition-colors duration-300 ${
         darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'
       }`}>
+        {/* Offline status banner */}
+        <OfflineIndicator />
+
         <Suspense fallback={<div className="h-14 bg-slate-800" />}>
           <Header onLeave={handleLeave} />
         </Suspense>

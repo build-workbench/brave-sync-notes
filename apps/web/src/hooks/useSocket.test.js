@@ -87,8 +87,8 @@ describe('useSocket', () => {
 
     expect(typeof mockSocket.handlers.connect).toBe('function');
 
-    act(() => {
-      mockSocket.handlers.connect();
+    await act(async () => {
+      await mockSocket.handlers.connect();
     });
 
     await expect(joinPromise).resolves.toBe(true);

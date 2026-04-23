@@ -3,6 +3,8 @@ import { io } from 'socket.io-client';
 import { useAppStore } from '../store/useStore';
 import { deriveKeys, encryptData, decryptData } from '../utils/crypto';
 import { ConflictManager } from '../utils/conflict';
+import { OfflineQueue } from '../utils/offline';
+import { getStorageManager } from '../utils/storage';
 import debounce from 'lodash.debounce';
 import toast from 'react-hot-toast';
 
@@ -59,8 +61,11 @@ export const useSocket = () => {
   const isReconnectingRef = useRef(false);
 
   const conflictManagerRef = useRef(null);
+  const offlineQueueRef = useRef(null);
   const [pendingConflicts, setPendingConflicts] = useState([]);
   const [conflictCount, setConflictCount] = useState(0);
+  const [queueSize, setQueueSize] = useState(0);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
   
   // Get store values with selector to prevent unnecessary rerenders
   const setStatus = useAppStore((state) => state.setStatus);
@@ -76,6 +81,28 @@ export const useSocket = () => {
   if (!conflictManagerRef.current) {
     conflictManagerRef.current = new ConflictManager({ autoResolveStrategy: 'manual' });
   }
+
+  // Initialize offline queue
+  const initOfflineQueue = useCallback(async () => {
+    if (offlineQueueRef.current) return offlineQueueRef.current;
+
+    try {
+      const storage = getStorageManager();
+      await storage.initialize();
+      offlineQueueRef.current = new OfflineQueue(storage);
+      const size = await offlineQueueRef.current.getQueueSize();
+      setQueueSize(size);
+      return offlineQueueRef.current;
+    } catch (error) {
+      console.error('Failed to initialize offline queue:', error);
+      return null;
+    }
+  }, []);
+
+  // Check if offline (either network or socket disconnected)
+  const isOffline = useCallback(() => {
+    return !navigator.onLine || !socketRef.current?.connected;
+  }, []);
 
   // Hash function for content comparison (optimized for large content)
   const hashContent = useCallback((content) => {
@@ -238,15 +265,19 @@ export const useSocket = () => {
 
         const socket = socketRef.current;
 
-        socket.on('connect', () => {
+        socket.on('connect', async () => {
           setStatus('connected');
           reconnectAttemptRef.current = 0;
-          
+
           socket.emit('join-chain', {
             roomId: keys.roomId,
             deviceName: name,
           });
-          
+
+          // Initialize offline queue and process any pending operations
+          await initOfflineQueue();
+          await processQueuedOperations();
+
           if (isReconnectingRef.current) {
             toast.success(t.reconnected);
             isReconnectingRef.current = false;
@@ -344,13 +375,15 @@ export const useSocket = () => {
           }
         });
 
-        socket.on('reconnect', () => {
+        socket.on('reconnect', async () => {
           toast.dismiss('reconnecting');
           // Re-join the room after reconnection
           socket.emit('join-chain', {
             roomId: keys.roomId,
             deviceName: name,
           });
+          // Process any queued offline operations
+          await processQueuedOperations();
         });
 
         socket.on('reconnect_failed', () => {
@@ -425,13 +458,27 @@ export const useSocket = () => {
     };
   }, [syncDebounceMs, setStatus, splitIntoChunks, hashContent]);
 
-  const pushUpdate = useCallback((content) => {
-    if (!socketRef.current?.connected) {
+  const pushUpdate = useCallback(async (content) => {
+    // If offline, queue the operation
+    if (isOffline()) {
+      const queue = await initOfflineQueue();
+      if (queue && keysRef.current) {
+        await queue.enqueue({
+          type: 'update',
+          data: content,
+          timestamp: Date.now(),
+          roomId: keysRef.current.roomId,
+        });
+        const size = await queue.getQueueSize();
+        setQueueSize(size);
+        toast.success(t.networkOffline || 'Changes queued for sync');
+      }
       return;
     }
+
     setStatus('syncing');
     debouncedPushRef.current?.(content);
-  }, [setStatus]);
+  }, [setStatus, isOffline, initOfflineQueue, t]);
 
   const disconnect = useCallback(() => {
     if (debouncedPushRef.current) {
@@ -447,6 +494,8 @@ export const useSocket = () => {
     conflictManagerRef.current?.clearConflicts();
     setPendingConflicts([]);
     setConflictCount(0);
+    setQueueSize(0);
+    setIsProcessingQueue(false);
   }, []);
 
   const resolveConflict = useCallback(async (conflictId, resolvedContent) => {
@@ -473,6 +522,62 @@ export const useSocket = () => {
     }
   }, []);
 
+  // Process queued operations on reconnection
+  const processQueuedOperations = useCallback(async () => {
+    if (!offlineQueueRef.current || !socketRef.current?.connected || !keysRef.current) {
+      return { processed: 0, failed: 0 };
+    }
+
+    setIsProcessingQueue(true);
+
+    try {
+      const results = await offlineQueueRef.current.processQueue(async (operation) => {
+        if (operation.type !== 'update' || !operation.data) {
+          return { success: false };
+        }
+
+        try {
+          const content = operation.data;
+          const chunks = splitIntoChunks(content);
+          const sessionId = Date.now().toString();
+
+          for (const chunk of chunks) {
+            const dataToEncrypt = chunks.length === 1
+              ? { content }
+              : { chunked: true, sessionId, chunk };
+
+            const encrypted = encryptData(dataToEncrypt, keysRef.current.encryptionKey);
+
+            socketRef.current.emit('push-update', {
+              roomId: keysRef.current.roomId,
+              encryptedData: encrypted,
+              timestamp: Date.now(),
+              chunkIndex: chunk.index,
+              totalChunks: chunks.length,
+            });
+          }
+
+          lastSyncedHashRef.current = hashContent(content);
+          return { success: true };
+        } catch (err) {
+          console.error('Failed to process queued operation:', err);
+          return { success: false };
+        }
+      });
+
+      const size = await offlineQueueRef.current.getQueueSize();
+      setQueueSize(size);
+
+      if (results.processed > 0) {
+        toast.success(`Synced ${results.processed} offline change${results.processed > 1 ? 's' : ''}`);
+      }
+
+      return results;
+    } finally {
+      setIsProcessingQueue(false);
+    }
+  }, [splitIntoChunks, hashContent]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -491,5 +596,10 @@ export const useSocket = () => {
     pendingConflicts,
     resolveConflict,
     clearConflicts,
+    // Offline queue
+    queueSize,
+    isProcessingQueue,
+    processQueuedOperations,
+    isOffline,
   };
 };
