@@ -254,7 +254,7 @@ function handleSocketConnection(socket) {
   });
 
   // Receive an update from a client (supports chunked transfer)
-  socket.on('push-update', async ({ roomId, encryptedData, timestamp, chunkIndex, totalChunks }) => {
+  socket.on('push-update', async ({ roomId, encryptedData, timestamp, _chunkIndex, _totalChunks }) => {
     try {
       // Validate room membership
       const meta = socketMeta.get(socket.id);

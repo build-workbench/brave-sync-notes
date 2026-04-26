@@ -37,7 +37,7 @@ class PersistenceAdapter {
      * @param {EncryptedRoomData} data - 加密的房间数据
      * @returns {Promise<void>}
      */
-    async saveRoom(roomId, data) {
+    async saveRoom(_roomId, _data) {
         throw new Error('saveRoom method must be implemented');
     }
 
@@ -46,7 +46,7 @@ class PersistenceAdapter {
      * @param {string} roomId - 房间ID
      * @returns {Promise<EncryptedRoomData|null>}
      */
-    async getRoom(roomId) {
+    async getRoom(_roomId) {
         throw new Error('getRoom method must be implemented');
     }
 
@@ -55,7 +55,7 @@ class PersistenceAdapter {
      * @param {Date} olderThan - 删除早于此时间的数据
      * @returns {Promise<number>} 删除的记录数量
      */
-    async cleanupExpired(olderThan) {
+    async cleanupExpired(_olderThan) {
         throw new Error('cleanupExpired method must be implemented');
     }
 
@@ -65,7 +65,7 @@ class PersistenceAdapter {
      * @param {Operation} operation - 操作记录
      * @returns {Promise<void>}
      */
-    async appendLog(roomId, operation) {
+    async appendLog(_roomId, _operation) {
         throw new Error('appendLog method must be implemented');
     }
 
@@ -75,7 +75,7 @@ class PersistenceAdapter {
      * @param {number} since - 获取此版本号之后的操作
      * @returns {Promise<Operation[]>}
      */
-    async getLog(roomId, since) {
+    async getLog(_roomId, _since) {
         throw new Error('getLog method must be implemented');
     }
 
