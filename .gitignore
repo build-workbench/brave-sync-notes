@@ -48,3 +48,6 @@ coverage/
 # BMad Method V6
 _bmad/
 _bmad-output/
+
+# Local git worktrees
+.worktrees/
