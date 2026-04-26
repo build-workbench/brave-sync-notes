@@ -221,6 +221,62 @@ export const useSocket = () => {
     };
   }, [t, setStatus]);
 
+  // Process queued operations on reconnection
+  const processQueuedOperations = useCallback(async () => {
+    if (!offlineQueueRef.current || !socketRef.current?.connected || !keysRef.current) {
+      return { processed: 0, failed: 0 };
+    }
+
+    setIsProcessingQueue(true);
+
+    try {
+      const results = await offlineQueueRef.current.processQueue(async (operation) => {
+        if (operation.type !== 'update' || !operation.data) {
+          return { success: false };
+        }
+
+        try {
+          const content = operation.data;
+          const chunks = splitIntoChunks(content);
+          const sessionId = Date.now().toString();
+
+          for (const chunk of chunks) {
+            const dataToEncrypt = chunks.length === 1
+              ? { content }
+              : { chunked: true, sessionId, chunk };
+
+            const encrypted = encryptData(dataToEncrypt, keysRef.current.encryptionKey);
+
+            socketRef.current.emit('push-update', {
+              roomId: keysRef.current.roomId,
+              encryptedData: encrypted,
+              timestamp: Date.now(),
+              chunkIndex: chunk.index,
+              totalChunks: chunks.length,
+            });
+          }
+
+          lastSyncedHashRef.current = hashContent(content);
+          return { success: true };
+        } catch (err) {
+          console.error('Failed to process queued operation:', err);
+          return { success: false };
+        }
+      });
+
+      const size = await offlineQueueRef.current.getQueueSize();
+      setQueueSize(size);
+
+      if (results.processed > 0) {
+        toast.success(`Synced ${results.processed} offline change${results.processed > 1 ? 's' : ''}`);
+      }
+
+      return results;
+    } finally {
+      setIsProcessingQueue(false);
+    }
+  }, [splitIntoChunks, hashContent]);
+
   const joinChain = useCallback((chainMnemonic, name) => {
     return new Promise((resolve) => {
       try {
@@ -521,62 +577,6 @@ export const useSocket = () => {
       socketRef.current.emit('request-sync', { roomId: keysRef.current.roomId });
     }
   }, []);
-
-  // Process queued operations on reconnection
-  const processQueuedOperations = useCallback(async () => {
-    if (!offlineQueueRef.current || !socketRef.current?.connected || !keysRef.current) {
-      return { processed: 0, failed: 0 };
-    }
-
-    setIsProcessingQueue(true);
-
-    try {
-      const results = await offlineQueueRef.current.processQueue(async (operation) => {
-        if (operation.type !== 'update' || !operation.data) {
-          return { success: false };
-        }
-
-        try {
-          const content = operation.data;
-          const chunks = splitIntoChunks(content);
-          const sessionId = Date.now().toString();
-
-          for (const chunk of chunks) {
-            const dataToEncrypt = chunks.length === 1
-              ? { content }
-              : { chunked: true, sessionId, chunk };
-
-            const encrypted = encryptData(dataToEncrypt, keysRef.current.encryptionKey);
-
-            socketRef.current.emit('push-update', {
-              roomId: keysRef.current.roomId,
-              encryptedData: encrypted,
-              timestamp: Date.now(),
-              chunkIndex: chunk.index,
-              totalChunks: chunks.length,
-            });
-          }
-
-          lastSyncedHashRef.current = hashContent(content);
-          return { success: true };
-        } catch (err) {
-          console.error('Failed to process queued operation:', err);
-          return { success: false };
-        }
-      });
-
-      const size = await offlineQueueRef.current.getQueueSize();
-      setQueueSize(size);
-
-      if (results.processed > 0) {
-        toast.success(`Synced ${results.processed} offline change${results.processed > 1 ? 's' : ''}`);
-      }
-
-      return results;
-    } finally {
-      setIsProcessingQueue(false);
-    }
-  }, [splitIntoChunks, hashContent]);
 
   // Cleanup on unmount
   useEffect(() => {
