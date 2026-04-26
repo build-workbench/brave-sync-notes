@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fc from 'fast-check';
 import OfflineQueue from '../OfflineQueue';
-import { resetStorageManager, getStorageManager } from '../../storage/StorageManager';
 
 /**
  * Property Tests for Offline Queue
@@ -195,7 +194,7 @@ describe('Offline Queue Property Tests', () => {
 
       // Process only first two
       let count = 0;
-      await queue.processQueue(async (op) => {
+      await queue.processQueue(async (_op) => {
         count++;
         return count < 2; // Process first, fail second, leave third
       });

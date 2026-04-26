@@ -50,7 +50,7 @@ const Header = ({ onLeave }) => {
   const t = useTranslation(lang);
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('saved'); // 'saved' | 'saving' | 'error'
+  const [saveStatus] = useState('saved'); // 'saved' | 'saving' | 'error'
 
   const statusConfig = {
     connected: {

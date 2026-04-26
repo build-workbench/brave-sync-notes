@@ -412,7 +412,7 @@ export const useSocket = () => {
         resolve(false);
       }
     });
-  }, [setStatus, setNote, setMembers, setView, saveToHistory, reassembleChunks, t, hashContent]);
+  }, [setStatus, setNote, setMembers, setView, saveToHistory, reassembleChunks, t, hashContent, initOfflineQueue, processQueuedOperations]);
 
   // Create debounced push function
   useEffect(() => {

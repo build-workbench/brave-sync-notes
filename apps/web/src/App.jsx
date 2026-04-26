@@ -8,8 +8,8 @@ import { useTranslation } from './utils/translations';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import { LoadingOverlay, EditorSkeleton } from './components/Loading/LoadingSpinner';
 import { ConflictDialog, ConflictIndicator } from './components/Conflict';
-import OfflineIndicator, { ConnectionStatus } from './components/OfflineIndicator/OfflineIndicator';
-import { Eye, Edit3, Columns, HardDrive, AlertCircle } from 'lucide-react';
+import OfflineIndicator from './components/OfflineIndicator/OfflineIndicator';
+import { Eye, Edit3, Columns, AlertCircle } from 'lucide-react';
 
 // Lazy load heavy components
 const Landing = lazy(() => import('./components/Landing/Landing'));
@@ -50,7 +50,6 @@ function App() {
     resolveConflict,
     clearConflicts,
     queueSize,
-    isProcessingQueue,
     isOffline,
   } = useSocket();
   const t = useTranslation(lang);
