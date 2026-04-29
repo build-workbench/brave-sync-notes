@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateUniqueId } from '../utils/shared';
 import { debounce } from '../utils/debounce';
+import { createNotebook as buildNotebook } from '../utils/notebooks';
 
 // Auto-save callback (set externally)
 let autoSaveCallback = null;
@@ -30,6 +31,12 @@ const debouncedAutoSave = debounce(async (state) => {
     }
   }
 }, 300);
+
+const selectNotebookNote = (notes, notebookId) => {
+  return notes
+    .filter((note) => note.notebookId === notebookId)
+    .sort((a, b) => (b.updatedAt || b.timestamp || 0) - (a.updatedAt || a.timestamp || 0))[0];
+};
 
 export const useAppStore = create(
   persist(
@@ -103,6 +110,18 @@ export const useAppStore = create(
 
       setNote: (note, meta) => {
         set((state) => ({
+          notes: state.notes.map((entry) => (
+            entry.id === state.activeNoteId
+              ? {
+                  ...entry,
+                  content: note,
+                  version: meta?.version ?? state.noteVersion,
+                  timestamp: meta?.timestamp ?? Date.now(),
+                  updatedAt: meta?.timestamp ?? Date.now(),
+                  deviceId: meta?.deviceId ?? (state.deviceName || entry.deviceId || 'local'),
+                }
+              : entry
+          )),
           note,
           noteVersion: meta?.version ?? state.noteVersion,
           noteTimestamp: meta?.timestamp ?? Date.now(),
@@ -271,15 +290,16 @@ export const useAppStore = create(
       setNotebooks: (notebooks) => set({ notebooks }),
 
       addNotebook: (notebook) => set((state) => {
-        const newNotebook = {
-          id: notebook.id || generateUniqueId('nb_'),
-          name: notebook.name || '未命名笔记本',
-          createdAt: notebook.createdAt || Date.now(),
-          updatedAt: notebook.updatedAt || Date.now(),
-        };
+        const newNotebook = buildNotebook(notebook);
         return {
           notebooks: [...state.notebooks, newNotebook],
           activeNotebookId: newNotebook.id,
+          activeNoteId: null,
+          mnemonic: newNotebook.mnemonic || state.mnemonic,
+          note: '',
+          noteVersion: 0,
+          noteTimestamp: 0,
+          noteDeviceId: state.deviceName || 'local',
         };
       }),
 
@@ -298,13 +318,17 @@ export const useAppStore = create(
         // 如果删除的是当前活动笔记本，切换到第一个
         if (notebookId === state.activeNotebookId) {
           const nextNotebook = notebooks[0];
-          const nextNote = notes.find((n) => n.notebookId === nextNotebook?.id);
+          const nextNote = selectNotebookNote(notes, nextNotebook?.id);
           return {
             notebooks,
             notes,
             activeNotebookId: nextNotebook?.id || null,
             activeNoteId: nextNote?.id || null,
+            mnemonic: nextNotebook?.mnemonic || '',
             note: nextNote?.content || '',
+            noteVersion: nextNote?.version || 0,
+            noteTimestamp: nextNote?.timestamp || 0,
+            noteDeviceId: nextNote?.deviceId || 'local',
           };
         }
 
@@ -313,12 +337,13 @@ export const useAppStore = create(
 
       setActiveNotebookId: (notebookId) => set((state) => {
         // 切换笔记本时，选择该笔记本的第一个笔记
-        const notebookNotes = state.notes.filter((n) => n.notebookId === notebookId);
-        const firstNote = notebookNotes[0];
+        const notebook = state.notebooks.find((entry) => entry.id === notebookId);
+        const firstNote = selectNotebookNote(state.notes, notebookId);
 
         return {
           activeNotebookId: notebookId,
           activeNoteId: firstNote?.id || null,
+          mnemonic: notebook?.mnemonic || state.mnemonic,
           note: firstNote?.content || '',
           noteVersion: firstNote?.version || 0,
           noteTimestamp: firstNote?.timestamp || 0,
@@ -345,6 +370,9 @@ export const useAppStore = create(
         darkMode: state.darkMode,
         lang: state.lang,
         deviceName: state.deviceName,
+        mnemonic: state.mnemonic,
+        activeNotebookId: state.activeNotebookId,
+        activeNoteId: state.activeNoteId,
         history: state.history,
         fontSize: state.fontSize,
         tabSize: state.tabSize,

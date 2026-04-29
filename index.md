@@ -44,7 +44,7 @@ All technical and product specifications are in the `/specs` directory:
 
 - [CHANGELOG.md](./CHANGELOG.md) - Version history (English)
   - [中文版](./CHANGELOG.zh-CN.md)
-- [Changelog Directory](./changelog/) - Detailed release notes
+- [Changelog Archive](./docs/changelog/) - Detailed release notes
 
 ## 🤖 For AI Agents
 
@@ -65,16 +65,15 @@ brave-sync-notes/
 │   ├── api/                # API interface definitions
 │   ├── db/                 # Database schema definitions
 │   └── testing/            # Testing strategy
-├── docs/                   # 📚 User & Developer Guides
+├── docs/                   # 📚 User & Developer Guides (VitePress)
 │   ├── en/                 # English documentation
 │   ├── zh-CN/              # Chinese documentation
 │   ├── api/                # API reference
-│   ├── setup/              # Setup guides
-│   ├── tutorials/          # Tutorials
-│   └── architecture/       # Architecture docs
-├── changelog/              # 📜 Version history
-│   ├── en/                 # English changelog
-│   └── zh-CN/              # Chinese changelog
+│   └── changelog/          # Version history
+├── openspec/               # 🔄 Change Management (OpenSpec)
+│   ├── changes/            # Active change proposals
+│   ├── specs/              # Delta specs during development
+│   └── schemas/            # Custom schema definitions
 ├── AGENTS.md               # 🤖 AI Agent configuration
 ├── CONTRIBUTING.md         # 🤝 Contributing guide
 ├── README.md               # 📖 Project overview (English)

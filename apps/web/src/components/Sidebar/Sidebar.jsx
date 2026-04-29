@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -22,6 +22,8 @@ const Sidebar = ({ socketId }) => {
     darkMode,
     lang,
     mnemonic,
+    notebooks,
+    activeNotebookId,
     members,
     showSidebar,
     toggleSidebar,
@@ -38,9 +40,18 @@ const Sidebar = ({ socketId }) => {
   const t = useTranslation(lang);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const activeNotebook = useMemo(
+    () => notebooks.find((notebook) => notebook.id === activeNotebookId) || null,
+    [notebooks, activeNotebookId]
+  );
+  const activeMnemonic = activeNotebook?.mnemonic || mnemonic;
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(mnemonic);
+    if (!activeMnemonic) {
+      return;
+    }
+
+    navigator.clipboard.writeText(activeMnemonic);
     setCopyFeedback(true);
     toast.success(t.copied);
     setTimeout(() => setCopyFeedback(false), 2000);
@@ -59,9 +70,20 @@ const Sidebar = ({ socketId }) => {
   };
 
   const generateQRData = () => {
-    // Generate a URL that includes the mnemonic for easy mobile joining
     const baseUrl = window.location.origin;
-    return `${baseUrl}?chain=${encodeURIComponent(mnemonic)}`;
+    const params = new URLSearchParams();
+
+    params.set('chain', activeMnemonic);
+
+    if (activeNotebook?.name) {
+      params.set('notebook', activeNotebook.name);
+    }
+
+    if (activeNotebook?.id) {
+      params.set('notebookId', activeNotebook.id);
+    }
+
+    return `${baseUrl}?${params.toString()}`;
   };
 
   const formatTime = (timestamp) => {
@@ -160,12 +182,19 @@ const Sidebar = ({ socketId }) => {
               }`}>
                 {t.syncChainCode}
               </h3>
+              {activeNotebook && (
+                <p className={`mb-2 text-xs ${
+                  darkMode ? 'text-slate-400' : 'text-slate-500'
+                }`}>
+                  {activeNotebook.name}
+                </p>
+              )}
               <div className={`p-3 rounded-lg border text-xs font-mono break-all select-all ${
                 darkMode
                   ? 'bg-slate-900 border-slate-700 text-slate-300'
                   : 'bg-slate-50 border-slate-200 text-slate-600'
               }`}>
-                {mnemonic}
+                {activeMnemonic}
               </div>
               <div className="flex gap-2 mt-2">
                 <button

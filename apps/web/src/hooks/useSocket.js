@@ -572,6 +572,10 @@ export const useSocket = () => {
     return socketRef.current?.id;
   }, []);
 
+  const getCurrentRoomId = useCallback(() => {
+    return keysRef.current?.roomId || null;
+  }, []);
+
   const requestSync = useCallback(() => {
     if (socketRef.current?.connected && keysRef.current) {
       socketRef.current.emit('request-sync', { roomId: keysRef.current.roomId });
@@ -590,6 +594,7 @@ export const useSocket = () => {
     pushUpdate,
     disconnect,
     getSocketId,
+    getCurrentRoomId,
     requestSync,
     isConnected: () => socketRef.current?.connected ?? false,
     conflictCount,

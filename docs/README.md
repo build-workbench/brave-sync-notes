@@ -1,33 +1,36 @@
 # Documentation
 
-This directory contains user guides, tutorials, and supplementary documentation for Note Sync Now.
+This directory contains the VitePress-powered documentation site for Note Sync Now.
 
 ## Structure
 
 ```
 docs/
-├── setup/              # Environment setup and installation guides
-├── tutorials/          # User tutorials and how-to guides
-├── architecture/       # High-level architecture documentation
+├── .vitepress/         # VitePress configuration
 ├── assets/             # Images, diagrams, and static resources
-├── en/                 # English documentation (legacy)
-├── zh-CN/              # Chinese documentation (legacy)
-└── api/                # API reference documentation
+├── public/             # Public static files (logos, screenshots)
+├── en/                 # English documentation
+├── zh-CN/              # Chinese documentation
+├── api/                # API reference documentation
+└── changelog/          # Version history archive
 ```
 
-## For New Documentation
+## Development
 
-- **Setup guides**: Add to `docs/setup/`
-- **User tutorials**: Add to `docs/tutorials/`
-- **Architecture diagrams**: Add to `docs/assets/`
-- **High-level architecture**: Add to `docs/architecture/`
+```bash
+# Start VitePress dev server
+cd docs && npm run dev
+
+# Build documentation
+cd docs && npm run build
+```
 
 ## For Technical Specifications
 
-Technical specifications (product requirements, RFCs, API definitions, database schemas) are maintained in the `/specs` directory at the project root:
+Technical specifications are maintained in the `/specs` directory:
 
 - `/specs/product/` - Product requirements
-- `/specs/rfc/` - Technical design documents
+- `/specs/rfc/` - Technical design documents (RFCs)
 - `/specs/api/` - API specifications
 - `/specs/db/` - Database schemas
 - `/specs/testing/` - Testing strategy

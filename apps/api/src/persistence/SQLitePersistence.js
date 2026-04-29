@@ -2,6 +2,7 @@ const { PersistenceAdapter, DataSerializer, DataValidator } = require('./Persist
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs').promises;
+const { logger } = require('../utils/logger');
 
 /**
  * SQLite 持久化存储实现
@@ -46,7 +47,7 @@ class SQLitePersistence extends PersistenceAdapter {
             // 创建数据库连接
             this.db = new sqlite3.Database(this.options.dbPath, (err) => {
                 if (err) {
-                    console.error('Failed to connect to SQLite:', err);
+                    logger.error('Failed to connect to SQLite:', { error: err.message });
                     throw err;
                 }
             });
@@ -63,7 +64,7 @@ class SQLitePersistence extends PersistenceAdapter {
 
             this.isConnected = true;
         } catch (error) {
-            console.error('Failed to initialize SQLite:', error);
+            logger.error('Failed to initialize SQLite:', { error: error.message });
             this.isConnected = false;
             this.connectionPromise = null;
             throw error;
@@ -209,7 +210,7 @@ class SQLitePersistence extends PersistenceAdapter {
       `, [roomId, compressedData, data.timestamp, data.version, data.deviceName, data.hash || '', now]);
 
         } catch (error) {
-            console.error(`Failed to save room ${roomId}:`, error);
+            logger.error(`Failed to save room ${roomId}:`, { error: error.message });
             throw new Error(`Failed to save room data: ${error.message}`);
         }
     }
@@ -248,7 +249,7 @@ class SQLitePersistence extends PersistenceAdapter {
 
             return roomData;
         } catch (error) {
-            console.error(`Failed to get room ${roomId}:`, error);
+            logger.error(`Failed to get room ${roomId}:`, { error: error.message });
             throw new Error(`Failed to get room data: ${error.message}`);
         }
     }
@@ -272,7 +273,7 @@ class SQLitePersistence extends PersistenceAdapter {
 
             return result.changes;
         } catch (error) {
-            console.error('Failed to cleanup expired data:', error);
+            logger.error('Failed to cleanup expired data:', { error: error.message });
             throw new Error(`Failed to cleanup expired data: ${error.message}`);
         }
     }
@@ -323,7 +324,7 @@ class SQLitePersistence extends PersistenceAdapter {
       `, [roomId, roomId]);
 
         } catch (error) {
-            console.error(`Failed to append log for room ${roomId}:`, error);
+            logger.error(`Failed to append log for room ${roomId}:`, { error: error.message });
             throw new Error(`Failed to append operation log: ${error.message}`);
         }
     }
@@ -362,7 +363,7 @@ class SQLitePersistence extends PersistenceAdapter {
 
             return operations;
         } catch (error) {
-            console.error(`Failed to get log for room ${roomId}:`, error);
+            logger.error(`Failed to get log for room ${roomId}:`, { error: error.message });
             throw new Error(`Failed to get operation log: ${error.message}`);
         }
     }
@@ -381,7 +382,7 @@ class SQLitePersistence extends PersistenceAdapter {
             await this._getQuery('SELECT 1 as test');
             return true;
         } catch (error) {
-            console.error('SQLite health check failed:', error);
+            logger.error('SQLite health check failed:', { error: error.message });
             return false;
         }
     }
@@ -395,7 +396,7 @@ class SQLitePersistence extends PersistenceAdapter {
             return new Promise((resolve) => {
                 this.db.close((err) => {
                     if (err) {
-                        console.error('Error closing SQLite connection:', err);
+                        logger.error('Error closing SQLite connection:', { error: err.message });
                     }
                     this.db = null;
                     this.isConnected = false;
@@ -426,7 +427,7 @@ class SQLitePersistence extends PersistenceAdapter {
                 databasePath: this.options.dbPath
             };
         } catch (error) {
-            console.error('Failed to get SQLite stats:', error);
+            logger.error('Failed to get SQLite stats:', { error: error.message });
             return {
                 connected: false,
                 error: error.message
@@ -449,7 +450,7 @@ class SQLitePersistence extends PersistenceAdapter {
             await this._runQuery('ANALYZE');
 
         } catch (error) {
-            console.error('SQLite maintenance failed:', error);
+            logger.error('SQLite maintenance failed:', { error: error.message });
             throw new Error(`Database maintenance failed: ${error.message}`);
         }
     }

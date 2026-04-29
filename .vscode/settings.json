@@ -1,3 +1,27 @@
 {
-    "javascript.autoClosingTags": false
+    "javascript.autoClosingTags": false,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "github.copilot.enable": {
+        "*": true,
+        "yaml": true,
+        "markdown": true
+    },
+    "github.copilot.advanced": {
+        "length": 2000,
+        "temperature": 0.1
+    },
+    "files.associations": {
+        "*.js": "javascript",
+        "*.jsx": "javascriptreact"
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/coverage": true,
+        "**/.vitepress/dist": true
+    }
 }

@@ -51,3 +51,6 @@ _bmad-output/
 
 # Local git worktrees
 .worktrees/
+
+# OpenMemory cache (local only)
+.omc/

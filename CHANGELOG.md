@@ -9,10 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Shared utility functions for ID generation and content hashing
+- `jsconfig.json` for LSP support in `apps/web/` and `apps/api/`
+- `.github/copilot-instructions.md` for GitHub Copilot integration
+- Local search functionality with SearchIndexProvider
+- Multi-notebook support with notebook management utilities
+- Offline queue management for enhanced offline support
+- Version snapshots and history management
+- Yjs-based real-time collaboration foundation
 
 ### Changed
 - Removed ~60+ verbose console.log statements across codebase
 - Consolidated duplicate code into shared utilities
+- **Security**: Increased PBKDF2 iterations from 10,000 to 100,000 (OWASP recommendation)
+- Updated `.env.example` with new PBKDF2 default
+- Updated repository description with bilingual format
+- Optimized VitePress documentation portal
+
+### Removed
+- `_bmad/` directory (BMad framework files, 140KB)
+- `_bmad-output/` directory (planning artifacts)
+- Duplicate `changelog/` directory (consolidated to `docs/changelog/`)
+- Empty documentation directories (`docs/setup/`, `docs/tutorials/`, `docs/architecture/`)
+- BMad skills from `.claude/skills/` (kept only OpenSpec skills)
+- All dependabot and recovery remote branches (18 branches cleaned)
+- `HANDOFF.md` (temporary handoff document)
+
+### Fixed
+- Fixed SearchIndex import in SearchIndexProvider.jsx
+- All lint warnings resolved
+- All tests passing (195 frontend + 31 backend)
+
+### Security
+- **BREAKING**: PBKDF2 iterations increased from 10,000 to 100,000
+  - Existing sync chains must be re-created after upgrade
+  - Users will need to re-enter their 12-word mnemonic
 
 ---
 

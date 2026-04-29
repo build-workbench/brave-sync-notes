@@ -1,14 +1,16 @@
-import React, { useEffect, useCallback, useState, useMemo, Suspense, lazy } from 'react';
+import React, { useEffect, useCallback, useState, useMemo, useRef, Suspense, lazy } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, setAutoSaveCallback } from './store/useStore';
 import { useSocket } from './hooks/useSocket';
 import { useStorage } from './hooks/useStorage';
+import { restoreNotebookState } from './utils/notebooks';
 import { useTranslation } from './utils/translations';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import { LoadingOverlay, EditorSkeleton } from './components/Loading/LoadingSpinner';
 import { ConflictDialog, ConflictIndicator } from './components/Conflict';
 import OfflineIndicator from './components/OfflineIndicator/OfflineIndicator';
+import NoteList from './components/NoteList/NoteList';
 import { Eye, Edit3, Columns, AlertCircle } from 'lucide-react';
 
 // Lazy load heavy components
@@ -28,6 +30,9 @@ function App() {
   const resetConnection = useAppStore((state) => state.resetConnection);
   const showSidebar = useAppStore((state) => state.showSidebar);
   const setStorageInitialized = useAppStore((state) => state.setStorageInitialized);
+  const notebooks = useAppStore((state) => state.notebooks);
+  const activeNotebookId = useAppStore((state) => state.activeNotebookId);
+  const deviceName = useAppStore((state) => state.deviceName);
 
   // Storage initialization
   const {
@@ -36,6 +41,9 @@ function App() {
     error: storageError,
     isLoading: storageLoading,
     initialize: initStorage,
+    listNotebooks,
+    getAllNotes,
+    saveNotebook,
     saveNote,
   } = useStorage();
 
@@ -44,6 +52,7 @@ function App() {
     pushUpdate,
     disconnect,
     getSocketId,
+    getCurrentRoomId,
     requestSync,
     conflictCount,
     pendingConflicts,
@@ -70,6 +79,12 @@ function App() {
   const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
   const [activeConflictId, setActiveConflictId] = useState(null);
   const [storageInitAttempted, setStorageInitAttempted] = useState(false);
+  const notebookStateHydratedRef = useRef(false);
+
+  const activeNotebook = useMemo(
+    () => notebooks.find((entry) => entry.id === activeNotebookId) || null,
+    [notebooks, activeNotebookId]
+  );
 
   // Setup auto-save callback
   useEffect(() => {
@@ -123,6 +138,53 @@ function App() {
 
   // Show storage error state
   const showStorageError = storageInitAttempted && storageError && !storageReady;
+
+  useEffect(() => {
+    const hydrateNotebookData = async () => {
+      if (!storageReady || notebookStateHydratedRef.current) {
+        return;
+      }
+
+      try {
+        const currentState = useAppStore.getState();
+        const restored = await restoreNotebookState(
+          {
+            listNotebooks,
+            listNotes: getAllNotes,
+            saveNotebook,
+            saveNote,
+          },
+          currentState
+        );
+
+        if (restored.notebooks.length === 0) {
+          return;
+        }
+
+        notebookStateHydratedRef.current = true;
+
+        useAppStore.setState({
+          notebooks: restored.notebooks,
+          notes: restored.notes,
+          activeNotebookId: restored.activeNotebookId,
+          activeNoteId: restored.activeNoteId,
+          mnemonic: restored.mnemonic,
+          note: restored.note,
+          noteVersion: restored.noteVersion,
+          noteTimestamp: restored.noteTimestamp,
+          noteDeviceId: restored.noteDeviceId,
+          view: 'app',
+        });
+      } catch (error) {
+        console.error('Failed to restore notebook state:', error);
+        toast.error(lang === 'zh' ? '恢复笔记本失败' : 'Failed to restore notebooks', {
+          duration: 4000,
+        });
+      }
+    };
+
+    hydrateNotebookData();
+  }, [storageReady, listNotebooks, getAllNotes, saveNotebook, saveNote, lang]);
 
   const activeConflict = useMemo(() => {
     if (!activeConflictId) return null;
@@ -189,6 +251,34 @@ function App() {
     clearConflicts();
     resetConnection();
   }, [disconnect, clearConflicts, resetConnection]);
+
+  useEffect(() => {
+    const syncActiveNotebook = async () => {
+      if (view !== 'app' || !storageReady || !activeNotebook?.mnemonic) {
+        return;
+      }
+
+      if (getCurrentRoomId() === activeNotebook.roomId) {
+        return;
+      }
+
+      const nextDeviceName = deviceName?.trim() || 'Local Device';
+      const joined = await joinChain(activeNotebook.mnemonic, nextDeviceName);
+      if (joined) {
+        requestSync();
+      }
+    };
+
+    syncActiveNotebook();
+  }, [
+    view,
+    storageReady,
+    activeNotebook,
+    deviceName,
+    joinChain,
+    getCurrentRoomId,
+    requestSync,
+  ]);
 
   // Memoize word count calculation
   const wordCount = useMemo(() => {
@@ -281,6 +371,12 @@ function App() {
           <Suspense fallback={<div className="w-64 bg-slate-800" />}>
             <Sidebar socketId={getSocketId()} />
           </Suspense>
+
+          <div className={`hidden lg:block w-80 shrink-0 border-r ${
+            darkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'
+          }`}>
+            <NoteList />
+          </div>
 
         {/* Main Content Area */}
         <main className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${

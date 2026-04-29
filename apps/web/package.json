@@ -47,6 +47,8 @@
     "rehype-highlight": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "socket.io-client": "^4.7.0",
+    "y-indexeddb": "^9.0.12",
+    "yjs": "^13.6.30",
     "zustand": "^4.4.7"
   },
   "devDependencies": {

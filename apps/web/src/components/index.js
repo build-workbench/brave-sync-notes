@@ -9,3 +9,4 @@ export { default as MarkdownPreview } from './Editor/MarkdownPreview';
 export { default as ErrorBoundary } from './ErrorBoundary/ErrorBoundary';
 export { LoadingSpinner, LoadingOverlay, EditorSkeleton, SidebarSkeleton } from './Loading/LoadingSpinner';
 export { ConflictIndicator, ConflictDialog } from './Conflict';
+export { SearchIndexProvider, useSearch } from './Search';

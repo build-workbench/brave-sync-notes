@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@persistence/*": ["src/persistence/*"],
+      "@utils/*": ["src/utils/*"]
+    },
+    "lib": ["ES2022"]
+  },
+  "include": ["src/**/*", "*.js"],
+  "exclude": ["node_modules", "coverage", "**/*.test.js"]
+}

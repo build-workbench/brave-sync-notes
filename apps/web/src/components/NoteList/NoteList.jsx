@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText,
@@ -9,14 +9,17 @@ import {
   Search,
   MoreHorizontal,
   Clock,
+  Loader2,
+  X,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useStore';
+import { SearchIndexProvider, useSearch } from '../Search/SearchIndexProvider';
 
 /**
- * NoteList Component
- * Displays a list of notes with search, filtering, and management capabilities
+ * NoteListInner Component
+ * Internal component that uses search context
  */
-const NoteList = () => {
+const NoteListInner = () => {
   const {
     darkMode,
     lang,
@@ -34,6 +37,8 @@ const NoteList = () => {
     setActiveNotebookId,
   } = useAppStore();
 
+  const { searchResults, isSearching, search, clearSearch } = useSearch();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
@@ -41,17 +46,55 @@ const NoteList = () => {
   const [editingNotebookId, setEditingNotebookId] = useState(null);
   const [editingNotebookName, setEditingNotebookName] = useState('');
 
+  // Handle search input with debounce
+  const handleSearchChange = useCallback(
+    (e) => {
+      const query = e.target.value;
+      setSearchQuery(query);
+
+      if (query.trim()) {
+        search(query);
+      } else {
+        clearSearch();
+      }
+    },
+    [search, clearSearch]
+  );
+
+  // Clear search
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    clearSearch();
+  }, [clearSearch]);
+
   // Filter notes based on search query and active notebook
   const filteredNotes = useMemo(() => {
-    let result = notes;
-
-    // Filter by active notebook
-    if (activeNotebookId) {
-      result = result.filter((note) => note.notebookId === activeNotebookId);
+    if (!activeNotebookId) {
+      return [];
     }
 
-    // Filter by search query
-    if (searchQuery.trim()) {
+    // If there's a search query and search results, use them
+    if (searchQuery.trim() && searchResults.length > 0) {
+      // Filter search results to current notebook
+      const notebookResults = searchResults.filter(
+        (result) => result.notebookId === activeNotebookId
+      );
+
+      // Convert search results to notes format
+      const resultNoteIds = new Set(notebookResults.map((r) => r.noteId));
+      const matchedNotes = notes.filter(
+        (note) => resultNoteIds.has(note.id) && note.notebookId === activeNotebookId
+      );
+
+      // Sort by last updated
+      return matchedNotes.sort((a, b) => b.updatedAt - a.updatedAt);
+    }
+
+    // Otherwise, filter notes normally
+    let result = notes.filter((note) => note.notebookId === activeNotebookId);
+
+    // Filter by simple search query (fallback)
+    if (searchQuery.trim() && searchResults.length === 0) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (note) =>
@@ -62,7 +105,7 @@ const NoteList = () => {
 
     // Sort by last updated
     return result.sort((a, b) => b.updatedAt - a.updatedAt);
-  }, [notes, activeNotebookId, searchQuery]);
+  }, [notes, activeNotebookId, searchQuery, searchResults]);
 
   // Get notes count per notebook
   const notebookNoteCounts = useMemo(() => {
@@ -75,6 +118,10 @@ const NoteList = () => {
 
   // Handle creating a new note
   const handleAddNote = () => {
+    if (!activeNotebookId) {
+      return;
+    }
+
     addNote({
       title: lang === 'zh' ? '新笔记' : 'New Note',
       content: '',
@@ -187,13 +234,34 @@ const NoteList = () => {
             type="text"
             placeholder={lang === 'zh' ? '搜索笔记...' : 'Search notes...'}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full pl-9 pr-3 py-2 rounded-lg text-sm transition-all ${
+            onChange={handleSearchChange}
+            className={`w-full pl-9 pr-16 py-2 rounded-lg text-sm transition-all ${
               darkMode
                 ? 'bg-slate-700 text-white placeholder-slate-400 focus:bg-slate-600'
                 : 'bg-slate-100 text-slate-900 placeholder-slate-500 focus:bg-white'
             } focus:outline-none focus:ring-2 focus:ring-orange-500`}
           />
+          {/* Search Status */}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {isSearching && (
+              <Loader2 size={14} className="animate-spin text-slate-400" />
+            )}
+            {!isSearching && searchQuery.trim() && searchResults.length > 0 && (
+              <span className="text-xs text-slate-400">
+                {searchResults.length}
+              </span>
+            )}
+            {searchQuery.trim() && (
+              <button
+                onClick={handleClearSearch}
+                className={`p-0.5 rounded hover:bg-slate-300 dark:hover:bg-slate-600 ${
+                  darkMode ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -244,32 +312,6 @@ const NoteList = () => {
             </AnimatePresence>
           </div>
         </div>
-
-        {/* All Notes Option */}
-        <button
-          onClick={() => setActiveNotebookId(null)}
-          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm mb-1 ${
-            activeNotebookId === null
-              ? 'bg-orange-500 text-white'
-              : darkMode
-              ? 'text-slate-200 hover:bg-slate-700'
-              : 'text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <FileText size={14} />
-          <span>{lang === 'zh' ? '所有笔记' : 'All Notes'}</span>
-          <span
-            className={`ml-auto text-xs ${
-              activeNotebookId === null
-                ? 'text-white/70'
-                : darkMode
-                ? 'text-slate-400'
-                : 'text-slate-500'
-            }`}
-          >
-            {notes.length}
-          </span>
-        </button>
 
         {/* Notebook List */}
         <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -360,6 +402,7 @@ const NoteList = () => {
             </span>
             <button
               onClick={handleAddNote}
+              disabled={!activeNotebookId}
               className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
             >
               <Plus size={12} />
@@ -380,7 +423,15 @@ const NoteList = () => {
                 >
                   <FileText size={32} className="mx-auto mb-2 opacity-50" />
                   <p className="text-sm">
-                    {searchQuery
+                    {notebooks.length === 0
+                      ? lang === 'zh'
+                        ? '先创建一个笔记本'
+                        : 'Create your first notebook'
+                      : !activeNotebookId
+                      ? lang === 'zh'
+                        ? '请选择一个笔记本'
+                        : 'Select a notebook'
+                      : searchQuery
                       ? lang === 'zh'
                         ? '未找到匹配的笔记'
                         : 'No matching notes found'
@@ -494,6 +545,20 @@ const NoteList = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+/**
+ * NoteList Component
+ * Main export with SearchIndexProvider wrapper
+ */
+const NoteList = () => {
+  const notes = useAppStore((state) => state.notes);
+
+  return (
+    <SearchIndexProvider notes={notes}>
+      <NoteListInner />
+    </SearchIndexProvider>
   );
 };
 

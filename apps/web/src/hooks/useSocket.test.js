@@ -148,6 +148,20 @@ describe('useSocket', () => {
     expect(mockSocket.emit).toHaveBeenCalledWith('request-sync', { roomId: keys.roomId });
   });
 
+  it('exposes the currently joined room id', async () => {
+    const { result } = renderHook(() => useSocket());
+    const mnemonic = 'test test test test test test test test test test test ball';
+    const keys = deriveKeys(mnemonic);
+
+    await act(async () => {
+      const joinPromise = result.current.joinChain(mnemonic, 'MacBook');
+      mockSocket.handlers.connect();
+      await joinPromise;
+    });
+
+    expect(result.current.getCurrentRoomId()).toBe(keys.roomId);
+  });
+
   it('handles socket errors by surfacing sync feedback', async () => {
     const { result } = renderHook(() => useSocket());
     const mnemonic = 'test test test test test test test test test test test ball';
