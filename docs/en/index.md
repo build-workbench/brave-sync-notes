@@ -128,7 +128,7 @@ brave-sync-notes/
 │   └── api/                  # Express + Socket.IO backend
 ├── changelog/                 # Version history
 ├── README.md                  # Main repository entry
-└── _config.yml               # Jekyll configuration
+└── .vitepress/              # VitePress configuration
 ```
 
 ---

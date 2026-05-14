@@ -9,7 +9,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License: MIT"></a>
   <a href="https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/LessUp/brave-sync-notes/ci.yml?branch=main&style=flat-square&label=CI" alt="CI Status"></a>
-  <a href="https://lessup.github.io/brave-sync-notes/"><img src="https://img.shields.io/github/actions/workflow/status/LessUp/brave-sync-notes/pages.yml?branch=main&style=flat-square&label=Pages" alt="Pages Status"></a>
+  <a href="https://lessup.github.io/brave-sync-notes/"><img src="https://img.shields.io/github/actions/workflow/status/LessUp/brave-sync-notes/docs.yml?branch=main&style=flat-square&label=Pages" alt="Pages Status"></a>
   <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black&style=flat-square" alt="React 18">
   <img src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white&style=flat-square" alt="Express 5">
   <img src="https://img.shields.io/badge/Socket.IO-4-010101?logo=socket.io&style=flat-square" alt="Socket.IO 4">
