@@ -1,4 +1,4 @@
-name: Deploy Documentation
+name: Docs (GitHub Pages)
 
 on:
   push:
@@ -26,31 +26,51 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Read .nvmrc
-        run: echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_ENV
-
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: 'docs/package-lock.json'
+          node-version: '20'
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v6
+      - name: Cache docs node_modules
+        uses: actions/cache@v4
+        with:
+          path: docs/node_modules
+          key: ${{ runner.os }}-docs-node-modules-${{ hashFiles('docs/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-docs-node-modules-
+
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Set VitePress base
+        shell: bash
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${BASE_PATH}" ]]; then
+            base="/"
+          else
+            base="${BASE_PATH%/}/"
+          fi
+          echo "VITEPRESS_BASE=${base}" >> "$GITHUB_ENV"
 
       - name: Install dependencies
-        run: |
-          cd docs
-          npm install
+        working-directory: docs
+        run: npm install --no-package-lock
 
       - name: Build documentation
-        run: |
-          cd docs
-          npm run build
+        working-directory: docs
+        env:
+          VITEPRESS_BASE: ${{ env.VITEPRESS_BASE }}
+        run: npm run build
+
+      - name: Add .nojekyll
+        run: touch docs/.vitepress/dist/.nojekyll
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@v3
         with:
           path: docs/.vitepress/dist
 
@@ -63,4 +83,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v4

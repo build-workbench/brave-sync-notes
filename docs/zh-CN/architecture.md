@@ -2,103 +2,172 @@
 layout: default
 title: 架构说明
 description: Note Sync Now 的系统边界、核心模块与同步数据流概览。
-permalink: /architecture/
 ---
 
 # 架构说明
 
-Note Sync Now 由一个 React + Vite 客户端、一个 Express + Socket.IO 服务端，以及一套 GitHub Pages 文档站组成。系统设计遵循“客户端负责加密与恢复，服务端负责中转与持久化”的边界。
+Note Sync Now 采用端到端加密架构，客户端负责加密与冲突处理，服务端仅作为密文中转站。
 
-## 总体分层
+## 系统架构图
 
-### 客户端层
-
-- React 负责界面与交互
-- Zustand 负责本地状态管理
-- `useSocket` 负责实时同步链路
-- `crypto` 模块负责密钥派生、加密与解密
-- 冲突管理模块负责本地与远端内容差异处理
-- 本地存储模块负责 IndexedDB / LocalStorage 能力承接
-
-关键路径：
-- `apps/web/src/App.jsx`
-- `apps/web/src/hooks/useSocket.js`
-- `apps/web/src/store/useStore.js`
-- `apps/web/src/utils/crypto`
-- `apps/web/src/utils/conflict`
-- `apps/web/src/utils/storage`
-
-### 服务端层
-
-- Express 暴露健康检查与统计接口
-- Socket.IO 处理房间加入、同步广播、错误反馈与成员列表
-- `PersistenceManager` 负责持久化适配
-- Redis / SQLite 作为可切换的存储后端
-- 内存 Map 作为最后兜底存储
-
-关键路径：
-- `apps/api/index.js`
-- `apps/api/src/persistence/PersistenceManager.js`
-- `apps/api/src/persistence/PersistenceAdapter.js`
+```mermaid
+graph TB
+    subgraph 客户端["客户端层 (React + Vite)"]
+        UI[用户界面<br/>React Components]
+        State[状态管理<br/>Zustand]
+        Crypto[加密模块<br/>Web Crypto API]
+        Storage[本地存储<br/>IndexedDB]
+        Socket[同步引擎<br/>useSocket Hook]
+        Conflict[冲突管理<br/>三路合并]
+    end
+    
+    subgraph 服务端["服务端层 (Express + Socket.IO)"]
+        API[REST API<br/>健康检查/统计]
+        WS[WebSocket<br/>Socket.IO]
+        PM[持久化管理<br/>PersistenceManager]
+        Memory[内存存储<br/>Map兜底]
+    end
+    
+    subgraph 存储层["持久化层"]
+        Redis[(Redis)]
+        SQLite[(SQLite)]
+    end
+    
+    UI --> State
+    State --> Crypto
+    State --> Socket
+    Socket --> Storage
+    Socket --> Conflict
+    Crypto --> Socket
+    
+    Socket <-->|WebSocket| WS
+    WS --> PM
+    PM --> Redis
+    PM --> SQLite
+    PM --> Memory
+```
 
 ## 核心架构原则
 
-1. **端到端加密优先**：笔记内容在客户端侧加密，服务端只接收密文。
-2. **助记词驱动恢复**：客户端通过助记词派生房间与加密相关信息。
-3. **服务端尽量无状态**：服务端聚焦同步转发、短期内存态与持久化兜底。
-4. **冲突显式处理**：本地编辑与远端更新冲突时，不把所有情况都简化为覆盖写入。
-5. **多层存储退化**：优先使用持久化存储，不可用时回退到内存模式。
+### 1. 端到端加密优先
+
+笔记内容在客户端加密，服务端只接收密文。即使服务端被攻破，攻击者也无法解密内容。
+
+### 2. 助记词驱动恢复
+
+客户端通过 BIP39 助记词派生房间 ID 和加密密钥，用户只需记住 12 个单词即可恢复所有数据。
+
+### 3. 服务端尽量无状态
+
+服务端聚焦同步转发、短期内存态与持久化兜底，不处理任何明文逻辑。
+
+### 4. 冲突显式处理
+
+本地编辑与远端更新冲突时，不把所有情况简化为覆盖写入，而是通过三路合并算法检测冲突，提示用户手动解决。
+
+### 5. 多层存储退化
+
+优先使用持久化存储（Redis/SQLite），不可用时回退到内存模式，保证服务可用性。
 
 ## 同步数据流
 
-1. 用户在客户端编辑内容。
-2. Zustand 更新当前笔记状态。
-3. `useSocket` 对内容进行加密，并按需要拆分为分块载荷。
-4. 客户端通过 `push-update` 将密文发送到服务端。
-5. 服务端验证房间成员资格、数据格式、大小与频率限制。
-6. 服务端将最新密文保存在持久化层或内存兜底层。
-7. 服务端通过 `sync-update` 向房间内其他成员广播更新。
-8. 接收端客户端解密数据，必要时进入冲突检测与人工解决流程。
+```mermaid
+flowchart LR
+    A[用户编辑] --> B[Zustand更新]
+    B --> C[防抖处理]
+    C --> D{内容大小}
+    D -->|< 100KB| E[直接加密]
+    D -->|>= 100KB| F[分块加密]
+    E --> G[push-update]
+    F --> G
+    G --> H[服务端验证]
+    H --> I[持久化存储]
+    I --> J[广播sync-update]
+    J --> K[其他客户端解密]
+    K --> L{冲突检测}
+    L -->|无冲突| M[更新本地]
+    L -->|有冲突| N[提示用户解决]
+```
 
-## 关键模块关系
+## 模块职责边界
 
-### 客户端同步引擎
+### 客户端职责
 
-`useSocket.js` 是客户端同步主入口，承担：
+| 模块 | 职责 | 关键文件 |
+|------|------|---------|
+| 用户界面 | React 组件、交互逻辑 | `apps/web/src/App.jsx` |
+| 状态管理 | Zustand store、状态同步 | `apps/web/src/store/useStore.js` |
+| 加密模块 | 密钥派生、加密解密 | `apps/web/src/utils/crypto` |
+| 同步引擎 | Socket 连接、事件处理 | `apps/web/src/hooks/useSocket.js` |
+| 冲突管理 | 差异检测、合并策略 | `apps/web/src/utils/conflict` |
+| 本地存储 | IndexedDB 读写、离线队列 | `apps/web/src/utils/storage` |
 
-- 创建与维护 Socket 连接
-- 首次 `join-chain`
-- 断线重连后的重新加入
-- 远端 `sync-update` 解密与落库
-- `request-sync` 主动拉取
-- 历史记录节流保存
-- 冲突管理器调用
+### 服务端职责
 
-### 服务端事件模型
+| 模块 | 职责 | 关键文件 |
+|------|------|---------|
+| REST API | 健康检查、统计接口 | `apps/api/index.js` |
+| WebSocket | 房间管理、事件分发 | `apps/api/index.js` |
+| 持久化 | 存储适配、数据迁移 | `apps/api/src/persistence/` |
 
-`server/index.js` 当前的关键事件包括：
+## 关键事件模型
 
-- `join-chain`：加入同步链并返回现有数据
-- `push-update`：提交最新密文更新
-- `request-sync`：重连或恢复后请求最新状态
-- `room-info`：广播房间成员信息
-- `update-ack`：确认服务端已接收更新
-- `error`：返回参数、权限或限流错误
+```mermaid
+sequenceDiagram
+    actor User as 用户
+    participant Client as 客户端
+    participant Server as 服务端
+    participant DB as 持久化层
+    
+    rect rgb(240, 248, 255)
+        Note over User, DB: 加入同步链
+        User->>Client: 输入助记词
+        Client->>Client: 派生 roomId & key
+        Client->>Server: join-chain
+        Server->>DB: 查询历史
+        DB-->>Server: 返回密文
+        Server-->>Client: sync-update
+        Server->>Server: 广播 room-info
+    end
+    
+    rect rgb(255, 248, 240)
+        Note over User, DB: 推送更新
+        User->>Client: 编辑内容
+        Client->>Client: 加密内容
+        Client->>Server: push-update
+        Server->>Server: 验证格式/大小/频率
+        Server->>DB: 存储密文
+        Server-->>Client: update-ack
+        Server->>Server: 广播 sync-update
+    end
+    
+    rect rgb(240, 255, 240)
+        Note over User, DB: 重连恢复
+        Client->>Server: join-chain
+        Server->>DB: 查询最新
+        Server-->>Client: sync-update
+        Client->>Client: 冲突检测
+    end
+```
 
-## 当前实现重点
+## 扩展性设计
 
-根据现有设计文档与代码实现，本项目当前重点在于：
+### 水平扩展
 
-- 稳定的端到端同步主链路
-- 冲突检测与人工解决集成
-- 服务端持久化与回退策略
-- 后续多笔记、离线队列与更强本地存储能力的可扩展性
+- 服务端无状态设计，可水平扩展
+- Redis 作为共享存储，支持多实例
+- Socket.IO 支持集群模式
+
+### 功能扩展
+
+- 多笔记支持：已有架构预留空间
+- 离线队列：IndexedDB 已实现基础能力
+- 版本历史：持久化层支持版本标记
 
 ## 推荐阅读顺序
 
-1. [仓库概览]({{ '/overview/' | relative_url }})
-2. 当前页面：架构说明
-3. [部署与运行]({{ '/deployment/' | relative_url }})
-4. [安全与同步机制]({{ '/security-sync/' | relative_url }})
-5. [贡献指南]({{ '/contributing/' | relative_url }})
-6. [更新日志]({{ '/changelog/' | relative_url }})
+1. 当前页面：架构说明
+2. [安全与同步机制](/zh-CN/security-sync)
+3. [加密协议详解](/zh-CN/crypto-protocol)
+4. [同步算法说明](/zh-CN/sync-algorithm)
+5. [API 设计文档](/zh-CN/api-design)

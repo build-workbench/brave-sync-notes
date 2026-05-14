@@ -2,142 +2,251 @@
 layout: default
 title: 安全与同步机制
 description: 端到端加密、房间加入、同步广播、冲突处理与服务端防护边界说明。
-permalink: /security-sync/
 ---
 
 # 安全与同步机制
 
-Note Sync Now 的核心价值不只是“实时同步”，而是“在不把明文交给服务端的前提下完成同步协作”。本页说明当前实现中的安全边界与同步主链路。
+Note Sync Now 的核心价值不只是"实时同步"，而是"在不把明文交给服务端的前提下完成同步协作"。
 
-## 端到端加密边界
+## 安全边界图
 
-系统遵循“客户端加密、服务端中转密文”的原则。
+```mermaid
+graph LR
+    subgraph 信任域["信任域 (客户端)"]
+        A[明文笔记]
+        B[加密密钥]
+        C[解密内容]
+    end
+    
+    subgraph 非信任域["非信任域 (服务端)"]
+        D[密文存储]
+        E[房间管理]
+        F[事件转发]
+    end
+    
+    A -->|加密| D
+    B -.->|从未离开| A
+    D -->|转发| G[其他客户端]
+    G -->|解密| H[明文笔记]
+    
+    style 信任域 fill:#e8f5e9
+    style 非信任域 fill:#ffebee
+```
 
-### 客户端负责
+## 端到端加密流程
 
-- 助记词相关密钥派生
-- 内容加密与解密
-- 接收远端更新后的冲突判断
-- 本地历史记录与状态更新
+```mermaid
+sequenceDiagram
+    actor User as 用户
+    participant Client as 客户端
+    participant Server as 服务端
+    participant Attacker as 攻击者
+    
+    Note over User, Attacker: 初始化阶段
+    User->>Client: 输入助记词
+    Client->>Client: PBKDF2派生密钥<br/>(100,000 iterations)
+    Client->>Client: 派生 roomId
+    
+    Note over User, Attacker: 同步阶段
+    User->>Client: 编辑笔记
+    Client->>Client: AES-256-GCM 加密
+    Client->>Server: 密文传输
+    
+    rect rgb(255, 200, 200)
+        Note over Attacker: 攻击者只能看到密文
+        Attacker->>Server: 窃取数据
+        Server-->>Attacker: 密文（无法解密）
+    end
+    
+    Server->>Client: 广播密文
+    Client->>Client: AES-256-GCM 解密
+    Client-->>User: 显示明文
+```
 
-相关代码：
-- `apps/web/src/hooks/useSocket.js`
-- `apps/web/src/utils/crypto`
-- `apps/web/src/store/useStore.js`
+## 客户端安全职责
 
-### 服务端负责
+### 密钥管理
 
-- 房间成员管理
-- 同步事件分发
-- 数据格式、大小与频率限制
-- 持久化密文载荷
-- 健康检查与统计信息
+```mermaid
+flowchart TB
+    A[助记词<br/>12个单词] --> B[BIP39]
+    B --> C[种子]
+    C --> D[PBKDF2]
+    D --> E[加密密钥<br/>256-bit]
+    D --> F[房间ID<br/>128-bit]
+    
+    E --> G[AES-256-GCM<br/>加密/解密]
+    F --> H[房间标识]
+    
+    style A fill:#e3f2fd
+    style E fill:#c8e6c9
+    style F fill:#c8e6c9
+```
 
-相关代码：
-- `apps/api/index.js`
-- `apps/api/src/persistence/PersistenceAdapter.js`
-- `apps/api/src/persistence/PersistenceManager.js`
+### 加密模块职责
 
-服务端不负责明文编辑逻辑，也不应依赖客户端内容语义来进行协作处理。
+| 功能 | 实现 | 安全等级 |
+|------|------|---------|
+| 密钥派生 | PBKDF2 (100,000 iterations) | 抗暴力破解 |
+| 加密算法 | AES-256-GCM | 军事级别 |
+| 认证标签 | 128-bit GCM tag | 防篡改 |
+| 助记词熵 | 128-bit (12 words) | 高熵值 |
 
-## 关键同步流程
+**关键代码位置**：
+- `apps/web/src/utils/crypto` - 加密模块
+- `apps/web/src/hooks/useSocket.js` - 同步引擎
+- `apps/web/src/store/useStore.js` - 状态管理
 
-### 1. 加入同步链
+## 服务端安全边界
 
-客户端调用 `joinChain` 后：
+### 服务端职责
 
-1. 通过助记词派生房间与加密相关信息
-2. 建立 Socket 连接
-3. 发送 `join-chain` 事件并附带 `roomId` 与设备名
-4. 服务端校验房间 ID
-5. 服务端将 socket 加入对应房间
-6. 如果已有历史密文，服务端立即返回 `sync-update`
-7. 服务端广播最新 `room-info`
+服务端**仅负责**：
 
-### 2. 推送更新
+```mermaid
+graph TB
+    A[服务端] --> B[房间成员管理]
+    A --> C[同步事件分发]
+    A --> D[数据格式校验]
+    A --> E[大小与频率限制]
+    A --> F[持久化密文]
+    A --> G[健康检查与统计]
+    
+    style A fill:#ffcdd2
+    style B fill:#fff9c4
+    style C fill:#fff9c4
+    style D fill:#fff9c4
+    style E fill:#fff9c4
+    style F fill:#fff9c4
+    style G fill:#fff9c4
+```
 
-用户编辑内容后：
+### 服务端防护措施
 
-1. 客户端对内容进行防抖处理
-2. 内容较大时按块拆分
-3. 客户端加密后发出 `push-update`
-4. 服务端校验成员资格、数据格式与体积
-5. 服务端写入持久化层或内存层
-6. 服务端向房间其他成员广播 `sync-update`
-7. 服务端向发送端返回 `update-ack`
+```mermaid
+flowchart LR
+    A[请求] --> B{输入验证}
+    B -->|失败| C[拒绝请求]
+    B -->|通过| D{访问控制}
+    D -->|无权限| C
+    D -->|有权限| E{大小限制<br/>< 5MB}
+    E -->|超限| C
+    E -->|通过| F{频率限制<br/>30次/分钟}
+    F -->|超限| C
+    F -->|通过| G[处理请求]
+    
+    style C fill:#ef5350
+    style G fill:#66bb6a
+```
 
-### 3. 重连与主动同步
+| 防护措施 | 限制值 | 目的 |
+|---------|-------|------|
+| 房间ID格式 | 长度+字符限制 | 防止注入 |
+| 更新大小 | < 5MB | 防止DoS |
+| 更新频率 | 30次/分钟 | 防止滥用 |
+| 载荷格式 | 必须有 encryptedData | 格式验证 |
 
-当网络波动或客户端恢复时：
+**关键代码位置**：
+- `apps/api/index.js` - 服务端入口
+- `apps/api/src/persistence/` - 持久化层
 
-- 客户端监听重连事件并自动重新发送 `join-chain`
-- 客户端也可以主动触发 `request-sync`
-- 服务端优先从持久化层读取最新密文；若不可用则回退到内存层
+## 冲突处理机制
 
-## 冲突处理
+```mermaid
+flowchart TB
+    A[收到远端更新] --> B[解密数据]
+    B --> C{本地有未同步修改?}
+    C -->|无| D[直接应用]
+    C -->|有| E[计算内容哈希]
+    E --> F{哈希相同?}
+    F -->|是| D
+    F -->|否| G[检测编辑冲突]
+    G --> H{基础版本一致?}
+    H -->|是| I[三路合并]
+    H -->|否| J[加入冲突队列]
+    I --> K{合并成功?}
+    K -->|是| D
+    K -->|否| J
+    J --> L[提示用户解决]
+    
+    style D fill:#c8e6c9
+    style J fill:#ffcdd2
+    style L fill:#fff9c4
+```
 
-当前实现不是简单的“谁最后写谁赢”。客户端集成了冲突管理模块，用于处理本地未同步修改与远端新内容同时出现的情况。
+### 三路合并算法
 
-已接入的关键能力包括：
+```mermaid
+sequenceDiagram
+    participant Local as 本地版本
+    participant Base as 基础版本
+    participant Remote as 远端版本
+    participant Result as 合并结果
+    
+    Note over Local, Result: 三路合并
+    Local->>Base: 计算本地差异 (diff1)
+    Remote->>Base: 计算远端差异 (diff2)
+    
+    alt 无冲突区域
+        Base->>Result: 应用 diff1
+        Base->>Result: 应用 diff2
+    else 有冲突区域
+        Base->>Result: 标记冲突
+        Result->>Result: 等待用户决策
+    end
+```
 
-- 比较本地内容与远端内容哈希/版本信息
-- 判断是否存在并发编辑或离线分叉
-- 维护待处理冲突列表
-- 支持人工解决冲突并清理冲突状态
+## 威胁模型
 
-这部分逻辑的核心入口在：
-- `brave-sync-notes/client/src/hooks/useSocket.js`
-- `apps/web/src/utils/conflict`
+```mermaid
+graph TB
+    subgraph 威胁["潜在威胁"]
+        T1[网络窃听]
+        T2[服务端被攻破]
+        T3[中间人攻击]
+        T4[暴力破解]
+        T5[DoS攻击]
+    end
+    
+    subgraph 防护["安全措施"]
+        P1[TLS加密传输]
+        P2[零知识架构]
+        P3[端到端加密]
+        P4[PBKDF2高迭代]
+        P5[频率限制]
+    end
+    
+    T1 -.->|防护| P1
+    T2 -.->|防护| P2
+    T3 -.->|防护| P3
+    T4 -.->|防护| P4
+    T5 -.->|防护| P5
+    
+    style 威胁 fill:#ffcdd2
+    style 防护 fill:#c8e6c9
+```
 
-## 服务端防护边界
-
-当前服务端已经实现若干直接防护措施：
-
-### 输入验证
-
-- 房间 ID 必须满足长度与字符格式限制
-- 更新载荷必须包含字符串形式的 `encryptedData`
-
-### 访问控制
-
-- 只有已加入房间的 socket 才能向该房间执行 `push-update`
-
-### 大小限制
-
-- 单次密文更新大小上限约为 5MB
-- Socket 层 `maxHttpBufferSize` 额外限制传输上限
-
-### 频率限制
-
-- 每个 socket 每分钟最多提交 30 次更新
-
-### 数据清理
-
-- 分块传输会话有超时清理机制
-- 空闲过久且无客户端连接的房间会按 TTL 清理
-- 房间总数超过上限时，会优先淘汰最旧且无连接的房间
+| 威胁 | 风险等级 | 防护措施 | 状态 |
+|------|---------|---------|------|
+| 网络窃听 | 高 | TLS + E2EE | ✅ 已防护 |
+| 服务端数据泄露 | 高 | 零知识架构 | ✅ 已防护 |
+| 中间人攻击 | 中 | 客户端加密 | ✅ 已防护 |
+| 暴力破解密钥 | 中 | PBKDF2 (100k iter) | ✅ 已防护 |
+| DoS攻击 | 中 | 频率/大小限制 | ✅ 已防护 |
+| 客户端恶意代码 | 低 | 代码审计 | ⚠️ 需用户注意 |
 
 ## 运行时可观测性
 
 服务端提供：
 
-- `/health`：基本健康状态、连接数、房间数、持久化状态
-- `/stats`：连接数、房间数、内存使用与持久化统计
-
-这两个接口适合在开发、部署排障和后续 CI / 监控接入时使用。
-
-## 当前工程重点
-
-接下来最值得优先增强的是：
-
-1. 为 `useSocket` 补更贴近真实使用路径的测试
-2. 为服务端事件流补 join / sync / error 主链路测试
-3. 把这些现有测试接入 CI，形成稳定质量门禁
+| 端点 | 用途 | 信息 |
+|------|------|------|
+| `/health` | 健康检查 | 连接数、房间数、持久化状态 |
+| `/stats` | 统计信息 | 内存使用、持久化统计 |
 
 ## 推荐阅读顺序
 
-1. [仓库概览]({{ '/overview/' | relative_url }})
-2. [架构说明]({{ '/architecture/' | relative_url }})
-3. 当前页面：安全与同步机制
-4. [部署与运行]({{ '/deployment/' | relative_url }})
-5. [更新日志]({{ '/changelog/' | relative_url }})
+1. [架构说明](/zh-CN/architecture)
+2. 当前页面：安全与同步机制
+3. [加密协议详解](/zh-CN/crypto-protocol)
+4. [部署与运行](/zh-CN/deployment)
