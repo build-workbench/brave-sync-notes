@@ -1,36 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateUniqueId } from '../utils/shared';
-import { debounce } from '../utils/debounce';
 import { createNotebook as buildNotebook } from '../utils/notebooks';
-
-// Auto-save callback (set externally)
-let autoSaveCallback = null;
-
-/**
- * Set the auto-save callback function
- * @param {Function} callback - Async function to save note
- */
-export const setAutoSaveCallback = (callback) => {
-  autoSaveCallback = callback;
-};
-
-// Create debounced auto-save function
-const debouncedAutoSave = debounce(async (state) => {
-  if (autoSaveCallback && state.autoSave && state.activeNoteId && state.storageInitialized) {
-    try {
-      await autoSaveCallback({
-        notebookId: state.activeNotebookId,
-        noteId: state.activeNoteId,
-        content: state.note,
-        version: state.noteVersion,
-        updatedAt: Date.now(),
-      });
-    } catch (error) {
-      console.error('Auto-save failed:', error);
-    }
-  }
-}, 300);
 
 const selectNotebookNote = (notes, notebookId) => {
   return notes
@@ -127,8 +98,6 @@ export const useAppStore = create(
           noteTimestamp: meta?.timestamp ?? Date.now(),
           noteDeviceId: meta?.deviceId ?? (state.deviceName || state.noteDeviceId || 'local'),
         }));
-        // Trigger auto-save
-        debouncedAutoSave(get());
       },
       setCurrentFileType: (currentFileType) => set({ currentFileType }),
 

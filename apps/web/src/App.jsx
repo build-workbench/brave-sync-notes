@@ -1,9 +1,10 @@
 import React, { useEffect, useCallback, useState, useMemo, useRef, Suspense, lazy } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore, setAutoSaveCallback } from './store/useStore';
+import { useAppStore } from './store/useStore';
 import { useSocket } from './hooks/useSocket';
 import { useStorage } from './hooks/useStorage';
+import { useAutoSave } from './hooks/useAutoSave';
 import { restoreNotebookState } from './utils/notebooks';
 import { useTranslation } from './utils/translations';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
@@ -86,26 +87,20 @@ function App() {
     [notebooks, activeNotebookId]
   );
 
-  // Setup auto-save callback
-  useEffect(() => {
-    setAutoSaveCallback(async (noteData) => {
-      if (storageReady && noteData.notebookId && noteData.noteId) {
-        try {
-          await saveNote(noteData.notebookId, {
-            id: noteData.noteId,
-            content: noteData.content,
-            version: noteData.version,
-            updatedAt: noteData.updatedAt,
-          });
-        } catch (error) {
-          console.error('Auto-save failed:', error);
-          toast.error(lang === 'zh' ? '自动保存失败' : 'Auto-save failed', {
-            duration: 3000,
-          });
-        }
+  // Create storage object for useAutoSave
+  const storageForAutoSave = useMemo(() => ({
+    saveNote: async (notebookId, note) => {
+      if (storageReady) {
+        await saveNote(notebookId, note);
       }
-    });
-  }, [storageReady, saveNote, lang]);
+    },
+  }), [storageReady, saveNote]);
+
+  // Setup auto-save
+  useAutoSave({
+    storage: storageForAutoSave,
+    enabled: storageReady,
+  });
 
   // Initialize storage on mount
   useEffect(() => {

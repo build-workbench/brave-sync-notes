@@ -2,57 +2,34 @@ import { useRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAppStore } from '../store/useStore';
 import { deriveKeys, encryptData, decryptData } from '../utils/crypto';
-import { ConflictManager } from '../utils/conflict';
+import { ConflictService } from '../utils/conflict';
 import { OfflineQueue } from '../utils/offline';
 import { getStorageManager } from '../utils/storage';
 import debounce from 'lodash.debounce';
 import toast from 'react-hot-toast';
+import {
+  getSocketUrl,
+  getMessages,
+  hashContent,
+  splitIntoChunks,
+  createChunkSessionManager,
+  HISTORY_THROTTLE_MS,
+  MAX_RECONNECTION_ATTEMPTS,
+  RECONNECTION_DELAY_MIN,
+  RECONNECTION_DELAY_MAX,
+  SOCKET_TIMEOUT,
+  CHUNK_SESSION_TIMEOUT,
+  CHUNK_CLEANUP_INTERVAL,
+} from '../utils/sync';
 
-const getSocketUrl = () => {
-  if (import.meta.env.VITE_SOCKET_URL) {
-    return import.meta.env.VITE_SOCKET_URL;
-  }
-
-  if (import.meta.env.DEV) {
-    return 'http://localhost:3002';
-  }
-
-  return null;
-};
-
-// Chunk size for large content (50KB)
-const CHUNK_SIZE = 50 * 1024;
-
-// Minimum interval between history saves (5 seconds)
-const HISTORY_THROTTLE_MS = 5000;
-
-const messages = {
-  en: {
-    connected: 'Connected to sync chain',
-    disconnected: 'Disconnected from server',
-    reconnecting: 'Reconnecting...',
-    reconnected: 'Reconnected successfully',
-    syncError: 'Sync error occurred',
-    joinError: 'Failed to join chain',
-    networkOffline: 'Network offline',
-    networkOnline: 'Network restored',
-  },
-  zh: {
-    connected: '已连接到同步链',
-    disconnected: '与服务器断开连接',
-    reconnecting: '正在重新连接...',
-    reconnected: '重新连接成功',
-    syncError: '同步出错',
-    joinError: '加入同步链失败',
-    networkOffline: '网络已断开',
-    networkOnline: '网络已恢复',
-  },
-};
-
+/**
+ * 同步 Socket Hook
+ * 管理实时同步连接、冲突处理和离线队列
+ */
 export const useSocket = () => {
+  // Refs for socket and connection state
   const socketRef = useRef(null);
   const keysRef = useRef(null);
-  const pendingChunksRef = useRef({});
   const debouncedPushRef = useRef(null);
   const lastHistorySaveRef = useRef(0);
   const lastContentHashRef = useRef('');
@@ -60,14 +37,20 @@ export const useSocket = () => {
   const reconnectAttemptRef = useRef(0);
   const isReconnectingRef = useRef(false);
 
+  // Chunk session manager
+  const chunkManagerRef = useRef(createChunkSessionManager());
+
+  // Conflict management
   const conflictManagerRef = useRef(null);
-  const offlineQueueRef = useRef(null);
   const [pendingConflicts, setPendingConflicts] = useState([]);
   const [conflictCount, setConflictCount] = useState(0);
+
+  // Offline queue
+  const offlineQueueRef = useRef(null);
   const [queueSize, setQueueSize] = useState(0);
   const [isProcessingQueue, setIsProcessingQueue] = useState(false);
-  
-  // Get store values with selector to prevent unnecessary rerenders
+
+  // Store selectors
   const setStatus = useAppStore((state) => state.setStatus);
   const setNote = useAppStore((state) => state.setNote);
   const setMembers = useAppStore((state) => state.setMembers);
@@ -76,13 +59,15 @@ export const useSocket = () => {
   const syncDebounceMs = useAppStore((state) => state.syncDebounceMs);
   const lang = useAppStore((state) => state.lang);
 
-  const t = useMemo(() => messages[lang] || messages.zh, [lang]);
+  const t = useMemo(() => getMessages(lang), [lang]);
 
+  // Initialize conflict manager
   if (!conflictManagerRef.current) {
-    conflictManagerRef.current = new ConflictManager({ autoResolveStrategy: 'manual' });
+    conflictManagerRef.current = new ConflictService({ autoResolveStrategy: 'manual' });
   }
 
-  // Initialize offline queue
+  // ==================== Initialization ====================
+
   const initOfflineQueue = useCallback(async () => {
     if (offlineQueueRef.current) return offlineQueueRef.current;
 
@@ -99,77 +84,18 @@ export const useSocket = () => {
     }
   }, []);
 
-  // Check if offline (either network or socket disconnected)
+  // ==================== Offline Detection ====================
+
   const isOffline = useCallback(() => {
     return !navigator.onLine || !socketRef.current?.connected;
   }, []);
 
-  // Hash function for content comparison (optimized for large content)
-  const hashContent = useCallback((content) => {
-    let hash = 0;
-    for (let i = 0; i < Math.min(content.length, 1000); i++) {
-      const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return hash.toString() + content.length;
-  }, []);
+  // ==================== History Management ====================
 
-  // Split content into chunks for large files
-  const splitIntoChunks = useCallback((content) => {
-    if (content.length <= CHUNK_SIZE) {
-      return [{ index: 0, total: 1, data: content }];
-    }
-    
-    const chunks = [];
-    const totalChunks = Math.ceil(content.length / CHUNK_SIZE);
-    
-    for (let i = 0; i < totalChunks; i++) {
-      chunks.push({
-        index: i,
-        total: totalChunks,
-        data: content.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE),
-      });
-    }
-    
-    return chunks;
-  }, []);
-
-  // Reassemble chunks
-  const reassembleChunks = useCallback((sessionId, chunk) => {
-    if (!pendingChunksRef.current[sessionId]) {
-      pendingChunksRef.current[sessionId] = {
-        chunks: new Array(chunk.total),
-        received: 0,
-        total: chunk.total,
-        startTime: Date.now(),
-      };
-    }
-    
-    const session = pendingChunksRef.current[sessionId];
-    
-    // Prevent duplicate chunks
-    if (session.chunks[chunk.index] !== undefined) {
-      return null;
-    }
-    
-    session.chunks[chunk.index] = chunk.data;
-    session.received++;
-    
-    if (session.received === session.total) {
-      const fullContent = session.chunks.join('');
-      delete pendingChunksRef.current[sessionId];
-      return fullContent;
-    }
-    
-    return null;
-  }, []);
-
-  // Throttled history save
   const saveToHistory = useCallback((content, deviceName) => {
     const now = Date.now();
     const contentHash = hashContent(content);
-    
+
     // Skip if same content or too soon
     if (
       contentHash === lastContentHashRef.current ||
@@ -178,50 +104,108 @@ export const useSocket = () => {
     ) {
       return;
     }
-    
+
     lastHistorySaveRef.current = now;
     lastContentHashRef.current = contentHash;
     addToHistory({ content, deviceName });
-  }, [addToHistory, hashContent]);
+  }, [addToHistory]);
 
-  // Cleanup stale chunk sessions
-  useEffect(() => {
-    const cleanup = setInterval(() => {
-      const now = Date.now();
-      for (const [sessionId, session] of Object.entries(pendingChunksRef.current)) {
-        if (now - session.startTime > 30000) { // 30 seconds timeout
-          delete pendingChunksRef.current[sessionId];
-        }
-      }
-    }, 10000);
-    
-    return () => clearInterval(cleanup);
-  }, []);
+  // ==================== Content Push ====================
 
-  // Network status monitoring
-  useEffect(() => {
-    const handleOnline = () => {
-      toast.success(t.networkOnline);
-      if (socketRef.current && !socketRef.current.connected && keysRef.current) {
-        socketRef.current.connect();
-      }
-    };
-    
-    const handleOffline = () => {
-      toast.error(t.networkOffline);
+  const pushContent = useCallback((content) => {
+    if (!socketRef.current?.connected || !keysRef.current) {
       setStatus('disconnected');
-    };
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [t, setStatus]);
+      return;
+    }
 
-  // Process queued operations on reconnection
+    try {
+      const chunks = splitIntoChunks(content);
+      const sessionId = Date.now().toString();
+
+      chunks.forEach((chunk) => {
+        const dataToEncrypt = chunks.length === 1
+          ? { content }
+          : { chunked: true, sessionId, chunk };
+
+        const encrypted = encryptData(dataToEncrypt, keysRef.current.encryptionKey);
+
+        socketRef.current.emit('push-update', {
+          roomId: keysRef.current.roomId,
+          encryptedData: encrypted,
+          timestamp: Date.now(),
+          chunkIndex: chunk.index,
+          totalChunks: chunks.length,
+        });
+      });
+
+      lastSyncedHashRef.current = hashContent(content);
+      setStatus('connected');
+    } catch (err) {
+      console.error('Push update error:', err);
+      setStatus('disconnected');
+    }
+  }, [setStatus]);
+
+  // Create debounced push function
+  useEffect(() => {
+    debouncedPushRef.current = debounce(pushContent, syncDebounceMs);
+
+    return () => {
+      if (debouncedPushRef.current) {
+        debouncedPushRef.current.cancel();
+      }
+    };
+  }, [syncDebounceMs, pushContent]);
+
+  // ==================== Remote Content Handler ====================
+
+  const handleRemoteContent = useCallback(async (remoteContent, payload) => {
+    const state = useAppStore.getState();
+    const localContent = state.note || '';
+    const localHash = hashContent(localContent);
+    const isDirty = localHash !== lastSyncedHashRef.current;
+
+    const remoteMeta = {
+      version: payload.version ?? 0,
+      timestamp: payload.timestamp ?? Date.now(),
+      deviceId: payload.deviceName || 'remote',
+    };
+
+    if (!isDirty || !conflictManagerRef.current) {
+      setNote(remoteContent, remoteMeta);
+      lastSyncedHashRef.current = hashContent(remoteContent);
+      saveToHistory(remoteContent, payload.deviceName);
+      return;
+    }
+
+    const result = await conflictManagerRef.current.checkAndHandle(
+      {
+        content: localContent,
+        version: state.noteVersion || 0,
+        timestamp: state.noteTimestamp || 0,
+        deviceId: state.noteDeviceId || state.deviceName || 'local',
+      },
+      {
+        content: remoteContent,
+        version: remoteMeta.version,
+        timestamp: remoteMeta.timestamp,
+        deviceId: remoteMeta.deviceId,
+      }
+    );
+
+    setPendingConflicts(conflictManagerRef.current.getPendingConflicts());
+    setConflictCount(conflictManagerRef.current.getConflictCount());
+
+    if (!result.hasConflict || result.resolved) {
+      const nextContent = result.resolved ?? remoteContent;
+      setNote(nextContent, remoteMeta);
+      lastSyncedHashRef.current = hashContent(nextContent);
+      saveToHistory(nextContent, payload.deviceName);
+    }
+  }, [setNote, saveToHistory]);
+
+  // ==================== Queue Processing ====================
+
   const processQueuedOperations = useCallback(async () => {
     if (!offlineQueueRef.current || !socketRef.current?.connected || !keysRef.current) {
       return { processed: 0, failed: 0 };
@@ -275,7 +259,9 @@ export const useSocket = () => {
     } finally {
       setIsProcessingQueue(false);
     }
-  }, [splitIntoChunks, hashContent]);
+  }, []);
+
+  // ==================== Connection Management ====================
 
   const joinChain = useCallback((chainMnemonic, name) => {
     return new Promise((resolve) => {
@@ -294,33 +280,34 @@ export const useSocket = () => {
         conflictManagerRef.current?.clearConflicts();
         setPendingConflicts([]);
         setConflictCount(0);
-        
-        // Fully tear down existing socket before creating a new one
-        // This prevents event listener leaks from rapid joinChain calls
+
+        // Tear down existing socket
         if (socketRef.current) {
           const oldSocket = socketRef.current;
-          socketRef.current = null; // Clear ref immediately to prevent stale handlers
+          socketRef.current = null;
           oldSocket.removeAllListeners();
           oldSocket.disconnect();
         }
 
-        // Cancel any pending debounced pushes from previous session
+        // Cancel pending pushes
         if (debouncedPushRef.current) {
           debouncedPushRef.current.cancel();
         }
-        pendingChunksRef.current = {};
-        
+        chunkManagerRef.current.clear();
+
+        // Create new socket
         socketRef.current = io(socketUrl, {
           transports: ['websocket', 'polling'],
           reconnection: true,
-          reconnectionAttempts: 10,
-          reconnectionDelay: 1000,
-          reconnectionDelayMax: 5000,
-          timeout: 20000,
+          reconnectionAttempts: MAX_RECONNECTION_ATTEMPTS,
+          reconnectionDelay: RECONNECTION_DELAY_MIN,
+          reconnectionDelayMax: RECONNECTION_DELAY_MAX,
+          timeout: SOCKET_TIMEOUT,
         });
 
         const socket = socketRef.current;
 
+        // Event handlers
         socket.on('connect', async () => {
           setStatus('connected');
           reconnectAttemptRef.current = 0;
@@ -330,7 +317,6 @@ export const useSocket = () => {
             deviceName: name,
           });
 
-          // Initialize offline queue and process any pending operations
           await initOfflineQueue();
           await processQueuedOperations();
 
@@ -347,59 +333,14 @@ export const useSocket = () => {
             try {
               const decrypted = decryptData(payload.encryptedData, keys.encryptionKey);
               if (decrypted) {
-                const handleRemoteContent = async (remoteContent) => {
-                  const state = useAppStore.getState();
-                  const localContent = state.note || '';
-                  const localHash = hashContent(localContent);
-                  const isDirty = localHash !== lastSyncedHashRef.current;
-
-                  const remoteMeta = {
-                    version: payload.version ?? 0,
-                    timestamp: payload.timestamp ?? Date.now(),
-                    deviceId: payload.deviceName || 'remote',
-                  };
-
-                  if (!isDirty || !conflictManagerRef.current) {
-                    setNote(remoteContent, remoteMeta);
-                    lastSyncedHashRef.current = hashContent(remoteContent);
-                    saveToHistory(remoteContent, payload.deviceName);
-                    return;
-                  }
-
-                  const result = await conflictManagerRef.current.checkAndHandle(
-                    {
-                      content: localContent,
-                      version: state.noteVersion || 0,
-                      timestamp: state.noteTimestamp || 0,
-                      deviceId: state.noteDeviceId || state.deviceName || 'local',
-                    },
-                    {
-                      content: remoteContent,
-                      version: remoteMeta.version,
-                      timestamp: remoteMeta.timestamp,
-                      deviceId: remoteMeta.deviceId,
-                    }
-                  );
-
-                  setPendingConflicts(conflictManagerRef.current.getPendingConflicts());
-                  setConflictCount(conflictManagerRef.current.getConflictCount());
-
-                  if (!result.hasConflict || result.resolved) {
-                    const nextContent = result.resolved ?? remoteContent;
-                    setNote(nextContent, remoteMeta);
-                    lastSyncedHashRef.current = hashContent(nextContent);
-                    saveToHistory(nextContent, payload.deviceName);
-                  }
-                };
-
                 // Handle chunked content
                 if (decrypted.chunked) {
-                  const fullContent = reassembleChunks(decrypted.sessionId, decrypted.chunk);
+                  const fullContent = chunkManagerRef.current.reassemble(decrypted.sessionId, decrypted.chunk);
                   if (fullContent !== null) {
-                    await handleRemoteContent(fullContent);
+                    await handleRemoteContent(fullContent, payload);
                   }
                 } else if (decrypted.content !== undefined) {
-                  await handleRemoteContent(decrypted.content);
+                  await handleRemoteContent(decrypted.content, payload);
                 }
               }
             } catch (err) {
@@ -416,7 +357,6 @@ export const useSocket = () => {
 
         socket.on('disconnect', (reason) => {
           setStatus('disconnected');
-
           if (reason !== 'io client disconnect') {
             toast.error(t.disconnected);
           }
@@ -433,12 +373,10 @@ export const useSocket = () => {
 
         socket.on('reconnect', async () => {
           toast.dismiss('reconnecting');
-          // Re-join the room after reconnection
           socket.emit('join-chain', {
             roomId: keys.roomId,
             deviceName: name,
           });
-          // Process any queued offline operations
           await processQueuedOperations();
         });
 
@@ -468,51 +406,9 @@ export const useSocket = () => {
         resolve(false);
       }
     });
-  }, [setStatus, setNote, setMembers, setView, saveToHistory, reassembleChunks, t, hashContent, initOfflineQueue, processQueuedOperations]);
+  }, [setStatus, setMembers, setView, t, initOfflineQueue, processQueuedOperations, handleRemoteContent]);
 
-  // Create debounced push function
-  useEffect(() => {
-    debouncedPushRef.current = debounce((content) => {
-      if (!socketRef.current?.connected || !keysRef.current) {
-        setStatus('disconnected');
-        return;
-      }
-      
-      try {
-        const chunks = splitIntoChunks(content);
-        const sessionId = Date.now().toString();
-        
-        chunks.forEach((chunk) => {
-          const dataToEncrypt = chunks.length === 1
-            ? { content }
-            : { chunked: true, sessionId, chunk };
-          
-          const encrypted = encryptData(dataToEncrypt, keysRef.current.encryptionKey);
-          
-          socketRef.current.emit('push-update', {
-            roomId: keysRef.current.roomId,
-            encryptedData: encrypted,
-            timestamp: Date.now(),
-            chunkIndex: chunk.index,
-            totalChunks: chunks.length,
-          });
-        });
-
-        lastSyncedHashRef.current = hashContent(content);
-        
-        setStatus('connected');
-      } catch (err) {
-        console.error('Push update error:', err);
-        setStatus('disconnected');
-      }
-    }, syncDebounceMs);
-
-    return () => {
-      if (debouncedPushRef.current) {
-        debouncedPushRef.current.cancel();
-      }
-    };
-  }, [syncDebounceMs, setStatus, splitIntoChunks, hashContent]);
+  // ==================== Public API ====================
 
   const pushUpdate = useCallback(async (content) => {
     // If offline, queue the operation
@@ -546,7 +442,7 @@ export const useSocket = () => {
       socketRef.current = null;
     }
     keysRef.current = null;
-    pendingChunksRef.current = {};
+    chunkManagerRef.current.clear();
     conflictManagerRef.current?.clearConflicts();
     setPendingConflicts([]);
     setConflictCount(0);
@@ -556,7 +452,7 @@ export const useSocket = () => {
 
   const resolveConflict = useCallback(async (conflictId, resolvedContent) => {
     if (!conflictManagerRef.current) return null;
-    const resolved = await conflictManagerRef.current.resolveManually(conflictId, resolvedContent);
+    const resolved = await conflictManagerRef.current.resolveConflictById(conflictId, resolvedContent);
     setPendingConflicts(conflictManagerRef.current.getPendingConflicts());
     setConflictCount(conflictManagerRef.current.getConflictCount());
     return resolved;
@@ -568,13 +464,9 @@ export const useSocket = () => {
     setConflictCount(0);
   }, []);
 
-  const getSocketId = useCallback(() => {
-    return socketRef.current?.id;
-  }, []);
+  const getSocketId = useCallback(() => socketRef.current?.id, []);
 
-  const getCurrentRoomId = useCallback(() => {
-    return keysRef.current?.roomId || null;
-  }, []);
+  const getCurrentRoomId = useCallback(() => keysRef.current?.roomId || null, []);
 
   const requestSync = useCallback(() => {
     if (socketRef.current?.connected && keysRef.current) {
@@ -582,11 +474,43 @@ export const useSocket = () => {
     }
   }, []);
 
+  // ==================== Effects ====================
+
+  // Network status monitoring
+  useEffect(() => {
+    const handleOnline = () => {
+      toast.success(t.networkOnline);
+      if (socketRef.current && !socketRef.current.connected && keysRef.current) {
+        socketRef.current.connect();
+      }
+    };
+
+    const handleOffline = () => {
+      toast.error(t.networkOffline);
+      setStatus('disconnected');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [t, setStatus]);
+
+  // Cleanup stale chunk sessions
+  useEffect(() => {
+    const cleanup = setInterval(() => {
+      chunkManagerRef.current.cleanupStale(CHUNK_SESSION_TIMEOUT);
+    }, CHUNK_CLEANUP_INTERVAL);
+
+    return () => clearInterval(cleanup);
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      disconnect();
-    };
+    return () => disconnect();
   }, [disconnect]);
 
   return {

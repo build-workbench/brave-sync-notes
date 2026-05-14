@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import SearchIndex from '../../utils/search-index';
-import { debounce } from '../../utils/debounce';
+import debounce from 'lodash.debounce';
 
 /**
  * Search Context
