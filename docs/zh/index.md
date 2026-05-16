@@ -2,7 +2,7 @@
 layout: default
 title: Note Sync Now 文档中心
 description: 端到端加密笔记同步工具 - 文档门户
-permalink: /docs/zh-CN/
+permalink: /docs/zh/
 lang: zh-CN
 ---
 
@@ -121,7 +121,7 @@ cd apps/web && npm ci && npm run dev
 brave-sync-notes/
 ├── docs/                      # 文档
 │   ├── en/                   # 英文文档
-│   ├── zh-CN/                # 中文文档
+│   ├── zh/                # 中文文档
 │   └── api/                  # API 文档
 ├── apps/
 │   ├── web/                  # React + Vite 前端

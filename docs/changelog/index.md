@@ -34,7 +34,7 @@ All notable changes to Note Sync Now are documented here.
 ## Release Notes by Language
 
 - [English Release Notes](./en/v2.2.0)
-- [中文发布说明](./zh-CN/v2.2.0)
+- [中文发布说明](./zh/v2.2.0)
 
 ---
 

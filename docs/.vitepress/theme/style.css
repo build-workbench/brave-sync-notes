@@ -1,15 +1,326 @@
-/* Note Sync Now - Brand Colors Only */
+/* ============================================
+   Note Sync Now - Brand Colors & Theme System
+   ============================================ */
+
+/* ============================================
+   1. 品牌色彩系统 (Brand Colors)
+   ============================================ */
 
 :root {
-  --vp-c-brand-1: #3b82f6;
-  --vp-c-brand-2: #2563eb;
-  --vp-c-brand-3: #1d4ed8;
+  /* Primary - Blue */
+  --vp-c-brand-1: rgb(59, 130, 246);      /* #3b82f6 */
+  --vp-c-brand-2: rgb(37, 99, 235);       /* #2563eb */
+  --vp-c-brand-3: rgb(30, 64, 175);       /* #1d4ed8 */
   --vp-c-brand-soft: rgba(59, 130, 246, 0.14);
+
+  /* Secondary - Purple (accent) */
+  --vp-c-accent-1: rgb(139, 92, 246);     /* #8b5cf6 */
+  --vp-c-accent-2: rgb(124, 58, 237);     /* #7c3aed */
+  --vp-c-accent-3: rgb(109, 40, 217);     /* #6d28d9 */
+  --vp-c-accent-soft: rgba(139, 92, 246, 0.14);
+
+  /* Success - Green */
+  --vp-c-success-1: rgb(16, 185, 129);    /* #10b981 */
+  --vp-c-success-2: rgb(5, 150, 105);     /* #059669 */
+  --vp-c-success-soft: rgba(16, 185, 129, 0.14);
+
+  /* Warning - Amber */
+  --vp-c-warning-1: rgb(245, 158, 11);    /* #f59e0b */
+  --vp-c-warning-2: rgb(217, 119, 6);     /* #d97706 */
+  --vp-c-warning-soft: rgba(245, 158, 11, 0.14);
+
+  /* Danger - Red */
+  --vp-c-danger-1: rgb(239, 68, 68);      /* #ef4444 */
+  --vp-c-danger-2: rgb(220, 38, 38);      /* #dc2626 */
+  --vp-c-danger-soft: rgba(239, 68, 68, 0.14);
+
+  /* Tip - Teal */
+  --vp-c-tip-1: rgb(20, 184, 166);        /* #14b8a6 */
+  --vp-c-tip-2: rgb(13, 148, 136);        /* #0d9488 */
+  --vp-c-tip-soft: rgba(20, 184, 166, 0.14);
+
+  /* Info - Blue (alias for brand) */
+  --vp-c-info-1: var(--vp-c-brand-1);
+  --vp-c-info-soft: var(--vp-c-brand-soft);
 }
 
 .dark {
-  --vp-c-brand-1: #60a5fa;
-  --vp-c-brand-2: #3b82f6;
-  --vp-c-brand-3: #2563eb;
+  /* Primary - Lighter Blue for dark mode */
+  --vp-c-brand-1: rgb(96, 165, 250);      /* #60a5fa */
+  --vp-c-brand-2: rgb(59, 130, 246);      /* #3b82f6 */
+  --vp-c-brand-3: rgb(37, 99, 235);       /* #2563eb */
   --vp-c-brand-soft: rgba(96, 165, 250, 0.16);
+
+  /* Secondary - Lighter Purple */
+  --vp-c-accent-1: rgb(167, 139, 250);    /* #a78bfa */
+  --vp-c-accent-2: rgb(139, 92, 246);     /* #8b5cf6 */
+  --vp-c-accent-3: rgb(124, 58, 237);     /* #7c3aed */
+  --vp-c-accent-soft: rgba(167, 139, 250, 0.16);
+
+  /* Success - Lighter Green */
+  --vp-c-success-1: rgb(52, 211, 153);    /* #34d399 */
+  --vp-c-success-2: rgb(16, 185, 129);    /* #10b981 */
+  --vp-c-success-soft: rgba(52, 211, 153, 0.16);
+
+  /* Warning - Lighter Amber */
+  --vp-c-warning-1: rgb(251, 191, 36);    /* #fbbf24 */
+  --vp-c-warning-2: rgb(245, 158, 11);    /* #f59e0b */
+  --vp-c-warning-soft: rgba(251, 191, 36, 0.16);
+
+  /* Danger - Lighter Red */
+  --vp-c-danger-1: rgb(248, 113, 113);    /* #f87171 */
+  --vp-c-danger-2: rgb(239, 68, 68);      /* #ef4444 */
+  --vp-c-danger-soft: rgba(248, 113, 113, 0.16);
+
+  /* Tip - Lighter Teal */
+  --vp-c-tip-1: rgb(45, 212, 191);        /* #2dd4bf */
+  --vp-c-tip-2: rgb(20, 184, 166);        /* #14b8a6 */
+  --vp-c-tip-soft: rgba(45, 212, 191, 0.16);
+}
+
+/* ============================================
+   2. Mermaid 图表主题适配
+   ============================================ */
+
+:root {
+  --mermaid-font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mermaid-bg-color: transparent;
+  --mermaid-node-bg: rgb(239, 246, 255);        /* blue-50 */
+  --mermaid-node-border: rgb(59, 130, 246);     /* blue-500 */
+  --mermaid-node-text: rgb(30, 64, 175);        /* blue-800 */
+  --mermaid-line-color: rgb(148, 163, 184);     /* slate-400 */
+  --mermaid-label-bg: rgb(255, 255, 255);
+  --mermaid-label-text: rgb(51, 65, 85);        /* slate-700 */
+}
+
+.dark {
+  --mermaid-node-bg: rgb(30, 58, 138);          /* blue-900 */
+  --mermaid-node-border: rgb(96, 165, 250);     /* blue-400 */
+  --mermaid-node-text: rgb(219, 234, 254);      /* blue-100 */
+  --mermaid-line-color: rgb(100, 116, 139);     /* slate-500 */
+  --mermaid-label-bg: rgb(30, 41, 59);          /* slate-800 */
+  --mermaid-label-text: rgb(226, 232, 240);     /* slate-200 */
+}
+
+/* Mermaid 容器样式 */
+.mermaid {
+  text-align: center;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  background: var(--vp-c-bg-soft);
+}
+
+/* ============================================
+   3. 自定义容器颜色
+   ============================================ */
+
+:root {
+  --vp-custom-block-tip-border: var(--vp-c-tip-1);
+  --vp-custom-block-tip-bg: var(--vp-c-tip-soft);
+  --vp-custom-block-info-border: var(--vp-c-brand-1);
+  --vp-custom-block-info-bg: var(--vp-c-brand-soft);
+  --vp-custom-block-warning-border: var(--vp-c-warning-1);
+  --vp-custom-block-warning-bg: var(--vp-c-warning-soft);
+  --vp-custom-block-danger-border: var(--vp-c-danger-1);
+  --vp-custom-block-danger-bg: var(--vp-c-danger-soft);
+}
+
+/* ============================================
+   4. 排版优化
+   ============================================ */
+
+/* 字体系统 */
+:root {
+  --vp-font-family-base: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --vp-font-family-mono: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+/* 标题层级 */
+.vp-doc h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.vp-doc h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  border-bottom: 1px solid var(--vp-c-divider);
+  padding-bottom: 0.5rem;
+  margin-top: 2rem;
+  letter-spacing: -0.01em;
+}
+
+.vp-doc h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.5rem;
+}
+
+.vp-doc h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* 正文 */
+.vp-doc p {
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+
+/* 代码块 */
+.vp-doc [class*='language-'] {
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+.vp-doc [class*='language-'] code {
+  font-size: 0.875rem;
+}
+
+/* 行内代码 */
+.vp-doc :not(pre) > code {
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  font-size: 0.9em;
+}
+
+/* 表格 */
+.vp-doc table {
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.vp-doc th {
+  background: var(--vp-c-bg-soft);
+  font-weight: 600;
+}
+
+.vp-doc td,
+.vp-doc th {
+  padding: 0.75rem 1rem;
+}
+
+/* 自定义容器 */
+.custom-block {
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+}
+
+.custom-block.tip {
+  border-color: var(--vp-c-tip-1);
+  background: var(--vp-c-tip-soft);
+}
+
+.custom-block.warning {
+  border-color: var(--vp-c-warning-1);
+  background: var(--vp-c-warning-soft);
+}
+
+.custom-block.danger {
+  border-color: var(--vp-c-danger-1);
+  background: var(--vp-c-danger-soft);
+}
+
+.custom-block.info {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+
+/* ============================================
+   5. 首页 Hero 优化
+   ============================================ */
+
+.VPHero .name {
+  background: linear-gradient(135deg, var(--vp-c-brand-1), var(--vp-c-accent-1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.VPHero .tagline {
+  color: var(--vp-c-text-2);
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+/* ============================================
+   6. 移动端适配
+   ============================================ */
+
+@media (max-width: 768px) {
+  .vp-doc h1 {
+    font-size: 1.75rem;
+  }
+
+  .vp-doc h2 {
+    font-size: 1.5rem;
+  }
+
+  .vp-doc h3 {
+    font-size: 1.15rem;
+  }
+
+  .mermaid {
+    overflow-x: auto;
+    padding: 0.5rem;
+  }
+}
+
+/* ============================================
+   7. 链接样式
+   ============================================ */
+
+.vp-doc a {
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.vp-doc a:hover {
+  color: var(--vp-c-brand-2);
+  text-decoration: underline;
+}
+
+/* 外部链接图标 */
+.vp-doc a[target="_blank"]::after {
+  content: "";
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-left: 0.2em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3Cpolyline points='15 3 21 3 21 9'/%3E%3Cline x1='10' y1='14' x2='21' y2='3'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  vertical-align: middle;
+}
+
+/* ============================================
+   8. 滚动条美化
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vp-c-divider);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vp-c-text-3);
 }

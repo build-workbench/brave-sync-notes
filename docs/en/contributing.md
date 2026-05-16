@@ -14,7 +14,7 @@ Thank you for your interest in contributing to Note Sync Now! This guide will he
 
 ## 🌐 Language / 语言
 
-[English](./) | [简体中文](../zh-CN/contributing.md)
+[English](./) | [简体中文](../zh/contributing.md)
 
 ---
 
@@ -342,7 +342,7 @@ Security: CVE-2026-XXXX
 ### Bilingual Documentation
 
 - Primary changes should be made in English (`docs/en/`)
-- Chinese translations follow in `docs/zh-CN/`
+- Chinese translations follow in `docs/zh/`
 - Keep both versions synchronized
 
 ---

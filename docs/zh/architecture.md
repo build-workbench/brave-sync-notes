@@ -167,7 +167,7 @@ sequenceDiagram
 ## 推荐阅读顺序
 
 1. 当前页面：架构说明
-2. [安全与同步机制](/zh-CN/security-sync)
-3. [加密协议详解](/zh-CN/crypto-protocol)
-4. [同步算法说明](/zh-CN/sync-algorithm)
-5. [API 设计文档](/zh-CN/api-design)
+2. [安全与同步机制](/zh/security-sync)
+3. [加密协议详解](/zh/crypto-protocol)
+4. [同步算法说明](/zh/sync-algorithm)
+5. [API 设计文档](/zh/api-design)

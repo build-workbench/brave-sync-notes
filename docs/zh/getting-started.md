@@ -2,7 +2,7 @@
 layout: default
 title: 快速入门指南
 description: 安装、配置和运行 Note Sync Now 的完整指南
-permalink: /docs/zh-CN/getting-started/
+permalink: /docs/zh/getting-started/
 lang: zh-CN
 ---
 

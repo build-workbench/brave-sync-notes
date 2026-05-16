@@ -14,7 +14,7 @@ This guide will walk you through installing, configuring, and running Note Sync 
 
 ## 🌐 Language / 语言
 
-[English](./) | [简体中文](../zh-CN/getting-started.md)
+[English](./) | [简体中文](../zh/getting-started.md)
 
 ---
 

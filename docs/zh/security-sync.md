@@ -246,7 +246,7 @@ graph TB
 
 ## 推荐阅读顺序
 
-1. [架构说明](/zh-CN/architecture)
+1. [架构说明](/zh/architecture)
 2. 当前页面：安全与同步机制
-3. [加密协议详解](/zh-CN/crypto-protocol)
-4. [部署与运行](/zh-CN/deployment)
+3. [加密协议详解](/zh/crypto-protocol)
+4. [部署与运行](/zh/deployment)

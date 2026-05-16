@@ -8,10 +8,10 @@ hero:
   actions:
     - theme: brand
       text: 架构概览
-      link: /zh-CN/architecture
+      link: /zh/architecture
     - theme: alt
       text: 加密协议
-      link: /zh-CN/crypto-protocol
+      link: /zh/crypto-protocol
     - theme: alt
       text: GitHub
       link: https://github.com/AICL-Lab/brave-sync-notes
@@ -20,21 +20,26 @@ features:
   - icon: 🔐
     title: 端到端加密
     details: AES-256-GCM 加密，客户端密钥派生，服务器只转发密文
+    link: /zh/crypto-protocol
   - icon: ⚡
     title: 实时同步
     details: WebSocket 双向通信，毫秒级同步，大文件分块传输
+    link: /zh/sync-algorithm
   - icon: 🔄
     title: 三路合并
     details: 智能冲突检测与解决，可视化差异对比
+    link: /zh/sync-algorithm#三路合并算法
   - icon: 📱
     title: 零账户设计
     details: 扫码即用，助记词恢复，无限设备
   - icon: 💾
     title: 离线优先
     details: IndexedDB 本地存储，离线编辑队列
+    link: /zh/architecture
   - icon: 🚀
     title: 一键部署
     details: Docker 镜像，Redis/SQLite 持久化，K8s 友好
+    link: /zh/deployment
 ---
 
 ## 系统架构
@@ -131,11 +136,11 @@ npm install && npm run dev
 
 ## 文档导航
 
-- [架构说明](/zh-CN/architecture) - 系统边界、核心模块、同步数据流
-- [安全机制](/zh-CN/security-sync) - 加密边界、防护措施、威胁模型
-- [加密协议](/zh-CN/crypto-protocol) - 密钥派生、加密流程、安全假设
-- [同步算法](/zh-CN/sync-algorithm) - 分块传输、冲突解决、重连恢复
-- [API 设计](/zh-CN/api-design) - WebSocket 事件、REST 接口
+- [架构说明](/zh/architecture) - 系统边界、核心模块、同步数据流
+- [安全机制](/zh/security-sync) - 加密边界、防护措施、威胁模型
+- [加密协议](/zh/crypto-protocol) - 密钥派生、加密流程、安全假设
+- [同步算法](/zh/sync-algorithm) - 分块传输、冲突解决、重连恢复
+- [API 设计](/zh/api-design) - WebSocket 事件、REST 接口
 
 <style>
 .tech-stack table {

@@ -2,7 +2,7 @@
 layout: default
 title: 贡献指南
 description: Note Sync Now 项目的开发流程、验证命令和文档规范
-permalink: /docs/zh-CN/contributing/
+permalink: /docs/zh/contributing/
 lang: zh-CN
 ---
 
@@ -342,7 +342,7 @@ fix(crypto): 修正 PBKDF2 盐值派生
 ### 双语文档
 
 - 主要变更应在英文版（`docs/en/`）中进行
-- 中文翻译在 `docs/zh-CN/` 中跟进
+- 中文翻译在 `docs/zh/` 中跟进
 - 保持两个版本同步
 
 ---

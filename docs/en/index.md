@@ -18,7 +18,7 @@ lang: en
 
 ## 🌐 Language Selection
 
-[English](./) | [简体中文](../zh-CN/)
+[English](./) | [简体中文](../zh/)
 
 ---
 
@@ -121,7 +121,7 @@ For detailed setup instructions, see [Getting Started](./getting-started.md).
 brave-sync-notes/
 ├── docs/                      # Documentation
 │   ├── en/                   # English documentation
-│   ├── zh-CN/                # Chinese documentation
+│   ├── zh/                # Chinese documentation
 │   └── api/                  # API documentation
 ├── apps/
 │   ├── web/                  # React + Vite frontend
