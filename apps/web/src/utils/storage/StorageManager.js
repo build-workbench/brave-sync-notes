@@ -139,6 +139,11 @@ class StorageManager {
         return this.storage.enqueueOperation(op);
     }
 
+    async listOperations() {
+        this._ensureInitialized();
+        return this.storage.listOperations();
+    }
+
     async dequeueOperations() {
         this._ensureInitialized();
         return this.storage.dequeueOperations();
@@ -217,7 +222,7 @@ class StorageManager {
             }
 
             // 迁移待处理操作
-            const operations = await this.dequeueOperations();
+            const operations = await this.listOperations();
             for (const op of operations) {
                 await targetStorage.enqueueOperation(op);
                 stats.operations++;
@@ -231,29 +236,8 @@ class StorageManager {
     }
 }
 
-// 创建单例实例
-let storageManagerInstance = null;
-
-/**
- * 获取存储管理器单例
- * @param {Object} options - 配置选项
- * @returns {StorageManager}
- */
-export function getStorageManager(options = {}) {
-    if (!storageManagerInstance) {
-        storageManagerInstance = new StorageManager(options);
-    }
-    return storageManagerInstance;
-}
-
-/**
- * 重置存储管理器单例（主要用于测试）
- */
-export function resetStorageManager() {
-    if (storageManagerInstance) {
-        storageManagerInstance.close();
-        storageManagerInstance = null;
-    }
+export function createStorageManager(options = {}) {
+    return new StorageManager(options);
 }
 
 export default StorageManager;

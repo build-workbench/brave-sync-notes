@@ -1,17 +1,18 @@
 import { useRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAppStore } from '../store/useStore';
-import { deriveKeys, encryptData, decryptData } from '../utils/crypto';
+import { deriveKeys } from '../utils/crypto';
 import { ConflictService } from '../utils/conflict';
 import { OfflineQueue } from '../utils/offline';
-import { getStorageManager } from '../utils/storage';
+import { createStorageManager } from '../utils/storage';
 import debounce from 'lodash.debounce';
 import toast from 'react-hot-toast';
+import { emitEncryptedUpdate } from './socket/socket-sync-utils';
+import { bindSocketEvents } from './socket/socket-event-binding';
 import {
   getSocketUrl,
   getMessages,
   hashContent,
-  splitIntoChunks,
   createChunkSessionManager,
   HISTORY_THROTTLE_MS,
   MAX_RECONNECTION_ATTEMPTS,
@@ -46,6 +47,7 @@ export const useSocket = () => {
   const [conflictCount, setConflictCount] = useState(0);
 
   // Offline queue
+  const storageManagerRef = useRef(null);
   const offlineQueueRef = useRef(null);
   const [queueSize, setQueueSize] = useState(0);
   const [isProcessingQueue, setIsProcessingQueue] = useState(false);
@@ -72,7 +74,10 @@ export const useSocket = () => {
     if (offlineQueueRef.current) return offlineQueueRef.current;
 
     try {
-      const storage = getStorageManager();
+      if (!storageManagerRef.current) {
+        storageManagerRef.current = createStorageManager();
+      }
+      const storage = storageManagerRef.current;
       await storage.initialize();
       offlineQueueRef.current = new OfflineQueue(storage);
       const size = await offlineQueueRef.current.getQueueSize();
@@ -119,26 +124,12 @@ export const useSocket = () => {
     }
 
     try {
-      const chunks = splitIntoChunks(content);
-      const sessionId = Date.now().toString();
-
-      chunks.forEach((chunk) => {
-        const dataToEncrypt = chunks.length === 1
-          ? { content }
-          : { chunked: true, sessionId, chunk };
-
-        const encrypted = encryptData(dataToEncrypt, keysRef.current.encryptionKey);
-
-        socketRef.current.emit('push-update', {
-          roomId: keysRef.current.roomId,
-          encryptedData: encrypted,
-          timestamp: Date.now(),
-          chunkIndex: chunk.index,
-          totalChunks: chunks.length,
-        });
+      lastSyncedHashRef.current = emitEncryptedUpdate({
+        socket: socketRef.current,
+        keys: keysRef.current,
+        content,
+        timestamp: Date.now(),
       });
-
-      lastSyncedHashRef.current = hashContent(content);
       setStatus('connected');
     } catch (err) {
       console.error('Push update error:', err);
@@ -221,26 +212,12 @@ export const useSocket = () => {
 
         try {
           const content = operation.data;
-          const chunks = splitIntoChunks(content);
-          const sessionId = Date.now().toString();
-
-          for (const chunk of chunks) {
-            const dataToEncrypt = chunks.length === 1
-              ? { content }
-              : { chunked: true, sessionId, chunk };
-
-            const encrypted = encryptData(dataToEncrypt, keysRef.current.encryptionKey);
-
-            socketRef.current.emit('push-update', {
-              roomId: keysRef.current.roomId,
-              encryptedData: encrypted,
-              timestamp: Date.now(),
-              chunkIndex: chunk.index,
-              totalChunks: chunks.length,
-            });
-          }
-
-          lastSyncedHashRef.current = hashContent(content);
+          lastSyncedHashRef.current = emitEncryptedUpdate({
+            socket: socketRef.current,
+            keys: keysRef.current,
+            content,
+            timestamp: Date.now(),
+          });
           return { success: true };
         } catch (err) {
           console.error('Failed to process queued operation:', err);
@@ -307,95 +284,19 @@ export const useSocket = () => {
 
         const socket = socketRef.current;
 
-        // Event handlers
-        socket.on('connect', async () => {
-          setStatus('connected');
-          reconnectAttemptRef.current = 0;
-
-          socket.emit('join-chain', {
-            roomId: keys.roomId,
-            deviceName: name,
-          });
-
-          await initOfflineQueue();
-          await processQueuedOperations();
-
-          if (isReconnectingRef.current) {
-            toast.success(t.reconnected);
-            isReconnectingRef.current = false;
-          } else {
-            toast.success(t.connected);
-          }
-        });
-
-        socket.on('sync-update', async (payload) => {
-          if (payload && payload.encryptedData) {
-            try {
-              const decrypted = decryptData(payload.encryptedData, keys.encryptionKey);
-              if (decrypted) {
-                // Handle chunked content
-                if (decrypted.chunked) {
-                  const fullContent = chunkManagerRef.current.reassemble(decrypted.sessionId, decrypted.chunk);
-                  if (fullContent !== null) {
-                    await handleRemoteContent(fullContent, payload);
-                  }
-                } else if (decrypted.content !== undefined) {
-                  await handleRemoteContent(decrypted.content, payload);
-                }
-              }
-            } catch (err) {
-              console.error('Decryption error:', err);
-            }
-          }
-        });
-
-        socket.on('room-info', (data) => {
-          if (data && data.members) {
-            setMembers(data.members);
-          }
-        });
-
-        socket.on('disconnect', (reason) => {
-          setStatus('disconnected');
-          if (reason !== 'io client disconnect') {
-            toast.error(t.disconnected);
-          }
-        });
-
-        socket.on('reconnect_attempt', (attempt) => {
-          reconnectAttemptRef.current = attempt;
-          isReconnectingRef.current = true;
-          setStatus('syncing');
-          if (attempt === 1) {
-            toast.loading(t.reconnecting, { id: 'reconnecting' });
-          }
-        });
-
-        socket.on('reconnect', async () => {
-          toast.dismiss('reconnecting');
-          socket.emit('join-chain', {
-            roomId: keys.roomId,
-            deviceName: name,
-          });
-          await processQueuedOperations();
-        });
-
-        socket.on('reconnect_failed', () => {
-          toast.dismiss('reconnecting');
-          toast.error(t.disconnected);
-          setStatus('disconnected');
-        });
-
-        socket.on('connect_error', (error) => {
-          console.error('Connection error:', error);
-          if (reconnectAttemptRef.current === 0) {
-            setStatus('disconnected');
-          }
-        });
-
-        socket.on('error', (error) => {
-          console.error('Socket error:', error);
-          toast.error(t.syncError);
+        bindSocketEvents({
+          socket,
+          keys,
+          name,
+          t,
+          setStatus,
+          setMembers,
+          initOfflineQueue,
+          processQueuedOperations,
+          handleRemoteContent,
+          chunkManager: chunkManagerRef.current,
+          reconnectAttemptRef,
+          isReconnectingRef,
         });
 
         setView('app');
@@ -446,6 +347,13 @@ export const useSocket = () => {
     conflictManagerRef.current?.clearConflicts();
     setPendingConflicts([]);
     setConflictCount(0);
+    offlineQueueRef.current = null;
+    if (storageManagerRef.current) {
+      storageManagerRef.current.close().catch((closeError) => {
+        console.error('Failed to close socket storage manager:', closeError);
+      });
+      storageManagerRef.current = null;
+    }
     setQueueSize(0);
     setIsProcessingQueue(false);
   }, []);

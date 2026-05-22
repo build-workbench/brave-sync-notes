@@ -4,7 +4,7 @@ import { useStorage } from '../useStorage';
 
 // Mock storage manager
 vi.mock('../utils/storage', () => ({
-  getStorageManager: vi.fn().mockReturnValue({
+  createStorageManager: vi.fn().mockReturnValue({
     initialize: vi.fn().mockResolvedValue(undefined),
     getStorageType: vi.fn().mockReturnValue('indexeddb'),
     saveNotebook: vi.fn().mockResolvedValue(undefined),
@@ -19,6 +19,7 @@ vi.mock('../utils/storage', () => ({
     getHistory: vi.fn().mockResolvedValue([]),
     cleanupHistory: vi.fn().mockResolvedValue(undefined),
     enqueueOperation: vi.fn().mockResolvedValue('op-id'),
+    listOperations: vi.fn().mockResolvedValue([]),
     dequeueOperations: vi.fn().mockResolvedValue([]),
     clearQueue: vi.fn().mockResolvedValue(undefined),
     removeOperation: vi.fn().mockResolvedValue(undefined),
@@ -70,6 +71,7 @@ describe('useStorage', () => {
     const { result } = renderHook(() => useStorage());
 
     expect(typeof result.current.enqueueOperation).toBe('function');
+    expect(typeof result.current.listOperations).toBe('function');
     expect(typeof result.current.dequeueOperations).toBe('function');
     expect(typeof result.current.clearQueue).toBe('function');
     expect(typeof result.current.removeOperation).toBe('function');

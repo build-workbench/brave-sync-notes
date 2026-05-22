@@ -11,8 +11,10 @@ jest.mock('redis', () => ({
     get: jest.fn().mockResolvedValue(null),
     del: jest.fn().mockResolvedValue(1),
     keys: jest.fn().mockResolvedValue([]),
+    scan: jest.fn().mockResolvedValue(['0', []]),
     hSet: jest.fn().mockResolvedValue('OK'),
     hGetAll: jest.fn().mockResolvedValue({}),
+    hGet: jest.fn().mockResolvedValue(null),
     expire: jest.fn().mockResolvedValue(1),
     info: jest.fn().mockResolvedValue(''),
     dbSize: jest.fn().mockResolvedValue(0),
@@ -83,6 +85,45 @@ describe('RedisPersistence', () => {
       // Mock would need to be set up to return the data
       // const retrieved = await redisPersistence.getRoom(roomId);
       // expect(retrieved).toEqual(data);
+    });
+  });
+
+  describe('cleanupExpired', () => {
+    it('scans room keys instead of blocking with KEYS', async () => {
+      await redisPersistence.connect();
+
+      redisPersistence.client.scan
+        .mockResolvedValueOnce(['0', ['notesync:room:old-room', 'notesync:room:new-room']]);
+      redisPersistence.client.hGet
+        .mockResolvedValueOnce(String(new Date('2020-01-01').getTime()))
+        .mockResolvedValueOnce(String(new Date('2030-01-01').getTime()));
+
+      const deleted = await redisPersistence.cleanupExpired(new Date('2025-01-01'));
+
+      expect(deleted).toBe(1);
+      expect(redisPersistence.client.scan).toHaveBeenCalled();
+      expect(redisPersistence.client.keys).not.toHaveBeenCalled();
+      expect(redisPersistence.client.del).toHaveBeenCalledWith('notesync:room:old-room');
+      expect(redisPersistence.client.del).toHaveBeenCalledWith('notesync:log:old-room');
+    });
+  });
+
+  describe('getStats', () => {
+    it('counts room and log keys via SCAN', async () => {
+      await redisPersistence.connect();
+
+      redisPersistence.client.scan
+        .mockResolvedValueOnce(['0', ['notesync:room:one', 'notesync:room:two']])
+        .mockResolvedValueOnce(['0', ['notesync:log:one']]);
+      redisPersistence.client.info.mockResolvedValue('used_memory:42');
+      redisPersistence.client.dbSize.mockResolvedValue(7);
+
+      const stats = await redisPersistence.getStats();
+
+      expect(stats.roomCount).toBe(2);
+      expect(stats.logCount).toBe(1);
+      expect(redisPersistence.client.scan).toHaveBeenCalledTimes(2);
+      expect(redisPersistence.client.keys).not.toHaveBeenCalled();
     });
   });
 

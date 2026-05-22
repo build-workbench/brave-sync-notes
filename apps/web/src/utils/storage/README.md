@@ -15,10 +15,10 @@
 ### 基本使用
 
 ```javascript
-import { getStorageManager } from './utils/storage';
+import { createStorageManager } from './utils/storage';
 
 // 获取存储管理器实例
-const storage = getStorageManager();
+const storage = createStorageManager();
 
 // 初始化存储
 await storage.initialize();
@@ -221,7 +221,7 @@ console.log('Migration stats:', stats);
 ## 配置选项
 
 ```javascript
-const storage = getStorageManager({
+const storage = createStorageManager({
   dbName: 'NoteSyncDB',           // IndexedDB 数据库名称
   version: 1,                      // 数据库版本
   prefix: 'notesync_',            // LocalStorage 键前缀

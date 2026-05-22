@@ -5,6 +5,9 @@ import CryptoJS from 'crypto-js';
 import { Buffer } from 'buffer';
 globalThis.Buffer = Buffer;
 
+const DERIVED_KEY_CACHE = new Map();
+const MAX_DERIVED_KEY_CACHE_SIZE = 128;
+
 export const generateSyncChain = () => {
   // Generate a random 12-word mnemonic
   const mnemonic = bip39.generateMnemonic();
@@ -12,6 +15,10 @@ export const generateSyncChain = () => {
 };
 
 export const deriveKeys = (mnemonic) => {
+  if (DERIVED_KEY_CACHE.has(mnemonic)) {
+    return DERIVED_KEY_CACHE.get(mnemonic);
+  }
+
   // 1. Derive Room ID (Public)
   // SHA256 of the mnemonic — server uses this as the room identifier
   // but never sees the mnemonic itself.
@@ -28,7 +35,15 @@ export const deriveKeys = (mnemonic) => {
     iterations: PBKDF2_ITERATIONS
   }).toString(CryptoJS.enc.Hex);
 
-  return { roomId, encryptionKey };
+  const derived = { roomId, encryptionKey };
+
+  if (DERIVED_KEY_CACHE.size >= MAX_DERIVED_KEY_CACHE_SIZE) {
+    const oldestKey = DERIVED_KEY_CACHE.keys().next().value;
+    DERIVED_KEY_CACHE.delete(oldestKey);
+  }
+
+  DERIVED_KEY_CACHE.set(mnemonic, derived);
+  return derived;
 };
 
 export const encryptData = (data, key) => {

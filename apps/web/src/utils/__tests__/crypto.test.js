@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import CryptoJS from 'crypto-js';
 import {
   generateSyncChain,
   deriveKeys,
@@ -46,6 +47,17 @@ describe('crypto', () => {
       const keys = deriveKeys(mnemonic);
       expect(keys.roomId).toMatch(/^[a-f0-9]{64}$/);
       expect(keys.encryptionKey).toMatch(/^[a-f0-9]{64}$/);
+    });
+
+    it('memoizes repeated derivation for the same mnemonic', () => {
+      const mnemonic = generateSyncChain();
+      const pbkdf2Spy = vi.spyOn(CryptoJS, 'PBKDF2');
+
+      deriveKeys(mnemonic);
+      deriveKeys(mnemonic);
+
+      expect(pbkdf2Spy).toHaveBeenCalledTimes(1);
+      pbkdf2Spy.mockRestore();
     });
   });
 

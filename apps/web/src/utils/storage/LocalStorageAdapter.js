@@ -384,13 +384,13 @@ class LocalStorageAdapter extends ClientStorage {
         }
     }
 
-    async dequeueOperations() {
+    async listOperations() {
         this._ensureInitialized();
 
         const indexKey = this._key('ops', 'index');
         const index = this._getJSON(indexKey) || [];
-
         const ops = [];
+
         for (const opId of index) {
             const key = this._key('op', opId);
             const op = this._getJSON(key);
@@ -399,9 +399,12 @@ class LocalStorageAdapter extends ClientStorage {
             }
         }
 
-        // 按时间戳排序
         ops.sort((a, b) => a.timestamp - b.timestamp);
         return ops;
+    }
+
+    async dequeueOperations() {
+        return this.listOperations();
     }
 
     async clearQueue() {

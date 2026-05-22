@@ -429,6 +429,24 @@ async function gracefulShutdown(signal) {
   }
 }
 
+let shutdownHandlersRegistered = false;
+
+function registerShutdownHandlers() {
+  if (shutdownHandlersRegistered) {
+    return;
+  }
+
+  const handleSignal = (signal) => {
+    gracefulShutdown(signal).catch((error) => {
+      console.error(`Failed to shut down after ${signal}:`, error);
+    });
+  };
+
+  process.on('SIGTERM', () => handleSignal('SIGTERM'));
+  process.on('SIGINT', () => handleSignal('SIGINT'));
+  shutdownHandlersRegistered = true;
+}
+
 
 async function startServer() {
   try {
@@ -468,6 +486,7 @@ module.exports = {
   server,
   io,
   startServer,
+  registerShutdownHandlers,
   initializePersistence,
   updateRoomMembers,
   gracefulShutdown,
@@ -480,5 +499,6 @@ module.exports = {
 };
 
 if (require.main === module) {
+  registerShutdownHandlers();
   startServer();
 }

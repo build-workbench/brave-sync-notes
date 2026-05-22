@@ -231,6 +231,18 @@ describe('LocalStorageAdapter', () => {
             expect(ops[0].id).toBe(testOperation.id);
         });
 
+        it('should list queued operations without removing them', async () => {
+            await storage.enqueueOperation(testOperation);
+            await storage.enqueueOperation({ ...testOperation, id: 'op-2', timestamp: testOperation.timestamp + 1 });
+
+            const listed = await storage.listOperations();
+            const remaining = await storage.dequeueOperations();
+
+            expect(listed).toHaveLength(2);
+            expect(listed.map((op) => op.id)).toEqual(['op-1', 'op-2']);
+            expect(remaining).toHaveLength(2);
+        });
+
         it('should remove specific operation', async () => {
             await storage.enqueueOperation(testOperation);
             await storage.removeOperation(testOperation.id);

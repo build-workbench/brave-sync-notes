@@ -15,8 +15,9 @@ vi.mock('../utils/offline', () => ({
 }));
 
 vi.mock('../utils/storage', () => ({
-  getStorageManager: vi.fn().mockReturnValue({
+  createStorageManager: vi.fn().mockReturnValue({
     initialize: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn().mockResolvedValue(undefined),
   }),
 }));
 

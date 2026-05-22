@@ -115,6 +115,33 @@ class RedisPersistence extends PersistenceAdapter {
     }
 
     /**
+     * 使用 SCAN 非阻塞遍历匹配的 key
+     * @param {string} pattern
+     * @returns {Promise<string[]>}
+     * @private
+     */
+    async _scanKeys(pattern) {
+        const keys = [];
+        let cursor = '0';
+
+        do {
+            const reply = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+            let batch = [];
+
+            if (Array.isArray(reply)) {
+                [cursor, batch] = reply;
+            } else {
+                cursor = reply?.cursor ?? '0';
+                batch = reply?.keys ?? [];
+            }
+
+            keys.push(...batch);
+        } while (cursor !== '0' && cursor !== 0);
+
+        return keys;
+    }
+
+    /**
      * 保存同步链数据
      * @param {string} roomId - 房间ID
      * @param {EncryptedRoomData} data - 加密的房间数据
@@ -199,9 +226,8 @@ class RedisPersistence extends PersistenceAdapter {
         let deletedCount = 0;
 
         try {
-            // 扫描所有房间 key
             const roomPattern = `${this.options.keyPrefix}room:*`;
-            const keys = await this.client.keys(roomPattern);
+            const keys = await this._scanKeys(roomPattern);
 
             for (const key of keys) {
                 try {
@@ -354,9 +380,8 @@ class RedisPersistence extends PersistenceAdapter {
             const info = await this.client.info('memory');
             const keyCount = await this.client.dbSize();
 
-            // 统计房间和日志数量
-            const roomKeys = await this.client.keys(`${this.options.keyPrefix}room:*`);
-            const logKeys = await this.client.keys(`${this.options.keyPrefix}log:*`);
+            const roomKeys = await this._scanKeys(`${this.options.keyPrefix}room:*`);
+            const logKeys = await this._scanKeys(`${this.options.keyPrefix}log:*`);
 
             return {
                 connected: this.isConnected,

@@ -415,14 +415,17 @@ class IndexedDBStorage extends ClientStorage {
         });
     }
 
-    async dequeueOperations() {
+    async listOperations() {
         const ops = await this._transaction('pendingOps', 'readonly', (store) => {
             return store.getAll();
         });
 
-        // 按时间戳排序
         ops.sort((a, b) => a.timestamp - b.timestamp);
         return ops;
+    }
+
+    async dequeueOperations() {
+        return this.listOperations();
     }
 
     async clearQueue() {

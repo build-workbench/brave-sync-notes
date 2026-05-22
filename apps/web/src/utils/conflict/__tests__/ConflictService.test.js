@@ -212,6 +212,19 @@ describe('ConflictService', () => {
             expect(resolved).toContain('MERGED FROM REMOTE');
         });
 
+        it('should fall back to remote content when local version is missing', () => {
+            const resolved = service.autoResolve({
+                type: 'concurrent_edit',
+                localVersion: null,
+                remoteVersion: {
+                    content: 'Remote content',
+                    timestamp: 2000,
+                },
+            }, 'last-write-wins');
+
+            expect(resolved).toBe('Remote content');
+        });
+
         it('should throw error for unknown strategy', () => {
             expect(() => {
                 service.autoResolve(conflict, 'unknown-strategy');

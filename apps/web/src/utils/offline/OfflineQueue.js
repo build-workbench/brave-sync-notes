@@ -41,6 +41,10 @@ class OfflineQueue {
      * 获取队列中的所有操作
      */
     async getAll() {
+        if (typeof this.storage.listOperations === 'function') {
+            return await this.storage.listOperations();
+        }
+
         return await this.storage.dequeueOperations();
     }
 

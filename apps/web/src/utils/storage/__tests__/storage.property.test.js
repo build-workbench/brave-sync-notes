@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fc from 'fast-check';
-import { resetStorageManager, getStorageManager } from '../StorageManager';
+import { createStorageManager } from '../StorageManager';
 
 /**
  * Feature: comprehensive-refactor, Property 1: Storage Round-Trip Consistency
@@ -15,10 +15,9 @@ describe('Storage Property Tests', () => {
   let testDbName;
 
   beforeEach(async () => {
-    resetStorageManager();
     // Use unique DB name per test to avoid state leakage
     testDbName = `TestNoteSyncDB_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    storage = getStorageManager({ dbName: testDbName });
+    storage = createStorageManager({ dbName: testDbName });
     await storage.initialize();
   });
 
@@ -26,7 +25,6 @@ describe('Storage Property Tests', () => {
     if (storage) {
       await storage.close();
     }
-    resetStorageManager();
   });
 
   describe('Property 1: Storage Round-Trip Consistency', () => {

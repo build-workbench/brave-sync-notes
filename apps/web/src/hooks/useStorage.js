@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { getStorageManager } from '../utils/storage';
+import { createStorageManager } from '../utils/storage';
 
 /**
  * 存储管理 Hook
@@ -24,10 +24,12 @@ export const useStorage = () => {
         setError(null);
 
         try {
-            const storage = getStorageManager();
+            if (!storageRef.current) {
+                storageRef.current = createStorageManager();
+            }
+            const storage = storageRef.current;
             await storage.initialize();
 
-            storageRef.current = storage;
             setStorageType(storage.getStorageType());
             setIsInitialized(true);
             setIsLoading(false);
@@ -119,6 +121,11 @@ export const useStorage = () => {
         return storageRef.current.enqueueOperation(op);
     }, [ensureInitialized]);
 
+    const listOperations = useCallback(async () => {
+        await ensureInitialized();
+        return storageRef.current.listOperations();
+    }, [ensureInitialized]);
+
     const dequeueOperations = useCallback(async () => {
         await ensureInitialized();
         return storageRef.current.dequeueOperations();
@@ -151,6 +158,17 @@ export const useStorage = () => {
         initialize();
     }, [initialize]);
 
+    useEffect(() => {
+        return () => {
+            if (storageRef.current) {
+                storageRef.current.close().catch((closeError) => {
+                    console.error('Failed to close storage manager:', closeError);
+                });
+                storageRef.current = null;
+            }
+        };
+    }, []);
+
     return {
         // 状态
         isInitialized,
@@ -180,6 +198,7 @@ export const useStorage = () => {
 
         // 离线队列操作
         enqueueOperation,
+        listOperations,
         dequeueOperations,
         clearQueue,
         removeOperation,

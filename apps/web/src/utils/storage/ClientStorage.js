@@ -195,6 +195,14 @@ class ClientStorage {
     }
 
     /**
+     * 列出所有待处理操作
+     * @returns {Promise<PendingOperation[]>}
+     */
+    async listOperations() {
+        throw new Error('listOperations method must be implemented');
+    }
+
+    /**
      * 获取所有待处理操作
      * @returns {Promise<PendingOperation[]>}
      */

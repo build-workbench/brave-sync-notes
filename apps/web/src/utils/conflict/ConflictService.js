@@ -330,30 +330,57 @@ class ConflictService {
      * @returns {string}
      */
     autoResolve(conflict, strategy = 'last-write-wins') {
+        const local = conflict?.localVersion;
+        const remote = conflict?.remoteVersion;
+
+        if (!local && !remote) {
+            throw new Error('Conflict must include at least one version');
+        }
+
+        const localContent = local?.content;
+        const remoteContent = remote?.content;
+        const localTimestamp = Number.isFinite(local?.timestamp) ? local.timestamp : null;
+        const remoteTimestamp = Number.isFinite(remote?.timestamp) ? remote.timestamp : null;
+
         switch (strategy) {
             case 'last-write-wins':
-                // 使用时间戳最新的版本
-                return conflict.localVersion.timestamp > conflict.remoteVersion.timestamp
-                    ? conflict.localVersion.content
-                    : conflict.remoteVersion.content;
+                if (!local) {
+                    return remoteContent;
+                }
+                if (!remote) {
+                    return localContent;
+                }
+                if (localTimestamp === null) {
+                    return remoteContent;
+                }
+                if (remoteTimestamp === null) {
+                    return localContent;
+                }
+                return localTimestamp > remoteTimestamp ? localContent : remoteContent;
 
             case 'first-write-wins':
-                // 使用时间戳最早的版本
-                return conflict.localVersion.timestamp < conflict.remoteVersion.timestamp
-                    ? conflict.localVersion.content
-                    : conflict.remoteVersion.content;
+                if (!local) {
+                    return remoteContent;
+                }
+                if (!remote) {
+                    return localContent;
+                }
+                if (localTimestamp === null) {
+                    return remoteContent;
+                }
+                if (remoteTimestamp === null) {
+                    return localContent;
+                }
+                return localTimestamp < remoteTimestamp ? localContent : remoteContent;
 
             case 'local-wins':
-                // 总是使用本地版本
-                return conflict.localVersion.content;
+                return localContent ?? remoteContent;
 
             case 'remote-wins':
-                // 总是使用远程版本
-                return conflict.remoteVersion.content;
+                return remoteContent ?? localContent;
 
             case 'merge-both':
-                // 尝试合并两个版本
-                return this._mergeBoth(conflict.localVersion.content, conflict.remoteVersion.content);
+                return this._mergeBoth(localContent ?? '', remoteContent ?? '');
 
             default:
                 throw new Error(`Unknown resolution strategy: ${strategy}`);

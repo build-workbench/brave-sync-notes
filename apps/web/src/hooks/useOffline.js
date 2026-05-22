@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { OfflineQueue } from '../utils/offline';
-import { getStorageManager } from '../utils/storage';
+import { createStorageManager } from '../utils/storage';
 
 /**
  * 离线状态管理 Hook
@@ -21,9 +21,11 @@ export const useOffline = () => {
         if (queueRef.current) return;
 
         try {
-            const storage = getStorageManager();
+            if (!storageRef.current) {
+                storageRef.current = createStorageManager();
+            }
+            const storage = storageRef.current;
             await storage.initialize();
-            storageRef.current = storage;
 
             queueRef.current = new OfflineQueue(storage);
 
@@ -138,6 +140,18 @@ export const useOffline = () => {
 
         const interval = setInterval(updateQueueSize, 5000);
         return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (storageRef.current) {
+                storageRef.current.close().catch((closeError) => {
+                    console.error('Failed to close offline storage manager:', closeError);
+                });
+                storageRef.current = null;
+            }
+            queueRef.current = null;
+        };
     }, []);
 
     return {

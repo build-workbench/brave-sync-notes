@@ -19,13 +19,14 @@ describe('server sync flow', () => {
     let startServer;
     let gracefulShutdown;
     let handleSocketConnection;
+    let registerShutdownHandlers;
 
     const roomId = 'valid-room-12345';
 
     beforeEach(() => {
         jest.resetModules();
         process.env.PORT = '3102';
-        ({ app, server, stores, startServer, gracefulShutdown, handleSocketConnection } = require('./index'));
+        ({ app, server, stores, startServer, gracefulShutdown, handleSocketConnection, registerShutdownHandlers } = require('./index'));
         stores.chainStore.clear();
         stores.socketMeta.clear();
         stores.chunkStore.clear();
@@ -144,5 +145,16 @@ describe('server sync flow', () => {
             deviceName: 'Seed Device',
             version: 99,
         }));
+    });
+
+    test('registerShutdownHandlers wires SIGINT and SIGTERM', () => {
+        const onSpy = jest.spyOn(process, 'on').mockImplementation(() => process);
+
+        registerShutdownHandlers();
+
+        expect(onSpy).toHaveBeenCalledWith('SIGTERM', expect.any(Function));
+        expect(onSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
+
+        onSpy.mockRestore();
     });
 });

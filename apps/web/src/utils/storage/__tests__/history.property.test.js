@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fc from 'fast-check';
-import { resetStorageManager, getStorageManager } from '../StorageManager';
+import { createStorageManager } from '../StorageManager';
 
 /**
  * Feature: comprehensive-refactor, Property 9: History Version Limit
@@ -12,10 +12,11 @@ import { resetStorageManager, getStorageManager } from '../StorageManager';
  */
 describe('History Property Tests', () => {
   let storage;
+  let testDbName;
 
   beforeEach(async () => {
-    resetStorageManager();
-    storage = getStorageManager({ dbName: 'TestNoteSyncDB' });
+    testDbName = `TestNoteSyncDB_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    storage = createStorageManager({ dbName: testDbName });
     await storage.initialize();
   });
 
@@ -23,7 +24,6 @@ describe('History Property Tests', () => {
     if (storage) {
       await storage.close();
     }
-    resetStorageManager();
   });
 
   describe('Property 9: History Version Limit', () => {

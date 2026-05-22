@@ -1,13 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { generateUniqueId } from '../utils/shared';
-import { createNotebook as buildNotebook } from '../utils/notebooks';
-
-const selectNotebookNote = (notes, notebookId) => {
-  return notes
-    .filter((note) => note.notebookId === notebookId)
-    .sort((a, b) => (b.updatedAt || b.timestamp || 0) - (a.updatedAt || a.timestamp || 0))[0];
-};
+import {
+  applyAddNote,
+  applyAddNotebook,
+  applyRemoveNote,
+  applyRemoveNotebook,
+  applySetActiveNoteId,
+  applySetActiveNotebookId,
+  applySetNote,
+  applyUpdateNote,
+  applyUpdateNotebook,
+} from './domain/notebook-domain';
 
 export const useAppStore = create(
   persist(
@@ -79,26 +82,7 @@ export const useAppStore = create(
       setDeviceName: (deviceName) => set({ deviceName }),
       setMembers: (members) => set({ members }),
 
-      setNote: (note, meta) => {
-        set((state) => ({
-          notes: state.notes.map((entry) => (
-            entry.id === state.activeNoteId
-              ? {
-                  ...entry,
-                  content: note,
-                  version: meta?.version ?? state.noteVersion,
-                  timestamp: meta?.timestamp ?? Date.now(),
-                  updatedAt: meta?.timestamp ?? Date.now(),
-                  deviceId: meta?.deviceId ?? (state.deviceName || entry.deviceId || 'local'),
-                }
-              : entry
-          )),
-          note,
-          noteVersion: meta?.version ?? state.noteVersion,
-          noteTimestamp: meta?.timestamp ?? Date.now(),
-          noteDeviceId: meta?.deviceId ?? (state.deviceName || state.noteDeviceId || 'local'),
-        }));
-      },
+      setNote: (note, meta) => set((state) => applySetNote(state, note, meta)),
       setCurrentFileType: (currentFileType) => set({ currentFileType }),
 
       // History Management
@@ -172,153 +156,24 @@ export const useAppStore = create(
       // Multi-note Actions
       setNotes: (notes) => set({ notes }),
 
-      addNote: (note) => set((state) => {
-        const newNote = {
-          id: note.id || generateUniqueId('note_'),
-          title: note.title || '未命名笔记',
-          content: note.content || '',
-          version: note.version || 1,
-          timestamp: note.timestamp || Date.now(),
-          deviceId: note.deviceId || state.deviceName || 'local',
-          notebookId: note.notebookId || state.activeNotebookId,
-          createdAt: note.createdAt || Date.now(),
-          updatedAt: note.updatedAt || Date.now(),
-        };
-        return {
-          notes: [...state.notes, newNote],
-          activeNoteId: newNote.id,
-          note: newNote.content,
-          noteVersion: newNote.version,
-          noteTimestamp: newNote.timestamp,
-          noteDeviceId: newNote.deviceId,
-        };
-      }),
+      addNote: (note) => set((state) => applyAddNote(state, note)),
 
-      updateNote: (noteId, updates) => set((state) => {
-        const notes = state.notes.map((n) => {
-          if (n.id === noteId) {
-            return {
-              ...n,
-              ...updates,
-              version: (updates.version !== undefined) ? updates.version : n.version + 1,
-              updatedAt: Date.now(),
-            };
-          }
-          return n;
-        });
+      updateNote: (noteId, updates) => set((state) => applyUpdateNote(state, noteId, updates)),
 
-        // 如果更新的是当前活动笔记，同步更新 note 字段
-        const updatedNote = notes.find((n) => n.id === noteId);
-        if (noteId === state.activeNoteId && updatedNote) {
-          return {
-            notes,
-            note: updatedNote.content,
-            noteVersion: updatedNote.version,
-            noteTimestamp: updatedNote.timestamp || Date.now(),
-            noteDeviceId: updatedNote.deviceId || state.deviceName || 'local',
-          };
-        }
+      removeNote: (noteId) => set((state) => applyRemoveNote(state, noteId)),
 
-        return { notes };
-      }),
-
-      removeNote: (noteId) => set((state) => {
-        const notes = state.notes.filter((n) => n.id !== noteId);
-
-        // 如果删除的是当前活动笔记，切换到第一个笔记
-        if (noteId === state.activeNoteId) {
-          const nextNote = notes[0];
-          return {
-            notes,
-            activeNoteId: nextNote?.id || null,
-            note: nextNote?.content || '',
-            noteVersion: nextNote?.version || 0,
-            noteTimestamp: nextNote?.timestamp || 0,
-            noteDeviceId: nextNote?.deviceId || 'local',
-          };
-        }
-
-        return { notes };
-      }),
-
-      setActiveNoteId: (noteId) => set((state) => {
-        const note = state.notes.find((n) => n.id === noteId);
-        if (note) {
-          return {
-            activeNoteId: noteId,
-            note: note.content,
-            noteVersion: note.version,
-            noteTimestamp: note.timestamp,
-            noteDeviceId: note.deviceId,
-          };
-        }
-        return { activeNoteId: noteId };
-      }),
+      setActiveNoteId: (noteId) => set((state) => applySetActiveNoteId(state, noteId)),
 
       // Notebook Actions
       setNotebooks: (notebooks) => set({ notebooks }),
 
-      addNotebook: (notebook) => set((state) => {
-        const newNotebook = buildNotebook(notebook);
-        return {
-          notebooks: [...state.notebooks, newNotebook],
-          activeNotebookId: newNotebook.id,
-          activeNoteId: null,
-          mnemonic: newNotebook.mnemonic || state.mnemonic,
-          note: '',
-          noteVersion: 0,
-          noteTimestamp: 0,
-          noteDeviceId: state.deviceName || 'local',
-        };
-      }),
+      addNotebook: (notebook) => set((state) => applyAddNotebook(state, notebook)),
 
-      updateNotebook: (notebookId, updates) => set((state) => ({
-        notebooks: state.notebooks.map((nb) =>
-          nb.id === notebookId
-            ? { ...nb, ...updates, updatedAt: Date.now() }
-            : nb
-        ),
-      })),
+      updateNotebook: (notebookId, updates) => set((state) => applyUpdateNotebook(state, notebookId, updates)),
 
-      removeNotebook: (notebookId) => set((state) => {
-        const notebooks = state.notebooks.filter((nb) => nb.id !== notebookId);
-        const notes = state.notes.filter((n) => n.notebookId !== notebookId);
+      removeNotebook: (notebookId) => set((state) => applyRemoveNotebook(state, notebookId)),
 
-        // 如果删除的是当前活动笔记本，切换到第一个
-        if (notebookId === state.activeNotebookId) {
-          const nextNotebook = notebooks[0];
-          const nextNote = selectNotebookNote(notes, nextNotebook?.id);
-          return {
-            notebooks,
-            notes,
-            activeNotebookId: nextNotebook?.id || null,
-            activeNoteId: nextNote?.id || null,
-            mnemonic: nextNotebook?.mnemonic || '',
-            note: nextNote?.content || '',
-            noteVersion: nextNote?.version || 0,
-            noteTimestamp: nextNote?.timestamp || 0,
-            noteDeviceId: nextNote?.deviceId || 'local',
-          };
-        }
-
-        return { notebooks, notes };
-      }),
-
-      setActiveNotebookId: (notebookId) => set((state) => {
-        // 切换笔记本时，选择该笔记本的第一个笔记
-        const notebook = state.notebooks.find((entry) => entry.id === notebookId);
-        const firstNote = selectNotebookNote(state.notes, notebookId);
-
-        return {
-          activeNotebookId: notebookId,
-          activeNoteId: firstNote?.id || null,
-          mnemonic: notebook?.mnemonic || state.mnemonic,
-          note: firstNote?.content || '',
-          noteVersion: firstNote?.version || 0,
-          noteTimestamp: firstNote?.timestamp || 0,
-          noteDeviceId: firstNote?.deviceId || 'local',
-        };
-      }),
+      setActiveNotebookId: (notebookId) => set((state) => applySetActiveNotebookId(state, notebookId)),
 
       // Reset
       resetConnection: () => set({
