@@ -1,49 +1,41 @@
 ---
 layout: default
-title: Changelog
-description: Version history and release notes for Note Sync Now
+title: 更新日志
+description: Note Sync Now 版本更新历史。
 permalink: /changelog/
-lang: en
+lang: zh-CN
 ---
 
-# Changelog
+# 更新日志
 
-All notable changes to Note Sync Now are documented here.
+本页记录 Note Sync Now 的版本更新历史。
 
 ---
 
-## Latest Release
+## 最新版本
 
 ### [v2.2.0] - 2026-04-16
 
-**Documentation & Workflow Improvements**
+**文档与工作流改进**
 
-#### Added
-- Unified changelog with Keep a Changelog format
-- Comprehensive test coverage for sync operations
-- Enhanced CI pipeline with parallel testing
+#### 新增
+- 统一更新日志格式（Keep a Changelog）
+- 同步操作的完整测试覆盖
+- 增强的 CI 流水线（并行测试）
 
-#### Changed
-- Modernized documentation structure
-- Updated all project documentation
+#### 变更
+- 现代化文档结构
+- 更新所有项目文档
 
-[View Full Release Notes →](./en/v2.2.0)
-
----
-
-## Release Notes by Language
-
-- [English Release Notes](./en/v2.2.0)
-- [中文发布说明](./zh/v2.2.0)
+[查看完整发布说明 ->](./zh/v2.2.0)
 
 ---
 
-## Full Changelog
+## 完整更新日志
 
-For the complete version history, see:
-- [CHANGELOG.md](https://github.com/LessUp/brave-sync-notes/blob/main/CHANGELOG.md) (English)
-- [CHANGELOG.zh-CN.md](https://github.com/LessUp/brave-sync-notes/blob/main/CHANGELOG.zh-CN.md) (中文)
+完整的版本历史请查看：
+- [CHANGELOG.md](https://github.com/AICL-Lab/brave-sync-notes/blob/main/CHANGELOG.md)
 
 ---
 
-*Last updated: 2026-04-21*
+*最后更新：2026-04-21*

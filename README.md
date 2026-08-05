@@ -1,63 +1,62 @@
 <div align="center">
 
-# Note Sync Now / Brave Sync Notes
+# Note Sync Now / 安全同步笔记
 
 <p align="center">
-  <strong>End-to-End Encrypted Note Synchronization</strong>
+  <strong>端到端加密笔记同步系统</strong>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License: MIT"></a>
-  <a href="https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/LessUp/brave-sync-notes/ci.yml?branch=main&style=flat-square&label=CI" alt="CI Status"></a>
-  <a href="https://lessup.github.io/brave-sync-notes/"><img src="https://img.shields.io/github/actions/workflow/status/LessUp/brave-sync-notes/docs.yml?branch=main&style=flat-square&label=Pages" alt="Pages Status"></a>
+  <a href="https://github.com/AICL-Lab/brave-sync-notes/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/AICL-Lab/brave-sync-notes/ci.yml?branch=main&style=flat-square&label=CI" alt="CI Status"></a>
+  <a href="https://aicl-lab.github.io/brave-sync-notes/"><img src="https://img.shields.io/github/actions/workflow/status/AICL-Lab/brave-sync-notes/docs.yml?branch=main&style=flat-square&label=Pages" alt="Pages Status"></a>
   <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black&style=flat-square" alt="React 18">
   <img src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white&style=flat-square" alt="Express 5">
   <img src="https://img.shields.io/badge/Socket.IO-4-010101?logo=socket.io&style=flat-square" alt="Socket.IO 4">
 </p>
 
 <p align="center">
-  <a href="https://lessup.github.io/brave-sync-notes/">📚 Documentation</a> •
-  <a href="https://lessup.github.io/brave-sync-notes/overview/">🏠 Project Home</a> •
-  <a href="https://github.com/LessUp/brave-sync-notes/releases">📦 Releases</a> •
-  <a href="./CONTRIBUTING.md">🤝 Contributing</a>
-</p>
-
-<p align="center">
-  <b>English</b> | <a href="./README.zh-CN.md">简体中文</a>
+  <a href="https://aicl-lab.github.io/brave-sync-notes/">📚 文档站</a> •
+  <a href="https://github.com/AICL-Lab/brave-sync-notes/releases">📦 发布版本</a> •
+  <a href="./CONTRIBUTING.md">🤝 贡献指南</a>
 </p>
 
 </div>
 
 ---
 
-## ✨ Features
+Note Sync Now 是一个端到端加密笔记同步项目，用于探索助记词恢复、实时协作与隐私优先的多设备同步体验。
+
+---
+
+## ✨ 核心特性
 
 <table>
 <tr>
 <td width="50%">
 
-### 🔐 End-to-End Encryption
-- Client-side AES-256-GCM encryption
-- Server only relays ciphertext
-- 12-word mnemonic recovery
+### 🔐 端到端加密
+- 客户端 AES-256-GCM 加密
+- 服务器仅转发密文
+- 12词助记词恢复
 
-### ⚡ Real-time Sync
+### ⚡ 实时同步
 - WebSocket + Socket.IO
-- Automatic chunked transfer (>50KB)
-- Smart reconnection
+- 自动分块传输 (>50KB)
+- 智能重连机制
 
 </td>
 <td width="50%">
 
-### 🔄 Conflict Resolution
-- Three-way merge algorithm
-- Manual resolution UI
-- Version tracking
+### 🔄 冲突解决
+- 三路合并算法
+- 手动解决 UI
+- 版本追踪
 
-### 💾 Multi-Layer Storage
-- Server: Redis / SQLite / Memory
-- Client: IndexedDB / LocalStorage
-- Automatic fallback
+### 💾 多层存储
+- 服务端: Redis / SQLite / 内存
+- 客户端: IndexedDB / LocalStorage
+- 自动降级
 
 </td>
 </tr>
@@ -65,273 +64,247 @@
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) 18+ (20 LTS recommended)
-- [npm](https://www.npmjs.com/) 9+
-- [Redis](https://redis.io/) (optional, for persistent storage)
-
-### Installation
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/LessUp/brave-sync-notes.git
-cd brave-sync-notes
-
-# 2. Start the server
-cd apps/api && npm ci && cp .env.example .env && node index.js
-
-# 3. Start the client (new terminal)
-cd apps/web && npm ci && cp .env.example .env && npm run dev
-```
-
-**Access the application:**
-- Client: http://localhost:5173
-- Server: http://localhost:3002
-
-### Docker Deployment
-
-```bash
-cd brave-sync-notes
-docker-compose up -d
-```
-
-For detailed setup instructions, see our [Getting Started Guide](./docs/en/getting-started.md).
-
----
-
-## ⌨️ Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl/⌘ + S` | Save |
-| `Ctrl/⌘ + B` | Toggle sidebar |
-| `Ctrl/⌘ + P` | Toggle preview |
-| `Ctrl/⌘ + H` | Toggle history |
-| `Ctrl/⌘ + N` | New note |
-| `Ctrl/⌘ + /` | Toggle dark mode |
-| `Esc` | Close modal |
-
----
-
-## 📖 Documentation
-
-We provide comprehensive documentation in both **English** and **简体中文**.
-
-### Specifications (Single Source of Truth)
-
-| Spec | Description |
-|------|-------------|
-| [Product Requirements](./specs/product/note-sync-system.md) | Feature definitions & acceptance criteria |
-| [Core Architecture](./specs/rfc/0001-core-architecture.md) | System design & technical decisions |
-| [API Specification](./specs/api/websocket-api.yaml) | WebSocket & REST API definitions |
-| [Database Schema](./specs/db/schema-v1.dbml) | Data models & storage structure |
-| [Testing Strategy](./specs/testing/test-strategy.md) | Test frameworks & correctness properties |
-
-### User & Developer Guides
-
-#### English Documentation
-
-| Document | Description |
-|----------|-------------|
-| [Getting Started](./docs/en/getting-started.md) | Complete installation and setup guide |
-| [Architecture](./docs/en/architecture.md) | System design and data flow |
-| [Deployment](./docs/en/deployment.md) | Production deployment guide |
-| [Security](./docs/en/security-sync.md) | Encryption and synchronization |
-| [Contributing](./docs/en/contributing.md) | Development guidelines |
-| [API Reference](./docs/api/) | WebSocket and REST API docs |
-
-### 中文文档
-
-| 文档 | 说明 |
-|------|------|
-| [快速入门](./docs/zh-CN/getting-started.md) | 完整安装和设置指南 |
-| [架构说明](./docs/zh-CN/architecture.md) | 系统设计与数据流 |
-| [部署指南](./docs/zh-CN/deployment.md) | 生产环境部署指南 |
-| [安全机制](./docs/zh-CN/security-sync.md) | 加密与同步机制 |
-| [贡献指南](./docs/zh-CN/contributing.md) | 开发规范 |
-| [API 参考](./docs/api/) | WebSocket 和 REST API 文档 |
-
-**Full Documentation Site**: https://lessup.github.io/brave-sync-notes/
-
----
-
-## 🏗️ Architecture Overview
+## 🏗️ 架构概览
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        Clients                              │
+│                        客户端                               │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
-│  │  Browser A  │◄──►│  Browser B  │◄──►│  Mobile App │     │
+│  │  浏览器 A   │◄──►│  浏览器 B   │◄──►│  移动端 App │     │
 │  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘     │
 │         │                  │                  │             │
-│  [React + Vite]      [Zustand State]   [AES-256 Crypto]    │
+│  [React + Vite]      [Zustand 状态]    [AES-256 加密]      │
 └─────────┬──────────────────┬──────────────────┬─────────────┘
           │                  │                  │
           └──────────────────┼──────────────────┘
                              │ WebSocket
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                       Server                                │
+│                       服务端                                │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │  Express + Socket.IO                                   │  │
-│  │  • Room Management                                     │  │
-│  │  • Event Distribution                                  │  │
-│  │  • Rate Limiting                                       │  │
+│  │  • 房间管理                                            │  │
+│  │  • 事件分发                                            │  │
+│  │  • 速率限制                                            │  │
 │  └──────────────────┬────────────────────────────────────┘  │
 │                     │                                       │
 │  ┌──────────────────▼──────────────────┐                   │
-│  │      Persistence Layer              │                   │
+│  │      持久化层                        │                   │
 │  │  ┌──────────┐ ┌──────────┐         │                   │
-│  │  │  Redis   │ │  SQLite  │ (Fallback)                  │
+│  │  │  Redis   │ │  SQLite  │ (降级)  │                   │
 │  │  └──────────┘ └──────────┘         │                   │
 │  └─────────────────────────────────────┘                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-For detailed architecture, see [Architecture Documentation](./docs/en/architecture.md).
+详细架构请参阅 [架构文档](./docs/zh/architecture.md)。
 
 ---
 
-## 🛠️ Development
-
-### Testing
-
-```bash
-# Client tests
-cd apps/web && npm test -- --run
-
-# Server tests
-cd apps/api && npm test
-
-# Property-based tests
-cd apps/api && npm run test:property
-```
-
-### Project Structure
+## 📁 仓库结构
 
 ```
 brave-sync-notes/
 ├── apps/
-│   ├── web/             # React + Vite frontend
-│   │   ├── src/         # Source code
-│   │   └── tests/       # Test files
-│   └── api/             # Express + Socket.IO backend
-│       ├── src/         # Source code
-│       └── tests/       # Test files
-├── docs/                # Documentation (EN/ZH)
-├── changelog/           # Version history
-└── .github/workflows/   # CI/CD configuration
+│   ├── web/                 # React + Vite 前端
+│   │   ├── src/
+│   │   │   ├── components/  # UI 组件
+│   │   │   ├── hooks/       # 自定义 Hooks
+│   │   │   ├── store/       # Zustand 状态管理
+│   │   │   └── utils/       # 工具函数
+│   │   └── tests/           # 测试文件
+│   └── api/                 # Express + Socket.IO 后端
+│       ├── src/
+│       │   ├── persistence/ # 持久化存储
+│       │   └── utils/       # 工具函数
+│       └── tests/           # 测试文件
+├── docs/                    # GitHub Pages 文档站
+├── specs/                   # 稳定规范（Single Source of Truth）
+├── openspec/                # 变更管理与增量规范
+└── .github/workflows/       # CI/CD 配置
+```
+
+## 🚀 快速开始
+
+### 环境要求
+
+- Node.js 20+
+- npm 9+ 或 pnpm
+- Redis (可选，用于持久化存储)
+
+### 安装运行
+
+```bash
+# 克隆仓库
+git clone https://github.com/AICL-Lab/brave-sync-notes.git
+cd brave-sync-notes
+
+# 安装并启动后端
+cd apps/api
+npm ci
+cp .env.example .env
+npm start
+
+# 新终端安装并启动前端
+cd ../web
+npm ci
+cp .env.example .env
+npm run dev
+```
+
+后端默认监听 `http://localhost:3002`，前端开发服务运行在 `http://localhost:5173`。
+
+### Docker 部署
+
+```bash
+cd brave-sync-notes
+docker-compose up -d
+```
+
+## 📖 文档入口
+
+完整文档请访问 [文档站](https://aicl-lab.github.io/brave-sync-notes/)，包含架构说明、部署指南、加密协议与贡献指南。
+
+## ⌨️ 键盘快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| `Ctrl/⌘ + S` | 保存 |
+| `Ctrl/⌘ + B` | 切换侧边栏 |
+| `Ctrl/⌘ + P` | 切换预览 |
+| `Ctrl/⌘ + H` | 切换历史 |
+| `Ctrl/⌘ + N` | 新建笔记 |
+| `Ctrl/⌘ + /` | 切换深色模式 |
+| `Esc` | 关闭弹窗 |
+
+## 🧪 测试
+
+```bash
+# 前端测试
+cd apps/web && npm test -- --run
+
+# 后端测试
+cd apps/api && npm test
+
+# 基于属性的测试
+cd apps/api && npm run test:property
+
+# 前端测试覆盖率
+cd apps/web && npm run test:coverage
 ```
 
 ---
 
-## 📊 Project Status
+## 📊 项目状态
 
-| Metric | Status |
-|--------|--------|
-| Latest Version | [v2.2.0](https://github.com/LessUp/brave-sync-notes/releases/tag/v2.2.0) |
-| Build Status | ![CI](https://github.com/LessUp/brave-sync-notes/actions/workflows/ci.yml/badge.svg) |
-| Documentation | ![Pages](https://github.com/LessUp/brave-sync-notes/actions/workflows/pages.yml/badge.svg) |
-| License | [MIT](./LICENSE) |
+| 指标 | 状态 |
+|------|------|
+| 最新版本 | [v2.2.0](https://github.com/AICL-Lab/brave-sync-notes/releases/tag/v2.2.0) |
+| 构建状态 | ![CI](https://github.com/AICL-Lab/brave-sync-notes/actions/workflows/ci.yml/badge.svg) |
+| 文档状态 | ![Pages](https://github.com/AICL-Lab/brave-sync-notes/actions/workflows/docs.yml/badge.svg) |
+| 许可证 | [MIT](./LICENSE) |
 
 ---
 
-## 🔄 OpenSpec Integration
+## 📝 更新日志
 
-This project uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) for **spec-driven development** with AI assistance. All changes are managed through structured proposals.
+查看 [CHANGELOG.md](CHANGELOG.md) 了解版本历史。
 
-### Quick Commands
+---
 
-| Command | Description |
-|---------|-------------|
-| `/opsx:propose` | Create a new change proposal |
-| `/opsx:explore` | Explore ideas before committing |
-| `/opsx:apply` | Implement tasks from a change |
-| `/opsx:archive` | Archive a completed change |
+## 🔄 OpenSpec 集成
 
-### Workflow
+本项目使用 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 进行 AI 辅助的**规范驱动开发**。所有变更都通过结构化的提案进行管理。
+
+### 快捷命令
+
+| 命令 | 描述 |
+|------|------|
+| `/opsx:propose` | 创建新的变更提案 |
+| `/opsx:explore` | 在提交前探索想法 |
+| `/opsx:apply` | 实现变更任务 |
+| `/opsx:archive` | 归档已完成的变更 |
+
+### 工作流程
 
 ```
-/opsx:propose "feature-name"  →  /opsx:apply  →  /opsx:archive
+/opsx:propose "功能名称"  ->  /opsx:apply  ->  /opsx:archive
 ```
 
-### Two-Tier Specification System
+### 两层规范体系
 
-| Directory | Purpose |
-|-----------|---------|
-| `specs/` | Stable, approved specifications (Single Source of Truth) |
-| `openspec/` | Change management and delta specs |
+| 目录 | 用途 |
+|------|------|
+| `specs/` | 稳定的、已批准的规范（Single Source of Truth）|
+| `openspec/` | 变更管理和增量规范 |
 
-See [AGENTS.md](./AGENTS.md) for detailed workflow instructions.
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](./docs/en/contributing.md) for details.
-
-Quick links:
-- [Report a Bug](https://github.com/LessUp/brave-sync-notes/issues/new)
-- [Request a Feature](https://github.com/LessUp/brave-sync-notes/discussions)
-- [View Issues](https://github.com/LessUp/brave-sync-notes/issues)
+详见 [AGENTS.md](./AGENTS.md) 了解详细工作流程。
 
 ---
 
-## 📜 License
+## 🤝 贡献
 
-This project is licensed under the [MIT License](./LICENSE).
+欢迎贡献代码！请查看 [贡献指南](CONTRIBUTING.md) 了解详情。
 
----
-
-## ❓ FAQ
-
-### Is Redis required?
-No, the system automatically falls back to SQLite or in-memory storage if Redis is unavailable.
-
-### What's the maximum note size?
-Notes up to 5MB are supported through automatic chunked transfer.
-
-### How does the 12-word recovery work?
-The mnemonic follows the BIP39 standard. Your encryption key is derived from these 12 words, enabling secure recovery on any device.
+快速链接：
+- [报告 Bug](https://github.com/AICL-Lab/brave-sync-notes/issues/new)
+- [功能请求](https://github.com/AICL-Lab/brave-sync-notes/discussions)
+- [查看 Issues](https://github.com/AICL-Lab/brave-sync-notes/issues)
 
 ---
 
-## 🔧 Troubleshooting
+## ❓ 常见问题
 
-### Connection Failed
-- Ensure the backend server is running on port 3002
-- Check if the port is occupied: `lsof -i :3002`
-- Verify firewall settings allow WebSocket connections
+### Redis 是必须的吗？
+不是，系统会自动降级到 SQLite 或内存存储。
 
-### Sync Not Working
-- Confirm both devices use the same mnemonic
-- Check browser console for errors
-- Ensure WebSocket connection is established (green indicator)
+### 笔记最大支持多大？
+通过自动分块传输，支持最大 5MB 的内容。
 
-### Redis Connection Error
-- Verify Redis is running: `redis-cli ping`
-- Or let the system fall back to SQLite automatically
+### 12词助记词如何恢复？
+助记词遵循 BIP39 标准，加密密钥由这 12 个词派生，可在任意设备安全恢复。
 
 ---
 
-## 🙏 Acknowledgments
+## 🔧 故障排除
 
-- [React](https://react.dev/) - Frontend framework
-- [Vite](https://vitejs.dev/) - Build tool
-- [Socket.IO](https://socket.io/) - Real-time communication
-- [Zustand](https://github.com/pmndrs/zustand) - State management
-- [Express](https://expressjs.com/) - Web framework
+### 连接失败
+- 确保后端服务运行在 3002 端口
+- 检查端口是否被占用：`lsof -i :3002`
+- 确认防火墙允许 WebSocket 连接
+
+### 同步不工作
+- 确认两设备使用相同的助记词
+- 检查浏览器控制台错误
+- 确认 WebSocket 连接已建立（绿色指示器）
+
+### Redis 连接错误
+- 验证 Redis 是否运行：`redis-cli ping`
+- 或让系统自动降级到 SQLite
+
+---
+
+## 📄 许可
+
+本项目采用 [MIT 许可证](./LICENSE)。
+
+---
+
+## 🙏 致谢
+
+- [React](https://react.dev/) - 前端框架
+- [Vite](https://vitejs.dev/) - 构建工具
+- [Socket.IO](https://socket.io/) - 实时通信
+- [Zustand](https://github.com/pmnders/zustand) - 状态管理
+- [Express](https://expressjs.com/) - Web 框架
 
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/LessUp">LessUp</a>
+  由 <a href="https://github.com/LessUp">LessUp</a> 用 ❤️ 制作
 </p>
 
 <p align="center">
-  <a href="https://lessup.github.io/brave-sync-notes/">🌐 Website</a> •
-  <a href="https://github.com/LessUp">👥 GitHub</a>
+  <a href="https://aicl-lab.github.io/brave-sync-notes/">🌐 网站</a> •
+  <a href="https://github.com/AICL-Lab/brave-sync-notes">👥 GitHub</a>
 </p>

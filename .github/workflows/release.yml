@@ -78,7 +78,6 @@ jobs:
           files: |
             LICENSE
             CHANGELOG.md
-            CHANGELOG.zh-CN.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

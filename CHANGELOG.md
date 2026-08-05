@@ -1,239 +1,209 @@
-# Changelog
+# 更新日志
 
-All notable changes to this project will be documented in this file.
+本文件记录了项目的所有重要变更。
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
+版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
 ## [Unreleased]
 
 ### Added
-- Shared utility functions for ID generation and content hashing
-- `jsconfig.json` for LSP support in `apps/web/` and `apps/api/`
-- `.github/copilot-instructions.md` for GitHub Copilot integration
-- Local search functionality with SearchIndexProvider
-- Multi-notebook support with notebook management utilities
-- Offline queue management for enhanced offline support
-- Version snapshots and history management
-- Yjs-based real-time collaboration foundation
+- 共享工具函数：ID 生成和内容哈希
 
 ### Changed
-- Removed ~60+ verbose console.log statements across codebase
-- Consolidated duplicate code into shared utilities
-- **Security**: Increased PBKDF2 iterations from 10,000 to 100,000 (OWASP recommendation)
-- Updated `.env.example` with new PBKDF2 default
-- Updated repository description with bilingual format
-- Optimized VitePress documentation portal
-
-### Removed
-- `_bmad/` directory (BMad framework files, 140KB)
-- `_bmad-output/` directory (planning artifacts)
-- Duplicate `changelog/` directory (consolidated to `docs/changelog/`)
-- Empty documentation directories (`docs/setup/`, `docs/tutorials/`, `docs/architecture/`)
-- BMad skills from `.claude/skills/` (kept only OpenSpec skills)
-- All dependabot and recovery remote branches (18 branches cleaned)
-- `HANDOFF.md` (temporary handoff document)
-
-### Fixed
-- Fixed SearchIndex import in SearchIndexProvider.jsx
-- All lint warnings resolved
-- All tests passing (195 frontend + 31 backend)
-
-### Security
-- **BREAKING**: PBKDF2 iterations increased from 10,000 to 100,000
-  - Existing sync chains must be re-created after upgrade
-  - Users will need to re-enter their 12-word mnemonic
+- 移除代码库中约 60+ 个冗余的 console.log 语句
+- 将重复代码整合到共享工具模块
 
 ---
 
 ## [2.2.0] - 2026-03-22
 
 ### Added
-- **Documentation Site**: Complete navigation closure and deep pages
-  - Added `changelog/index.md` as browsable archive
-  - Added deep documentation pages: `architecture.md`, `deployment.md`, `security-sync.md`
-  - Added front matter and permalinks to all documentation files
+- **文档站**：完整导航闭环和深度页面
+  - 添加 `changelog/index.md` 作为可浏览归档页
+  - 添加深度文档页面：`architecture.md`、`deployment.md`、`security-sync.md`
+  - 为所有文档文件添加 front matter 和固定链接
 
-- **CI Pipeline**: Enhanced workflow gates
-  - Split CI into `client` and `server` jobs
-  - Integrated test execution for both client and server
+- **CI 流水线**：增强工作流门禁
+  - 拆分 CI 为 `client` 和 `server` 两个 job
+  - 集成客户端和服务端测试执行
 
-- **Tests**: Sync link test coverage
-  - Client: `useSocket.test.js` - connection, sync-update, request-sync, error handling
-  - Server: `index.test.js` - health check, join-chain, push-update, request-sync
+- **测试**：同步链路测试覆盖
+  - 客户端：`useSocket.test.js` - 连接、sync-update、request-sync、错误处理
+  - 服务端：`index.test.js` - 健康检查、join-chain、push-update、request-sync
 
 ### Fixed
-- Server timer cleanup with `unref()` to prevent test process hanging
-- `gracefulShutdown` and `startServer` no longer call `process.exit()` in test environment
-- Extracted `handleSocketConnection` for direct socket event testing
+- 服务端定时器调用 `unref()` 防止测试进程悬挂
+- `gracefulShutdown` 和 `startServer` 在测试环境不再调用 `process.exit()`
+- 提取 `handleSocketConnection` 便于直接测试 Socket 事件处理
 
 ---
 
 ## [2.1.0] - 2026-03-13
 
 ### Changed
-- **Documentation Architecture**: Restructured entry points
-  - `README.md` / `README.zh-CN.md`: Repository entry only (positioning, quick start, links)
-  - `index.md`: Documentation portal with reading paths
-  - `CONTRIBUTING.md`: Integrated into docs site
+- **文档架构**：重构入口职责
+  - `README.md` / `README.zh-CN.md`：仅作为仓库入口（定位、快速启动、链接）
+  - `index.md`：文档门户，包含阅读路径指引
+  - `CONTRIBUTING.md`：集成到文档站点
 
-- **Configuration Fixes**:
-  - Fixed `_config.yml` repository from `LessUp/sync-notes` to `LessUp/brave-sync-notes`
-  - Fixed `baseurl` from `/sync-notes` to `/brave-sync-notes`
-  - Added `CONTRIBUTING.md` to Pages workflow paths
+- **配置修复**：
+  - 修复 `_config.yml` 仓库名从 `LessUp/sync-notes` 到 `LessUp/brave-sync-notes`
+  - 修复 `baseurl` 从 `/sync-notes` 到 `/brave-sync-notes`
+  - 添加 `CONTRIBUTING.md` 到 Pages 工作流路径
 
 ---
 
 ## [2.0.2] - 2026-03-10
 
 ### Added
-- **Workflow Standardization**:
-  - Unified CI permissions: `contents: read`
-  - Added concurrency configuration to prevent duplicate runs
-  - Added `actions/configure-pages@v5` step
-  - Added `paths` trigger filtering to reduce unnecessary builds
+- **工作流标准化**：
+  - 统一 CI 权限：`contents: read`
+  - 添加并发配置防止重复运行
+  - 添加 `actions/configure-pages@v5` 步骤
+  - 添加 `paths` 触发过滤减少无效构建
 
 ### Changed
-- **GitHub Pages Optimization**:
-  - Added SEO metadata to `_config.yml`
-  - Added `exclude` list to skip non-doc files from Jekyll build
-  - Refined `paths` triggers for specific files
-  - Fixed `sparse-checkout` configuration
-  - Added deployment status badge to `index.md`
+- **GitHub Pages 优化**：
+  - 添加 SEO 元数据到 `_config.yml`
+  - 添加 `exclude` 列表跳过非文档文件的 Jekyll 构建
+  - 优化 `paths` 触发器为特定文件
+  - 修复 `sparse-checkout` 配置
+  - 添加部署状态徽章到 `index.md`
 
 ---
 
 ## [2.0.1] - 2026-03-09 [SECURITY]
 
 ### Security
-- **[Critical] Server Input Validation**:
-  - Added `encryptedData` validation: must be string, max 5MB
-  - Added per-socket rate limiting: 30 updates/minute max
-  - Added `timestamp` type validation
+- **[严重] 服务端输入验证**：
+  - 添加 `encryptedData` 验证：必须为字符串，最大 5MB
+  - 添加每 socket 速率限制：每分钟最多 30 次更新
+  - 添加 `timestamp` 类型验证
 
-- **[Breaking] PBKDF2 Salt Improvement**:
-  - Changed from hardcoded salt to mnemonic-derived salt: `SHA256("notesync-salt:" + mnemonic)`
-  - Increased PBKDF2 iterations from 1,000 to 10,000
-  - ⚠️ **Breaking**: Existing sync chains need to be re-created
+- **[破坏性] PBKDF2 盐值改进**：
+  - 从硬编码盐值改为助记词派生盐值：`SHA256("notesync-salt:" + mnemonic)`
+  - PBKDF2 迭代次数从 1,000 增加到 10,000
+  - ⚠️ **破坏性变更**：现有同步链需要重新创建
 
 ### Fixed
-- **Memory Leak**: Room cleanup enhancement
-  - Added `MAX_MEMORY_ROOMS` hard cap (default 10,000)
-  - Two-phase cleanup: expired rooms first, then oldest when over capacity
-  - Reduced cleanup interval from 60min to 30min
+- **内存泄漏**：房间清理增强
+  - 添加 `MAX_MEMORY_ROOMS` 硬上限（默认 10,000）
+  - 两阶段清理：先清理过期房间，超容量时清理最旧房间
+  - 清理间隔从 60 分钟减少到 30 分钟
 
-- **Socket Event Listener Leak**: Fixed race condition on rapid `joinChain` calls
-  - Set `socketRef.current = null` before removing listeners
-  - Cancel pending debounced pushes from previous session
-  - Clear pending chunk reassembly state
+- **Socket 事件监听器泄漏**：修复快速调用 `joinChain` 时的竞态条件
+  - 在移除监听器前设置 `socketRef.current = null`
+  - 取消前一个会话的待处理防抖推送
+  - 清除待处理的分块重组状态
 
 ---
 
 ## [2.0.0] - 2025-11-25
 
 ### Added
-- **Editor**: CodeMirror integration
-  - Syntax highlighting for Markdown, JavaScript, Python, HTML, CSS, JSON
-  - Auto-completion, bracket matching, code folding
-  - Customizable font size, tab size, line numbers, word wrap
-  - Dark/light theme auto-switching
+- **编辑器**：CodeMirror 集成
+  - 语法高亮：Markdown、JavaScript、Python、HTML、CSS、JSON
+  - 自动补全、括号匹配、代码折叠
+  - 可自定义字体大小、Tab 大小、行号、自动换行
+  - 深色/浅色主题自动切换
 
-- **Preview**: Enhanced Markdown rendering
-  - Code block highlighting with Prism
-  - GFM support: tables, task lists, strikethrough
-  - Split view mode: edit/preview/side-by-side
+- **预览**：增强 Markdown 渲染
+  - Prism 代码块高亮
+  - GFM 支持：表格、任务列表、删除线
+  - 分屏视图：编辑/预览/并排
 
-- **History**: Version management
-  - Auto-save on each sync
-  - One-click restore to any version
-  - Single delete or clear all
-  - LocalStorage persistence
+- **历史记录**：版本管理
+  - 每次同步自动保存
+  - 一键恢复任意版本
+  - 单条删除或清空全部
+  - LocalStorage 持久化
 
-- **Mobile**: QR code join
-  - Auto-generate sync chain QR code
-  - Mobile scan to join instantly
-  - URL parameter auto-fill support
+- **移动端**：二维码加入
+  - 自动生成同步链二维码
+  - 手机扫码即时加入
+  - URL 参数自动填充
 
-- **Import/Export**: File operations
-  - Import .txt, .md, .markdown files
-  - Export as Markdown or plain text
+- **导入导出**：文件操作
+  - 导入 .txt、.md、.markdown 文件
+  - 导出为 Markdown 或纯文本
 
 ### Changed
-- **Performance**:
-  - Chunked transfer for content > 50KB
-  - Debounced sync (configurable, default 300ms)
-  - Zustand state management
-  - Component lazy loading
-  - Memoization with useMemo
+- **性能**：
+  - 大于 50KB 内容分块传输
+  - 可配置防抖同步（默认 300ms）
+  - Zustand 状态管理
+  - 组件懒加载
+  - useMemo 记忆化
 
-- **UI/UX**:
-  - Glassmorphism design with Framer Motion animations
-  - Fully responsive, mobile-first layout
-  - System dark mode preference support
-  - Bilingual UI (EN/ZH-CN)
+- **UI/UX**：
+  - Framer Motion 动画的毛玻璃设计
+  - 完全响应式，移动端优先布局
+  - 系统深色模式偏好支持
+  - 双语界面（中/英）
 
-- **Server**:
-  - Connection pool: WebSocket + Polling dual channels
-  - Auto cleanup of expired rooms
-  - Health check: `GET /health`, `GET /stats`
-  - Graceful shutdown: SIGTERM/SIGINT
-  - Config: maxHttpBufferSize 10MB, pingTimeout 60s
+- **服务端**：
+  - 连接池：WebSocket + Polling 双通道
+  - 自动清理过期房间
+  - 健康检查：`GET /health`、`GET /stats`
+  - 优雅关闭：SIGTERM/SIGINT
+  - 配置：maxHttpBufferSize 10MB、pingTimeout 60s
 
 ---
 
 ## [1.2.0] - 2025-12-19
 
 ### Added
-- **Conflict Management**: Client-side conflict detection and resolution
-  - Added `noteVersion`, `noteTimestamp`, `noteDeviceId` to store state
-  - Integrated `ConflictManager` in `sync-update` flow
-  - `ConflictIndicator` and `ConflictDialog` UI components
-  - Manual resolution: keep local/remote or custom merge
+- **冲突管理**：客户端冲突检测与解决
+  - 添加 `noteVersion`、`noteTimestamp`、`noteDeviceId` 到 store 状态
+  - 在 `sync-update` 流程中集成 `ConflictManager`
+  - `ConflictIndicator` 和 `ConflictDialog` UI 组件
+  - 手动解决：保留本地/远程或自定义合并
 
 ### Changed
-- `setNote(note, meta?)` supports remote metadata
-- `restoreFromHistory` maintains version metadata
-- Exposed `conflictCount`, `pendingConflicts`, `resolveConflict`, `clearConflicts` from hook
+- `setNote(note, meta?)` 支持远程元数据
+- `restoreFromHistory` 维护版本元数据
+- 从 hook 暴露 `conflictCount`、`pendingConflicts`、`resolveConflict`、`clearConflicts`
 
 ---
 
 ## [1.1.0] - 2025-12-18
 
 ### Fixed
-- **[Critical] Async Handler**: Fixed `join-chain` callback not declared as `async`
-- **Configuration**:
-  - Added `require('dotenv').config()` on server startup
-  - Unified room ID validation with `DataValidator.isValidRoomId()`
-  - Made CORS Origin configurable via `CORS_ORIGIN` env var
-  - Made room TTL configurable via `ROOM_TTL_MS` env var
+- **[严重] 异步处理器**：修复 `join-chain` 回调未声明为 `async`
+- **配置**：
+  - 服务端启动时添加 `require('dotenv').config()`
+  - 使用 `DataValidator.isValidRoomId()` 统一房间 ID 验证
+  - CORS Origin 可通过 `CORS_ORIGIN` 环境变量配置
+  - 房间 TTL 可通过 `ROOM_TTL_MS` 环境变量配置
 
 ---
 
 ## [1.0.1] - 2025-11-24
 
 ### Added
-- **Deployment**: Preparation for production
-  - Added `.gitignore` for client (node_modules, build artifacts, env files)
-  - Planned Netlify CLI deployment for Vite + React frontend
+- **部署**：生产环境准备
+  - 添加客户端 `.gitignore`（node_modules、构建产物、环境文件）
+  - 规划使用 Netlify CLI 部署 Vite + React 前端
 
 ---
 
 ## [1.0.0] - 2025-02-13
 
 ### Added
-- **Project Infrastructure**:
-  - Added `.editorconfig` for consistent code formatting
-  - Added standard badges to README (License, React, Express, Socket.IO, Vite)
+- **项目基础设施**：
+  - 添加 `.editorconfig` 统一代码格式
+  - 添加标准徽章到 README（License、React、Express、Socket.IO、Vite）
 
 ---
 
-[Unreleased]: https://github.com/LessUp/brave-sync-notes/compare/v2.2.0...HEAD
-[2.2.0]: https://github.com/LessUp/brave-sync-notes/compare/v2.1.0...v2.2.0
-[2.1.0]: https://github.com/LessUp/brave-sync-notes/compare/v2.0.2...v2.1.0
-[2.0.2]: https://github.com/LessUp/brave-sync-notes/compare/v2.0.1...v2.0.2
-[2.0.1]: https://github.com/LessUp/brave-sync-notes/compare/v2.0.0...v2.0.1
-[2.0.0]: https://github.com/LessUp/brave-sync-notes/compare/v1.2.0...v2.0.0
-[1.2.0]: https://github.com/LessUp/brave-sync-notes/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/LessUp/brave-sync-notes/compare/v1.0.1...v1.1.0
-[1.0.1]: https://github.com/LessUp/brave-sync-notes/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/LessUp/brave-sync-notes/releases/tag/v1.0.0
+[Unreleased]: https://github.com/AICL-Lab/brave-sync-notes/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/AICL-Lab/brave-sync-notes/compare/v2.1.0...v2.2.0
+[2.1.0]: https://github.com/AICL-Lab/brave-sync-notes/compare/v2.0.2...v2.1.0
+[2.0.2]: https://github.com/AICL-Lab/brave-sync-notes/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/AICL-Lab/brave-sync-notes/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/AICL-Lab/brave-sync-notes/compare/v1.2.0...v2.0.0
+[1.2.0]: https://github.com/AICL-Lab/brave-sync-notes/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/AICL-Lab/brave-sync-notes/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/AICL-Lab/brave-sync-notes/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/AICL-Lab/brave-sync-notes/releases/tag/v1.0.0

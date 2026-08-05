@@ -2,7 +2,6 @@ import type { DefaultTheme } from 'vitepress'
 
 type Sidebar = DefaultTheme.Sidebar
 
-// 中文侧边栏
 export const sidebarZh: Sidebar = {
   '/zh/': [
     {
@@ -37,42 +36,6 @@ export const sidebarZh: Sidebar = {
   ]
 }
 
-// 英文侧边栏
-export const sidebarEn: Sidebar = {
-  '/en/': [
-    {
-      text: 'Getting Started',
-      items: [
-        { text: 'Overview', link: '/en/' },
-        { text: 'Quick Start', link: '/en/getting-started' },
-        { text: 'Architecture', link: '/en/architecture' },
-        { text: 'Security', link: '/en/security-sync' }
-      ]
-    },
-    {
-      text: 'Technical Whitepaper',
-      items: [
-        { text: 'Tech Spec', link: '/en/tech-spec' },
-        { text: 'Crypto Protocol', link: '/en/crypto-protocol' },
-        { text: 'Sync Algorithm', link: '/en/sync-algorithm' },
-        { text: 'API Design', link: '/en/api-design' },
-        { text: 'Performance', link: '/en/performance' },
-        { text: 'References', link: '/en/references' }
-      ]
-    },
-    {
-      text: 'Deployment & Development',
-      items: [
-        { text: 'Deployment Guide', link: '/en/deployment' },
-        { text: 'Contributing', link: '/en/contributing' },
-        { text: 'FAQ', link: '/en/faq' },
-        { text: 'Troubleshooting', link: '/en/troubleshooting' }
-      ]
-    }
-  ]
-}
-
-// API 文档侧边栏
 export const sidebarApi: Sidebar = {
   '/api/': [
     {
@@ -85,15 +48,13 @@ export const sidebarApi: Sidebar = {
   ]
 }
 
-// Changelog 侧边栏
 export const sidebarChangelog: Sidebar = {
   '/changelog/': [
     {
-      text: 'Version History',
+      text: '版本历史',
       items: [
-        { text: 'Overview', link: '/changelog/' },
-        { text: 'v2.2.0 (EN)', link: '/changelog/en/v2.2.0' },
-        { text: 'v2.2.0 (中文)', link: '/changelog/zh/v2.2.0' }
+        { text: '概述', link: '/changelog/' },
+        { text: 'v2.2.0', link: '/changelog/zh/v2.2.0' }
       ]
     }
   ]

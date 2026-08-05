@@ -442,8 +442,8 @@ class SyncClient {
 ## See Also
 
 - [REST API Reference](./rest-api.md)
-- [Architecture Overview](../en/architecture.md)
-- [Security & Synchronization](../en/security-sync.md)
+- [Architecture Overview](../zh/architecture.md)
+- [Security & Synchronization](../zh/security-sync.md)
 
 ---
 

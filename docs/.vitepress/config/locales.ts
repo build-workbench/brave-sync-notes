@@ -1,6 +1,6 @@
 import type { DefaultTheme } from 'vitepress'
-import { navZh, navEn } from './nav'
-import { sidebarZh, sidebarEn, sidebarApi, sidebarChangelog } from './sidebar'
+import { navZh } from './nav'
+import { sidebarZh, sidebarApi, sidebarChangelog } from './sidebar'
 
 type LocaleConfig = DefaultTheme.Config['locales']
 
@@ -40,44 +40,6 @@ export const locales: LocaleConfig = {
       darkModeSwitchLabel: '切换主题',
       lightModeSwitchTitle: '切换到浅色模式',
       darkModeSwitchTitle: '切换到深色模式'
-    }
-  },
-  en: {
-    label: 'English',
-    lang: 'en-US',
-    link: '/en/',
-    title: 'Note Sync Now',
-    description: 'E2EE Note Sync Technical Whitepaper',
-    themeConfig: {
-      nav: navEn,
-      sidebar: {
-        ...sidebarEn,
-        ...sidebarApi,
-        ...sidebarChangelog
-      },
-      editLink: {
-        pattern: 'https://github.com/AICL-Lab/brave-sync-notes/edit/main/docs/:path',
-        text: 'Edit this page on GitHub'
-      },
-      docFooter: {
-        prev: 'Previous',
-        next: 'Next'
-      },
-      lastUpdated: {
-        text: 'Last updated',
-        formatOptions: {
-          dateStyle: 'short',
-          timeStyle: 'short'
-        }
-      },
-      outline: {
-        label: 'On this page'
-      },
-      returnToTopLabel: 'Return to top',
-      sidebarMenuLabel: 'Menu',
-      darkModeSwitchLabel: 'Toggle theme',
-      lightModeSwitchTitle: 'Switch to light theme',
-      darkModeSwitchTitle: 'Switch to dark theme'
     }
   }
 }

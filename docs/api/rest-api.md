@@ -424,8 +424,8 @@ Use the `/health` and `/stats` endpoints for health checks and APM integration.
 ## See Also
 
 - [WebSocket API Reference](./websocket-api.md)
-- [Architecture Overview](../en/architecture.md)
-- [Deployment Guide](../en/deployment.md)
+- [Architecture Overview](../zh/architecture.md)
+- [Deployment Guide](../zh/deployment.md)
 
 ---
 

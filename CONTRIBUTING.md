@@ -62,7 +62,7 @@ specs/
 - **Keep docs in sync**: Update relevant specs when changing functionality. Code and specs must always match.
 - **User documentation**: Place tutorials, guides, and how-to content in `/docs/setup` or `/docs/tutorials`.
 - **Architecture docs**: High-level architecture goes in `/docs/architecture` (can link to detailed RFCs in `/specs/rfc`).
-- **Changelog**: Update both `CHANGELOG.md` and `CHANGELOG.zh-CN.md` for user-facing changes.
+- **Changelog**: Update `CHANGELOG.md` for user-facing changes.
 
 ## Creating New Specs
 

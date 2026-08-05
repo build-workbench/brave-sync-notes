@@ -12,11 +12,6 @@ lang: zh-CN
 
 ---
 
-## 🌐 语言 / Language
-
-[English](../en/getting-started.md) | [简体中文](./)
-
----
 
 ## 📋 前置要求
 

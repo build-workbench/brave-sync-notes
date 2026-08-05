@@ -74,27 +74,16 @@ npm run dev
 - 生产环境应优先确保主存储与回退存储都可用
 - 回退到内存模式时，重启后无法保留原有同步状态
 
-## GitHub Pages 文档站
+## 文档站
 
-当前仓库根目录承载 GitHub Pages 文档站，关键文件包括：
+文档站基于 VitePress 构建，源码位于 `docs/` 目录，通过 `.github/workflows/docs.yml` 自动部署到 GitHub Pages。
 
-- `index.md`
-- `README.md`
-- `README.zh-CN.md`
-- `CONTRIBUTING.md`
-- `architecture.md`
-- `deployment.md`
-- `security-sync.md`
-- `changelog/`
-- `_config.yml`
-- `.github/workflows/pages.yml`
+主要目录结构：
 
-Pages 主要用于：
-
-- 项目导读
-- 架构与同步机制说明
-- 部署与运行说明
-- 更新日志归档
+- `docs/zh/` - 中文文档页面
+- `docs/api/` - API 参考文档
+- `docs/changelog/` - 版本更新日志
+- `docs/.vitepress/` - VitePress 配置与主题
 
 ## CI 与发布验证
 
@@ -140,8 +129,8 @@ cd apps/api && npm run test:property
 
 ## 推荐阅读顺序
 
-1. [仓库概览]({{ '/overview/' | relative_url }})
-2. [架构说明]({{ '/architecture/' | relative_url }})
+1. [仓库概览](/)
+2. [架构说明](/zh/architecture)
 3. 当前页面：部署与运行
-4. [安全与同步机制]({{ '/security-sync/' | relative_url }})
-5. [贡献指南]({{ '/contributing/' | relative_url }})
+4. [安全与同步机制](/zh/security-sync)
+5. [贡献指南](/zh/contributing)
