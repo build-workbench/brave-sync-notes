@@ -7,22 +7,31 @@
 
 ## [Unreleased]
 
-### Added
-- 共享工具函数：ID 生成和内容哈希
+### Removed
+- 移除 VitePress 文档站（37 文件）及全部构建配置，核心架构信息合并至 `ARCHITECTURE.md`
+- 移除 Docker 部署基础设施（`docker-compose.yml`、两个 `Dockerfile`、`nginx.conf`）
+- 移除 GitHub 社区文件（issue 模板、PR 模板、CODEOWNERS、copilot-instructions、WORKFLOWS.md）
+- 移除 4 个 CI workflow（docs、release、codeql、dependency-review），CI 简化为单 job
+- 移除 `CONTRIBUTING.md`（归档项目不再接受贡献）
+- 移除 `netlify.toml`（路径错误且归档不需要）
+- 移除 `start-local.sh`（功能等同于 `npm start`）
+- 移除前端 9 个未使用/冗余依赖：`yjs`、`y-indexeddb`、`idb-keyval`、`events`、`process`、`rehype-highlight`、`crypto-js`、`buffer`、`vite-plugin-node-polyfills`
+- 移除 `vite-plugin-node-polyfills` 及其 vite 配置
 
 ### Changed
-- 移除代码库中约 60+ 个冗余的 console.log 语句
-- 将重复代码整合到共享工具模块
-- 重写 `AGENTS.md` 为简洁中文版，回归「小巧灵」的业余项目定位，以 CHANGELOG 作为唯一变更记录
-- 重写 `CONTRIBUTING.md` 为中文版，移除 Spec-Driven Development 流程
-- 更新 `README.md`：移除 OpenSpec 集成章节和 `specs/`、`openspec/` 目录引用
-- 更新 `docs/README.md` 和 `.github/copilot-instructions.md`，移除 specs/OpenSpec 引用，全面中文化
+- 加密模块改用浏览器原生 Web Crypto API（PBKDF2 + AES-256-GCM），不再依赖 crypto-js
+- `crypto.js` 内嵌同步 SHA-256 实现，使 `createNotebook` 保持同步（Zustand store action 兼容）
+- `deriveKeys` / `encryptData` / `decryptData` 改为 async（Web Crypto API 异步特性）
+- 移除 notebook 对象中的 `encryptionKey` 字段（冗余，实际加密密钥仅在内存中派生）
+- 合并重复配置：根目录统一 `.prettierrc` 和 `.gitignore`，删除子项目副本
+- eslint 降级至 ^8.57.1（修复与 eslint-plugin-react 的 peer dependency 冲突）
+- 简化 `SECURITY.md` 为归档项目最小说明
+- 简化 `.vscode/settings.json` 移除 copilot 配置
+- 精简顶层 `package.json`：移除 docs/docker/install 相关脚本
 
-### Removed
-- 移除 `openspec/` 目录及全部 OpenSpec 变更管理产物
-- 移除 `specs/` 目录及全部稳定规范文档（产品需求、RFC、API、DB、测试策略）
-- 移除 `.claude/skills/openspec-*` 和 `.claude/commands/opsx/` 等 OpenSpec 工具配置
-- 移除空的 `.claude/` 目录
+### Fixed
+- 修复 react-dom 版本不匹配（`^19.2.5` -> `^18.2.0`，与 react ^18.2.0 对齐）
+- 修复 `@types/react-dom` 版本不匹配（`^19.2.3` -> `^18.2.0`）
 
 ---
 

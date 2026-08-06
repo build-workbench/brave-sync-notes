@@ -1,11 +1,10 @@
-# AGENTS.md — AI 协作指南
+# AGENTS.md - AI 协作指南
 
-> 这是一个**业余项目**，追求**小巧灵**：代码精简、文档轻盈、流程轻量。
-> 不引入重型规范框架，所有协作以常识和本文件为准。
+> 业余项目，追求**轻灵巧**：代码精简、文档轻盈、流程轻量。
 
 ## 项目定位
 
-**Note Sync Now / 安全同步笔记** —— 端到端加密的笔记同步系统。
+**Note Sync Now / 安全同步笔记** -- 端到端加密的笔记同步系统。
 - 客户端加密（AES-256-GCM），服务器只转发密文
 - 12 词 BIP39 助记词恢复密钥
 - WebSocket 实时同步，离线优先，多设备协作
@@ -18,7 +17,6 @@
 | 后端 | Node.js 20 + Express 5 + Socket.IO 4 |
 | 存储 | Redis / SQLite / 内存（服务端，自动降级）；IndexedDB / LocalStorage（客户端）|
 | 测试 | Vitest（前端）+ Jest（后端）+ fast-check（属性测试）|
-| 文档 | VitePress |
 
 ## 仓库结构
 
@@ -38,12 +36,9 @@ brave-sync-notes/
 │       │   ├── persistence/ # 持久化适配器
 │       │   └── utils/
 │       └── tests/
-├── docs/                    # VitePress 文档站
-├── .github/workflows/       # CI/CD
-├── AGENTS.md                # 本文件
-├── CHANGELOG.md             # 更新日志（必须维护）
-├── CONTRIBUTING.md          # 贡献指南
-└── README.md                # 项目入口
+├── ARCHITECTURE.md          # 架构设计文档
+├── CHANGELOG.md             # 更新日志
+└── AGENTS.md                # 本文件
 ```
 
 ## 关键文件
@@ -53,7 +48,7 @@ brave-sync-notes/
 | 客户端入口 | `apps/web/src/App.jsx` |
 | WebSocket Hook | `apps/web/src/hooks/useSocket.js` |
 | 全局状态 | `apps/web/src/store/useStore.js` |
-| 加密模块 | `apps/web/src/utils/crypto` |
+| 加密模块 | `apps/web/src/utils/crypto.js` |
 | 服务端入口 | `apps/api/index.js` |
 | 持久化管理 | `apps/api/src/persistence/PersistenceManager.js` |
 
@@ -76,26 +71,23 @@ brave-sync-notes/
 ### 验证命令
 
 ```bash
-# 根目录快捷脚本
 npm run test          # 前后端测试
 npm run lint          # 前后端 lint
-npm run build         # 构建全部
+npm run build         # 构建前端
 
-# 子项目细粒度
 cd apps/web && npm test -- --run      # 前端测试
-cd apps/web && npm run test:coverage  # 前端覆盖率
 cd apps/api && npm test               # 后端测试
-cd apps/api && npm run test:property  # 属性测试（触碰 sync/persistence/validation 时推荐）
-cd docs && npm run build              # 文档构建
+cd apps/api && npm run test:property  # 属性测试
 ```
 
 ### Socket 事件速查
-- 客户端 → 服务端：`join-chain`、`push-update`、`request-sync`
-- 服务端 → 客户端：`sync-update`、`sync-request`、`error`
+- 客户端 -> 服务端：`join-chain`、`push-update`、`request-sync`
+- 服务端 -> 客户端：`sync-update`、`room-info`、`error`
 
 ### 加密参数
-- 内容加密：AES-256-GCM
-- 密钥派生：PBKDF2（10,000 轮，助记词派生盐值 `SHA256("notesync-salt:" + mnemonic)`）
+- 内容加密：AES-256-GCM（Web Crypto API 原生）
+- 密钥派生：PBKDF2（10,000 轮，SHA-256，助记词派生盐值 `SHA-256("notesync-salt:" + mnemonic)`）
+- 房间 ID：`SHA-256(mnemonic)` 同步纯 JS 实现
 - 助记词：BIP39 标准 12 词
 
 ## 安全红线
@@ -110,9 +102,3 @@ cd docs && npm run build              # 文档构建
 - 所有用户可见变更写入 `[Unreleased]` 段
 - 分类：`Added` / `Changed` / `Deprecated` / `Removed` / `Fixed` / `Security`
 - 发布版本时把 `[Unreleased]` 转为带日期的版本号，并补充底部对比链接
-
-## 为什么这样设计？
-
-1. **小巧**：没有 specs/openspec 等重型规范目录，文档只保留必要部分
-2. **灵**：流程够轻，AI 和人类都能快速上手；变更靠 CHANGELOG 追踪
-3. **够用**：测试和 lint 守住质量底线，不靠流程文档堆砌

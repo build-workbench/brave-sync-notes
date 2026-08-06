@@ -4,18 +4,18 @@ node_modules/
 # Build output
 dist/
 build/
-.next/
 
 # Logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Environment
 .env
 .env.local
 .env.*.local
+
+# Testing
+coverage/
 
 # IDE
 .vscode/
@@ -32,25 +32,11 @@ Thumbs.db
 .cache/
 *.tsbuildinfo
 
-# Jekyll
-_site/
-.jekyll-cache/
-.jekyll-metadata
-Gemfile.lock
+# Database
+*.sqlite
+*.sqlite3
+*.db
+data/
 
-# Coverage
-coverage/
-*.lcov
-
-# AI Assistant Directories (legacy)
-.kiro/
-
-# BMad Method V6
-_bmad/
-_bmad-output/
-
-# Local git worktrees
+# Local worktrees
 .worktrees/
-
-# OpenMemory cache (local only)
-.omc/
