@@ -1,4 +1,4 @@
-import { deriveKeys, generateSyncChain } from './crypto';
+import { deriveRoomId, generateSyncChain } from './crypto';
 import { generateUniqueId } from './shared';
 
 const DEFAULT_NOTEBOOK_NAME = {
@@ -13,15 +13,13 @@ const DEFAULT_NOTE_TITLE = {
 
 export const createNotebook = (notebook = {}) => {
   const mnemonic = notebook.mnemonic || generateSyncChain();
-  const derived = deriveKeys(mnemonic);
   const now = Date.now();
 
   return {
     id: notebook.id || generateUniqueId('nb_'),
     name: notebook.name || 'Untitled Notebook',
     mnemonic,
-    roomId: notebook.roomId || derived.roomId,
-    encryptionKey: notebook.encryptionKey || derived.encryptionKey,
+    roomId: notebook.roomId || deriveRoomId(mnemonic),
     noteCount: notebook.noteCount || 0,
     createdAt: notebook.createdAt || now,
     updatedAt: notebook.updatedAt || now,

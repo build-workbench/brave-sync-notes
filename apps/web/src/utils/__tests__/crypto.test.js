@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
-import CryptoJS from 'crypto-js';
+import { describe, it, expect } from 'vitest';
 import {
   generateSyncChain,
   deriveKeys,
+  deriveRoomId,
+  deriveEncryptionKey,
   encryptData,
   decryptData,
   validateMnemonic,
@@ -24,76 +25,89 @@ describe('crypto', () => {
     });
   });
 
-  describe('deriveKeys', () => {
-    it('should derive consistent keys from same mnemonic', () => {
+  describe('deriveRoomId', () => {
+    it('should produce a valid 64-char hex string', () => {
       const mnemonic = generateSyncChain();
-      const keys1 = deriveKeys(mnemonic);
-      const keys2 = deriveKeys(mnemonic);
+      const roomId = deriveRoomId(mnemonic);
+      expect(roomId).toMatch(/^[a-f0-9]{64}$/);
+    });
+
+    it('should be deterministic for the same mnemonic', () => {
+      const mnemonic = 'test test test test test test test test test test test ball';
+      expect(deriveRoomId(mnemonic)).toBe(deriveRoomId(mnemonic));
+    });
+
+    it('should differ for different mnemonics', () => {
+      const m1 = 'test test test test test test test test test test test ball';
+      const m2 = 'test test test test test test test test test test test borrow';
+      expect(deriveRoomId(m1)).not.toBe(deriveRoomId(m2));
+    });
+  });
+
+  describe('deriveKeys', () => {
+    it('should derive consistent keys from same mnemonic', async () => {
+      const mnemonic = generateSyncChain();
+      const keys1 = await deriveKeys(mnemonic);
+      const keys2 = await deriveKeys(mnemonic);
       expect(keys1.roomId).toBe(keys2.roomId);
       expect(keys1.encryptionKey).toBe(keys2.encryptionKey);
     });
 
-    it('should derive different keys from different mnemonics', () => {
+    it('should derive different keys from different mnemonics', async () => {
       const mnemonic1 = generateSyncChain();
       const mnemonic2 = generateSyncChain();
-      const keys1 = deriveKeys(mnemonic1);
-      const keys2 = deriveKeys(mnemonic2);
+      const keys1 = await deriveKeys(mnemonic1);
+      const keys2 = await deriveKeys(mnemonic2);
       expect(keys1.roomId).not.toBe(keys2.roomId);
       expect(keys1.encryptionKey).not.toBe(keys2.encryptionKey);
     });
 
-    it('should produce valid hex strings', () => {
+    it('should produce valid hex roomId', async () => {
       const mnemonic = generateSyncChain();
-      const keys = deriveKeys(mnemonic);
+      const keys = await deriveKeys(mnemonic);
       expect(keys.roomId).toMatch(/^[a-f0-9]{64}$/);
-      expect(keys.encryptionKey).toMatch(/^[a-f0-9]{64}$/);
     });
 
-    it('memoizes repeated derivation for the same mnemonic', () => {
+    it('memoizes repeated derivation for the same mnemonic', async () => {
       const mnemonic = generateSyncChain();
-      const pbkdf2Spy = vi.spyOn(CryptoJS, 'PBKDF2');
-
-      deriveKeys(mnemonic);
-      deriveKeys(mnemonic);
-
-      expect(pbkdf2Spy).toHaveBeenCalledTimes(1);
-      pbkdf2Spy.mockRestore();
+      const key1 = await deriveEncryptionKey(mnemonic);
+      const key2 = await deriveEncryptionKey(mnemonic);
+      expect(key1).toBe(key2);
     });
   });
 
   describe('encryptData and decryptData', () => {
-    it('should encrypt and decrypt data correctly', () => {
-      const key = deriveKeys(generateSyncChain()).encryptionKey;
+    it('should encrypt and decrypt data correctly', async () => {
+      const key = (await deriveKeys(generateSyncChain())).encryptionKey;
       const data = { content: 'Hello, World!', timestamp: Date.now() };
-      const encrypted = encryptData(data, key);
-      const decrypted = decryptData(encrypted, key);
+      const encrypted = await encryptData(data, key);
+      const decrypted = await decryptData(encrypted, key);
       expect(decrypted).toEqual(data);
     });
 
-    it('should produce different ciphertext for same data', () => {
-      const key = deriveKeys(generateSyncChain()).encryptionKey;
+    it('should produce different ciphertext for same data', async () => {
+      const key = (await deriveKeys(generateSyncChain())).encryptionKey;
       const data = { content: 'Test data' };
-      const encrypted1 = encryptData(data, key);
-      const encrypted2 = encryptData(data, key);
-      // AES with random IV should produce different ciphertext
+      const encrypted1 = await encryptData(data, key);
+      const encrypted2 = await encryptData(data, key);
       expect(encrypted1).not.toBe(encrypted2);
     });
 
-    it('should throw error when decrypting with wrong key', () => {
-      const key1 = deriveKeys(generateSyncChain()).encryptionKey;
-      const key2 = deriveKeys(generateSyncChain()).encryptionKey;
+    it('should throw error when decrypting with wrong key', async () => {
+      const key1 = (await deriveKeys(generateSyncChain())).encryptionKey;
+      const key2 = (await deriveKeys(generateSyncChain())).encryptionKey;
       const data = { content: 'Secret' };
-      const encrypted = encryptData(data, key1);
-      expect(() => decryptData(encrypted, key2)).toThrow();
-    }, 10000);
+      const encrypted = await encryptData(data, key1);
+      await expect(decryptData(encrypted, key2)).rejects.toThrow();
+    });
 
-    it('should throw error for invalid ciphertext', () => {
-      const key = deriveKeys(generateSyncChain()).encryptionKey;
-      expect(() => decryptData('invalid-ciphertext', key)).toThrow();
-    }, 10000);
+    it('should throw error for invalid ciphertext', async () => {
+      const key = (await deriveKeys(generateSyncChain())).encryptionKey;
+      await expect(decryptData('invalid-ciphertext!!!', key)).rejects.toThrow();
+    });
 
-    it('should handle complex nested objects', () => {
-      const key = deriveKeys(generateSyncChain()).encryptionKey;
+    it('should handle complex nested objects', async () => {
+      const key = (await deriveKeys(generateSyncChain())).encryptionKey;
       const data = {
         note: {
           id: '123',
@@ -105,8 +119,8 @@ describe('crypto', () => {
         },
         history: [{ v: 1 }, { v: 2 }],
       };
-      const encrypted = encryptData(data, key);
-      const decrypted = decryptData(encrypted, key);
+      const encrypted = await encryptData(data, key);
+      const decrypted = await decryptData(encrypted, key);
       expect(decrypted).toEqual(data);
     });
   });

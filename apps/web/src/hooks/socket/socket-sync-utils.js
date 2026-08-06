@@ -1,7 +1,7 @@
 import { encryptData, decryptData } from '../../utils/crypto';
 import { hashContent, splitIntoChunks } from '../../utils/sync';
 
-export const emitEncryptedUpdate = ({
+export const emitEncryptedUpdate = async ({
   socket,
   keys,
   content,
@@ -10,12 +10,12 @@ export const emitEncryptedUpdate = ({
   const chunks = splitIntoChunks(content);
   const sessionId = Date.now().toString();
 
-  chunks.forEach((chunk) => {
+  for (const chunk of chunks) {
     const dataToEncrypt = chunks.length === 1
       ? { content }
       : { chunked: true, sessionId, chunk };
 
-    const encrypted = encryptData(dataToEncrypt, keys.encryptionKey);
+    const encrypted = await encryptData(dataToEncrypt, keys.encryptionKey);
 
     socket.emit('push-update', {
       roomId: keys.roomId,
@@ -24,7 +24,7 @@ export const emitEncryptedUpdate = ({
       chunkIndex: chunk.index,
       totalChunks: chunks.length,
     });
-  });
+  }
 
   return hashContent(content);
 };
@@ -36,7 +36,7 @@ export const processEncryptedSyncPayload = async ({
   onRemoteContent,
   decrypt = decryptData,
 }) => {
-  const decrypted = decrypt(payload.encryptedData, encryptionKey);
+  const decrypted = await decrypt(payload.encryptedData, encryptionKey);
   if (!decrypted) {
     return;
   }

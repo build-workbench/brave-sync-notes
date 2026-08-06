@@ -117,14 +117,14 @@ export const useSocket = () => {
 
   // ==================== Content Push ====================
 
-  const pushContent = useCallback((content) => {
+  const pushContent = useCallback(async (content) => {
     if (!socketRef.current?.connected || !keysRef.current) {
       setStatus('disconnected');
       return;
     }
 
     try {
-      lastSyncedHashRef.current = emitEncryptedUpdate({
+      lastSyncedHashRef.current = await emitEncryptedUpdate({
         socket: socketRef.current,
         keys: keysRef.current,
         content,
@@ -212,7 +212,7 @@ export const useSocket = () => {
 
         try {
           const content = operation.data;
-          lastSyncedHashRef.current = emitEncryptedUpdate({
+          lastSyncedHashRef.current = await emitEncryptedUpdate({
             socket: socketRef.current,
             keys: keysRef.current,
             content,
@@ -240,17 +240,15 @@ export const useSocket = () => {
 
   // ==================== Connection Management ====================
 
-  const joinChain = useCallback((chainMnemonic, name) => {
-    return new Promise((resolve) => {
+  const joinChain = useCallback(async (chainMnemonic, name) => {
       try {
         const socketUrl = getSocketUrl();
         if (!socketUrl) {
           toast.error('VITE_SOCKET_URL is required outside development');
-          resolve(false);
-          return;
+          return false;
         }
 
-        const keys = deriveKeys(chainMnemonic);
+        const keys = await deriveKeys(chainMnemonic);
         keysRef.current = keys;
 
         lastSyncedHashRef.current = '00';
@@ -300,13 +298,12 @@ export const useSocket = () => {
         });
 
         setView('app');
-        resolve(true);
+        return true;
       } catch (e) {
         console.error('Error joining chain', e);
         toast.error(t.joinError);
-        resolve(false);
+        return false;
       }
-    });
   }, [setStatus, setMembers, setView, t, initOfflineQueue, processQueuedOperations, handleRemoteContent]);
 
   // ==================== Public API ====================

@@ -37,8 +37,8 @@ vi.mock('../utils/crypto', async () => {
   const actual = await vi.importActual('../utils/crypto');
   return {
     ...actual,
-    encryptData: vi.fn((data) => JSON.stringify(data)),
-    decryptData: vi.fn((ciphertext) => JSON.parse(ciphertext)),
+    encryptData: vi.fn(async (data) => JSON.stringify(data)),
+    decryptData: vi.fn(async (ciphertext) => JSON.parse(ciphertext)),
   };
 });
 
@@ -78,11 +78,10 @@ describe('useSocket', () => {
   it('joins the derived room and updates view/status on connect', async () => {
     const { result } = renderHook(() => useSocket());
     const mnemonic = 'test test test test test test test test test test test ball';
-    const keys = deriveKeys(mnemonic);
+    const keys = await deriveKeys(mnemonic);
 
-    let joinPromise;
     await act(async () => {
-      joinPromise = result.current.joinChain(mnemonic, 'MacBook');
+      await result.current.joinChain(mnemonic, 'MacBook');
     });
 
     expect(typeof mockSocket.handlers.connect).toBe('function');
@@ -90,8 +89,6 @@ describe('useSocket', () => {
     await act(async () => {
       await mockSocket.handlers.connect();
     });
-
-    await expect(joinPromise).resolves.toBe(true);
 
     expect(mockSocket.emit).toHaveBeenCalledWith('join-chain', {
       roomId: keys.roomId,
@@ -107,9 +104,8 @@ describe('useSocket', () => {
     const mnemonic = 'test test test test test test test test test test test ball';
 
     await act(async () => {
-      const joinPromise = result.current.joinChain(mnemonic, 'MacBook');
-      mockSocket.handlers.connect();
-      await joinPromise;
+      await result.current.joinChain(mnemonic, 'MacBook');
+      await mockSocket.handlers.connect();
     });
 
     await act(async () => {
@@ -131,12 +127,11 @@ describe('useSocket', () => {
   it('requests latest sync only when connected and joined', async () => {
     const { result } = renderHook(() => useSocket());
     const mnemonic = 'test test test test test test test test test test test ball';
-    const keys = deriveKeys(mnemonic);
+    const keys = await deriveKeys(mnemonic);
 
     await act(async () => {
-      const joinPromise = result.current.joinChain(mnemonic, 'MacBook');
-      mockSocket.handlers.connect();
-      await joinPromise;
+      await result.current.joinChain(mnemonic, 'MacBook');
+      await mockSocket.handlers.connect();
     });
 
     mockSocket.emit.mockClear();
@@ -151,12 +146,11 @@ describe('useSocket', () => {
   it('exposes the currently joined room id', async () => {
     const { result } = renderHook(() => useSocket());
     const mnemonic = 'test test test test test test test test test test test ball';
-    const keys = deriveKeys(mnemonic);
+    const keys = await deriveKeys(mnemonic);
 
     await act(async () => {
-      const joinPromise = result.current.joinChain(mnemonic, 'MacBook');
-      mockSocket.handlers.connect();
-      await joinPromise;
+      await result.current.joinChain(mnemonic, 'MacBook');
+      await mockSocket.handlers.connect();
     });
 
     expect(result.current.getCurrentRoomId()).toBe(keys.roomId);
@@ -167,9 +161,8 @@ describe('useSocket', () => {
     const mnemonic = 'test test test test test test test test test test test ball';
 
     await act(async () => {
-      const joinPromise = result.current.joinChain(mnemonic, 'MacBook');
-      mockSocket.handlers.connect();
-      await joinPromise;
+      await result.current.joinChain(mnemonic, 'MacBook');
+      await mockSocket.handlers.connect();
     });
 
     act(() => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deriveKeys, validateMnemonic } from '../crypto';
+import { deriveRoomId, validateMnemonic } from '../crypto';
 import { createNotebook, restoreNotebookState } from '../notebooks';
 
 describe('notebooks utilities', () => {
@@ -9,9 +9,8 @@ describe('notebooks utilities', () => {
     expect(notebook.name).toBe('Work');
     expect(validateMnemonic(notebook.mnemonic)).toBe(true);
 
-    const derived = deriveKeys(notebook.mnemonic);
-    expect(notebook.roomId).toBe(derived.roomId);
-    expect(notebook.encryptionKey).toBe(derived.encryptionKey);
+    const roomId = deriveRoomId(notebook.mnemonic);
+    expect(notebook.roomId).toBe(roomId);
   });
 
   it('restores notebooks and the active note from storage', async () => {

@@ -9,7 +9,6 @@
  * @property {string} id - 笔记本唯一标识符
  * @property {string} name - 笔记本名称
  * @property {string} mnemonic - 12词助记词
- * @property {string} encryptionKey - 加密密钥
  * @property {string} roomId - 服务器房间ID
  * @property {number} createdAt - 创建时间戳
  * @property {number} updatedAt - 更新时间戳

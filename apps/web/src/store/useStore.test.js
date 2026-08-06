@@ -132,7 +132,6 @@ describe('useAppStore notebook behavior', () => {
     expect(state.notebooks).toHaveLength(1);
     expect(validateMnemonic(state.notebooks[0].mnemonic)).toBe(true);
     expect(state.notebooks[0].roomId).toBeTruthy();
-    expect(state.notebooks[0].encryptionKey).toBeTruthy();
   });
 
   it('clears active note and mnemonic when the last notebook is removed', () => {

@@ -1,15 +1,21 @@
 import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('../../../utils/crypto', () => ({
+  encryptData: vi.fn(async (data) => 'encrypted:' + JSON.stringify(data)),
+  decryptData: vi.fn(async (ct) => JSON.parse(ct.replace('encrypted:', ''))),
+}));
+
 import {
   emitEncryptedUpdate,
   processEncryptedSyncPayload,
 } from '../socket-sync-utils';
 
 describe('socket-sync-utils', () => {
-  it('emitEncryptedUpdate emits encrypted push-update payload(s)', () => {
+  it('emitEncryptedUpdate emits encrypted push-update payload(s)', async () => {
     const socket = { emit: vi.fn() };
-    const keys = { roomId: 'room-1', encryptionKey: 'key-1' };
+    const keys = { roomId: 'room-1', encryptionKey: {} };
 
-    const hash = emitEncryptedUpdate({
+    const hash = await emitEncryptedUpdate({
       socket,
       keys,
       content: 'hello world',
@@ -39,7 +45,7 @@ describe('socket-sync-utils', () => {
     };
     const onRemoteContent = vi.fn().mockResolvedValue(undefined);
     const chunkManager = { reassemble: vi.fn() };
-    const decrypt = vi.fn().mockReturnValue({ content: 'remote-content' });
+    const decrypt = vi.fn().mockResolvedValue({ content: 'remote-content' });
 
     await processEncryptedSyncPayload({
       payload,
