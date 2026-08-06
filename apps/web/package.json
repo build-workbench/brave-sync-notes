@@ -36,7 +36,7 @@
     "framer-motion": "^10.16.16",
     "idb-keyval": "^6.2.1",
     "lodash.debounce": "^4.0.8",
-    "lucide-react": "^0.292.0",
+    "lucide-react": "^1.14.0",
     "process": "^0.11.10",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
