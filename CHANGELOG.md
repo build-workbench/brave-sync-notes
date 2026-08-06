@@ -13,6 +13,16 @@
 ### Changed
 - 移除代码库中约 60+ 个冗余的 console.log 语句
 - 将重复代码整合到共享工具模块
+- 重写 `AGENTS.md` 为简洁中文版，回归「小巧灵」的业余项目定位，以 CHANGELOG 作为唯一变更记录
+- 重写 `CONTRIBUTING.md` 为中文版，移除 Spec-Driven Development 流程
+- 更新 `README.md`：移除 OpenSpec 集成章节和 `specs/`、`openspec/` 目录引用
+- 更新 `docs/README.md` 和 `.github/copilot-instructions.md`，移除 specs/OpenSpec 引用，全面中文化
+
+### Removed
+- 移除 `openspec/` 目录及全部 OpenSpec 变更管理产物
+- 移除 `specs/` 目录及全部稳定规范文档（产品需求、RFC、API、DB、测试策略）
+- 移除 `.claude/skills/openspec-*` 和 `.claude/commands/opsx/` 等 OpenSpec 工具配置
+- 移除空的 `.claude/` 目录
 
 ---
 
