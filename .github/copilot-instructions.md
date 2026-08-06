@@ -1,116 +1,109 @@
-# GitHub Copilot Instructions for Note Sync Now
+# GitHub Copilot 指南 — Note Sync Now
 
-## Project Overview
+## 项目概述
 
-This is an end-to-end encrypted note synchronization system with real-time sync, offline support, and multi-device collaboration. The project follows **Spec-Driven Development** using OpenSpec.
+端到端加密的笔记同步系统，支持实时同步、离线优先和多设备协作。这是一个追求**小巧灵**的业余项目，不使用重型规范框架。
 
-## Technology Stack
+## 技术栈
 
-- **Frontend**: React 18 + Vite 5 + Tailwind CSS + Zustand + CodeMirror 6
-- **Backend**: Node.js 20 + Express 5 + Socket.IO 4
-- **Storage**: Redis / SQLite (server), IndexedDB / LocalStorage (client)
-- **Testing**: Vitest (frontend), Jest (backend), fast-check (property-based)
-- **Documentation**: VitePress
+- **前端**：React 18 + Vite + Tailwind CSS + Zustand + CodeMirror 6
+- **后端**：Node.js 20 + Express 5 + Socket.IO 4
+- **存储**：Redis / SQLite（服务端，自动降级）；IndexedDB / LocalStorage（客户端）
+- **测试**：Vitest（前端）、Jest（后端）、fast-check（属性测试）
+- **文档**：VitePress
 
-## Code Conventions
+## 代码约定
 
-### Language
-- JavaScript (ES2022+), not TypeScript
-- JSDoc comments for documentation
-- `async/await` for async operations
+### 语言
+- JavaScript（ES2022+），不使用 TypeScript
+- 用 JSDoc 注释文档化函数
+- 异步操作统一使用 `async/await`
 
-### Naming
-- Files: `kebab-case.js`
-- Functions/Variables: `camelCase`
-- Constants: `UPPER_SNAKE_CASE`
-- Classes/Components: `PascalCase`
+### 命名
+- 文件：`kebab-case.js`
+- 函数/变量：`camelCase`
+- 常量：`UPPER_SNAKE_CASE`
+- 类/组件：`PascalCase`
 
-### File Organization
+### 文件组织
 ```
 apps/
-├── web/               # Frontend (React + Vite)
+├── web/               # 前端（React + Vite）
 │   └── src/
-│       ├── components/   # React components
-│       ├── hooks/        # Custom hooks
+│       ├── components/   # React 组件
+│       ├── hooks/        # 自定义 hooks
 │       ├── store/        # Zustand store
-│       └── utils/        # Utility functions
-└── api/               # Backend (Express + Socket.IO)
-    ├── index.js          # Server entry
+│       └── utils/        # 工具函数
+└── api/               # 后端（Express + Socket.IO）
+    ├── index.js          # 服务入口
     └── src/
-        └── persistence/  # Storage adapters
+        └── persistence/  # 存储适配器
 ```
 
-## Key Patterns
+## 关键模式
 
-### State Management (Zustand)
+### 状态管理（Zustand）
 ```javascript
-// useStore.js pattern
+// useStore.js 模式
 import { create } from 'zustand';
 
 const useStore = create((set, get) => ({
-  // State
+  // 状态
   data: null,
-  // Actions
+  // 动作
   setData: (data) => set({ data }),
-  // Computed
+  // 计算
   getData: () => get().data,
 }));
 ```
 
-### Socket Events
-- Client → Server: `join-chain`, `push-update`, `request-sync`
-- Server → Client: `sync-update`, `sync-request`, `error`
+### Socket 事件
+- 客户端 → 服务端：`join-chain`、`push-update`、`request-sync`
+- 服务端 → 客户端：`sync-update`、`sync-request`、`error`
 
-### Encryption
-- AES-256-GCM for content encryption
-- PBKDF2 (100,000 iterations) for key derivation
-- 12-word BIP39 mnemonic for key recovery
+### 加密
+- 内容加密：AES-256-GCM
+- 密钥派生：PBKDF2（10,000 轮，助记词派生盐值）
+- 12 词 BIP39 助记词恢复密钥
 
-## Testing
+## 测试
 
 ```bash
-# Run all tests
-npm test
-
-# Run with coverage
-npm run test:coverage
-
-# Property-based tests
-npm run test:property
+npm test                    # 运行所有测试
+npm run test:coverage       # 带覆盖率
+npm run test:property       # 属性测试
 ```
 
-## Important Files
+## 关键文件
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/App.jsx` | Main React component |
-| `apps/web/src/hooks/useSocket.js` | WebSocket connection |
-| `apps/web/src/store/useStore.js` | Global state |
-| `apps/web/src/utils/crypto.js` | Encryption utilities |
-| `apps/api/index.js` | Server entry point |
+| 文件 | 用途 |
+|------|------|
+| `apps/web/src/App.jsx` | 主 React 组件 |
+| `apps/web/src/hooks/useSocket.js` | WebSocket 连接 |
+| `apps/web/src/store/useStore.js` | 全局状态 |
+| `apps/web/src/utils/crypto.js` | 加密工具 |
+| `apps/api/index.js` | 服务入口 |
 
-## Spec-Driven Development
+## 协作流程
 
-Before implementing new features, check the specs in `/specs/`:
-- Product requirements: `/specs/product/`
-- API definitions: `/specs/api/`
-- Architecture: `/specs/rfc/`
+1. **先读代码**：动手前理解相关模块和现有模式
+2. **小步提交**：每个 commit 聚焦一件事，可选 conventional commits 风格
+3. **测试驱动**：修 bug 先写复现测试，再修复
+4. **同步 CHANGELOG**：用户可见的变更必须写入 `CHANGELOG.md` 的 `[Unreleased]` 段
+5. **不镀金**：只做被要求的事，不擅自添加规格外的功能
 
-For changes, use OpenSpec workflow:
-1. `/opsx:propose <name>` - Create proposal
-2. `/opsx:apply` - Implement tasks
-3. `/opsx:archive` - Archive completed change
+详见 [`AGENTS.md`](https://github.com/LessUp/brave-sync-notes/blob/main/AGENTS.md)。
 
-## Error Handling
+## 错误处理
 
-Use structured error objects:
+使用结构化错误对象：
 ```javascript
 {
   type: 'ERROR_TYPE',
-  message: 'Human-readable message',
+  message: '人类可读的信息',
   code: 'ERROR_CODE',
   recoverable: true/false
 }
 ```
 
-Never expose encryption keys in error messages.
+绝不暴露加密密钥。

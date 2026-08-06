@@ -1,207 +1,118 @@
-# Project Philosophy: Spec-Driven Development with OpenSpec
+# AGENTS.md — AI 协作指南
 
-This project follows **Spec-Driven Development (SDD)** powered by **OpenSpec** for change management. All code implementations must use the specification documents in `/specs` as the Single Source of Truth.
+> 这是一个**业余项目**，追求**小巧灵**：代码精简、文档轻盈、流程轻量。
+> 不引入重型规范框架，所有协作以常识和本文件为准。
 
-## Directory Context
+## 项目定位
 
-### Tier 1: Stable Specifications (`/specs/`)
-- `/specs/product/` - Product feature definitions and acceptance criteria
-- `/specs/rfc/` - Technical design documents (Architecture RFCs)
-- `/specs/api/` - API interface definitions (WebSocket and REST APIs)
-- `/specs/db/` - Database model and schema definitions
-- `/specs/testing/` - Testing strategy and correctness properties
+**Note Sync Now / 安全同步笔记** —— 端到端加密的笔记同步系统。
+- 客户端加密（AES-256-GCM），服务器只转发密文
+- 12 词 BIP39 助记词恢复密钥
+- WebSocket 实时同步，离线优先，多设备协作
 
-### Tier 2: Change Management (`/openspec/`)
-- `/openspec/changes/` - Active change proposals
-- `/openspec/specs/` - Delta specs during development
-- `/openspec/schemas/` - Custom schema definitions
+## 技术栈
 
-## AI Agent Workflow Instructions
+| 层 | 技术 |
+|----|------|
+| 前端 | React 18 + Vite + Tailwind CSS + Zustand + CodeMirror 6 |
+| 后端 | Node.js 20 + Express 5 + Socket.IO 4 |
+| 存储 | Redis / SQLite / 内存（服务端，自动降级）；IndexedDB / LocalStorage（客户端）|
+| 测试 | Vitest（前端）+ Jest（后端）+ fast-check（属性测试）|
+| 文档 | VitePress |
 
-When you (the AI) are asked to develop a new feature, modify an existing feature, or fix a bug, **follow the appropriate workflow below**:
+## 仓库结构
 
-### Workflow A: New Feature or Significant Change
-
-Use OpenSpec to manage the change through its full lifecycle:
-
-#### 1. Explore (Optional)
-If requirements are unclear, use exploration mode:
 ```
-/opsx:explore
-```
-Have a conversation to clarify requirements before creating a formal proposal.
-
-#### 2. Propose the Change
-```
-/opsx:propose "<change-name>"
-```
-This creates a structured change proposal with:
-- `proposal.md` - What & Why
-- `design.md` - How (technical approach)
-- `tasks.md` - Implementation checklist
-- `specs/` - Delta specs for this change
-
-#### 3. Review References
-Check `proposal.md` for related specs. Read referenced specs in `/specs/` before designing.
-
-#### 4. Implement
-```
-/opsx:apply
-```
-Work through tasks in `tasks.md`, marking each complete as you progress.
-
-#### 5. Archive
-```
-/opsx:archive
-```
-- Moves change to `openspec/changes/archive/`
-- Merges verified delta specs into stable specs
-
-### Workflow B: Bug Fix or Minor Change
-
-For small fixes that don't require full change management:
-
-1. **Review relevant specs** in `/specs/` first
-2. **If interface changes needed** → Use Workflow A
-3. **If code-only fix** → Implement and verify tests pass
-4. **Update spec** if the fix reveals spec was incorrect
-
-### Workflow C: Spec Conflict Resolution
-
-If user's request conflicts with existing specs:
-
-1. **Stop coding immediately**
-2. Point out the conflict with specific spec references
-3. Ask user whether to:
-   - Update specs first (use Workflow A)
-   - Modify the request to comply with specs
-   - Proceed with explicit spec exception
-
-## Spec Reference Quick Guide
-
-| What You're Building | Primary Spec | Related Specs |
-|---------------------|--------------|---------------|
-| New user feature | `/specs/product/note-sync-system.md` | Related RFC |
-| API endpoint/event | `/specs/api/websocket-api.yaml` | RFC, DB schema |
-| Database changes | `/specs/db/schema-v1.dbml` | API spec |
-| Test requirements | `/specs/testing/test-strategy.md` | Product specs |
-| Architecture guidance | `/specs/rfc/0001-core-architecture.md` | All specs |
-
-## Capabilities
-
-This project is organized into capabilities, each referencing multiple specs:
-
-| Capability | Product Req | RFC | API | Tests |
-|------------|-------------|-----|-----|-------|
-| sync-core | Req 1 | RFC 0001 | websocket-api.yaml | Props 1-2 |
-| conflict-resolution | Req 2 | RFC 0001 §2 | - | Props 3-4 |
-| multi-notebook | Req 3 | RFC 0002 §4 | - | Prop 5 |
-| offline-mode | Req 4 | RFC 0002 §3 | - | Prop 4 |
-| version-history | Req 5 | RFC 0002 §5 | - | Props 6-10 |
-| encryption | - | RFC 0001 | - | Props |
-| storage | Req 1 | - | - | schema-v1.dbml |
-
-See `/openspec/specs/capabilities/` for detailed capability specs.
-
-## Delta Specs Format
-
-When proposing changes that affect existing specs, use delta format:
-
-### API Changes (`specs/api-delta.yaml`)
-```yaml
-base: specs/api/websocket-api.yaml
-change_type: extend  # extend | modify | deprecate
-
-additions:
-  events:
-    client:
-      - name: new-event-name
-        payload: { field: type }
-    server:
-      - name: server-event-name
-        payload: { field: type }
+brave-sync-notes/
+├── apps/
+│   ├── web/                 # React + Vite 前端
+│   │   ├── src/
+│   │   │   ├── components/  # UI 组件
+│   │   │   ├── hooks/       # 自定义 Hooks（useSocket 等）
+│   │   │   ├── store/       # Zustand 状态
+│   │   │   └── utils/       # 工具函数（crypto 等）
+│   │   └── tests/
+│   └── api/                 # Express + Socket.IO 后端
+│       ├── index.js         # 服务入口
+│       ├── src/
+│       │   ├── persistence/ # 持久化适配器
+│       │   └── utils/
+│       └── tests/
+├── docs/                    # VitePress 文档站
+├── .github/workflows/       # CI/CD
+├── AGENTS.md                # 本文件
+├── CHANGELOG.md             # 更新日志（必须维护）
+├── CONTRIBUTING.md          # 贡献指南
+└── README.md                # 项目入口
 ```
 
-### Database Changes (`specs/db-delta.dbml`)
-```dbml
-// Base: specs/db/schema-v1.dbml
+## 关键文件
 
-Table new_table {
-  id varchar [pk]
-  field type
-  created_at timestamp
-}
+| 用途 | 文件 |
+|------|------|
+| 客户端入口 | `apps/web/src/App.jsx` |
+| WebSocket Hook | `apps/web/src/hooks/useSocket.js` |
+| 全局状态 | `apps/web/src/store/useStore.js` |
+| 加密模块 | `apps/web/src/utils/crypto` |
+| 服务端入口 | `apps/api/index.js` |
+| 持久化管理 | `apps/api/src/persistence/PersistenceManager.js` |
+
+## 协作约定
+
+### 代码风格
+- **语言**：JavaScript（ES2022+），不使用 TypeScript；用 JSDoc 注释文档化函数
+- **命名**：文件 `kebab-case.js`，函数/变量 `camelCase`，常量 `UPPER_SNAKE_CASE`，类/组件 `PascalCase`
+- **异步**：统一使用 `async/await`
+- **错误对象**：结构化 `{ type, message, code, recoverable }`，**绝不**在错误信息中暴露加密密钥
+- 遵循项目根目录的 ESLint 配置和 `.editorconfig`
+
+### 工作流程（轻量版）
+1. **先读代码**：动手前先理解相关模块和现有模式，模仿既有约定
+2. **小步提交**：每个 commit 聚焦一件事，描述性信息（可选 conventional commits 风格 `feat:`/`fix:`/`docs:`）
+3. **测试驱动**：修 bug 先写复现测试，再修复；新功能补测试
+4. **同步文档**：用户可见的变更**必须**更新 `CHANGELOG.md` 的 `[Unreleased]` 段
+5. **不镀金**：只做被要求的事，不擅自添加规格外的功能
+
+### 验证命令
+
+```bash
+# 根目录快捷脚本
+npm run test          # 前后端测试
+npm run lint          # 前后端 lint
+npm run build         # 构建全部
+
+# 子项目细粒度
+cd apps/web && npm test -- --run      # 前端测试
+cd apps/web && npm run test:coverage  # 前端覆盖率
+cd apps/api && npm test               # 后端测试
+cd apps/api && npm run test:property  # 属性测试（触碰 sync/persistence/validation 时推荐）
+cd docs && npm run build              # 文档构建
 ```
 
-## Code Generation Rules
+### Socket 事件速查
+- 客户端 → 服务端：`join-chain`、`push-update`、`request-sync`
+- 服务端 → 客户端：`sync-update`、`sync-request`、`error`
 
-1. **Reference specs before coding** - Always read related specs first
-2. **100% spec compliance** - Follow interface definitions exactly
-3. **No gold-plating** - Don't add features not in specs
-4. **Test against properties** - Verify correctness properties in `/specs/testing/`
-5. **Update specs when design changes** - Keep specs and code synchronized
-6. **Use RFC 2119 keywords** - SHALL, MUST, SHOULD, MAY in specs
+### 加密参数
+- 内容加密：AES-256-GCM
+- 密钥派生：PBKDF2（10,000 轮，助记词派生盐值 `SHA256("notesync-salt:" + mnemonic)`）
+- 助记词：BIP39 标准 12 词
 
-## Project Conventions
+## 安全红线
 
-### Technology Stack
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18 + Vite + Tailwind CSS |
-| State Management | Zustand |
-| Editor | CodeMirror 6 |
-| Backend | Node.js + Express 5 + Socket.IO 4 |
-| Storage | Redis / SQLite / IndexedDB |
-| Testing | Vitest + Jest + fast-check |
+- 永不提交密钥、令牌、密码到仓库
+- 永不在错误信息或日志中暴露加密密钥
+- 发现安全问题请私下报告，不要先开公开 issue
 
-### Code Style
-- JavaScript (not TypeScript) for current implementation
-- Use JSDoc comments for function documentation
-- Follow ESLint configuration in project root
-- Use `async/await` for asynchronous operations
+## CHANGELOG 维护规则
 
-### Naming Conventions
-- Files: `kebab-case.js`
-- Functions: `camelCase`
-- Constants: `UPPER_SNAKE_CASE`
-- Classes: `PascalCase`
+`CHANGELOG.md` 是本项目的**唯一变更记录**，遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 格式：
+- 所有用户可见变更写入 `[Unreleased]` 段
+- 分类：`Added` / `Changed` / `Deprecated` / `Removed` / `Fixed` / `Security`
+- 发布版本时把 `[Unreleased]` 转为带日期的版本号，并补充底部对比链接
 
-### Error Handling
-- Use structured error objects: `{ type, message, code, recoverable }`
-- Never expose encryption keys in error messages
-- Follow error types defined in architecture spec
+## 为什么这样设计？
 
-## OpenSpec Commands
-
-| Command | Purpose |
-|---------|---------|
-| `/opsx:propose <name>` | Create new change proposal |
-| `/opsx:explore` | Explore ideas before proposing |
-| `/opsx:apply` | Implement tasks from active change |
-| `/opsx:archive` | Archive completed change |
-
-## Key Files
-
-| Purpose | File |
-|---------|------|
-| Client entry | `apps/web/src/App.jsx` |
-| Socket hook | `apps/web/src/hooks/useSocket.js` |
-| State store | `apps/web/src/store/useStore.js` |
-| Crypto module | `apps/web/src/utils/crypto` |
-| Server entry | `apps/api/index.js` |
-| Persistence | `apps/api/src/persistence/PersistenceManager.js` |
-
-## Important Specs
-
-- [Product Requirements](./specs/product/note-sync-system.md)
-- [Core Architecture](./specs/rfc/0001-core-architecture.md)
-- [API Specification](./specs/api/websocket-api.yaml)
-- [Database Schema](./specs/db/schema-v1.dbml)
-- [Testing Strategy](./specs/testing/test-strategy.md)
-
-## Why This Declaration?
-
-1. **Prevent AI Hallucinations**: Forcing AI to read `/specs` first anchors its thinking scope
-2. **Constrain Modification Path**: "Modify specs before code" ensures documentation-code synchronization
-3. **Improve PR Quality**: Implementation aligns with business logic defined in specs
-4. **Change Tracking**: OpenSpec provides audit trail of all changes
+1. **小巧**：没有 specs/openspec 等重型规范目录，文档只保留必要部分
+2. **灵**：流程够轻，AI 和人类都能快速上手；变更靠 CHANGELOG 追踪
+3. **够用**：测试和 lint 守住质量底线，不靠流程文档堆砌

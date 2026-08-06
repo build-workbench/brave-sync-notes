@@ -118,9 +118,9 @@ brave-sync-notes/
 │       │   ├── persistence/ # 持久化存储
 │       │   └── utils/       # 工具函数
 │       └── tests/           # 测试文件
-├── docs/                    # GitHub Pages 文档站
-├── specs/                   # 稳定规范（Single Source of Truth）
-├── openspec/                # 变更管理与增量规范
+├── docs/                    # VitePress 文档站
+├── CHANGELOG.md             # 更新日志
+├── CONTRIBUTING.md          # 贡献指南
 └── .github/workflows/       # CI/CD 配置
 ```
 
@@ -209,36 +209,6 @@ cd apps/web && npm run test:coverage
 ## 📝 更新日志
 
 查看 [CHANGELOG.md](CHANGELOG.md) 了解版本历史。
-
----
-
-## 🔄 OpenSpec 集成
-
-本项目使用 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 进行 AI 辅助的**规范驱动开发**。所有变更都通过结构化的提案进行管理。
-
-### 快捷命令
-
-| 命令 | 描述 |
-|------|------|
-| `/opsx:propose` | 创建新的变更提案 |
-| `/opsx:explore` | 在提交前探索想法 |
-| `/opsx:apply` | 实现变更任务 |
-| `/opsx:archive` | 归档已完成的变更 |
-
-### 工作流程
-
-```
-/opsx:propose "功能名称"  ->  /opsx:apply  ->  /opsx:archive
-```
-
-### 两层规范体系
-
-| 目录 | 用途 |
-|------|------|
-| `specs/` | 稳定的、已批准的规范（Single Source of Truth）|
-| `openspec/` | 变更管理和增量规范 |
-
-详见 [AGENTS.md](./AGENTS.md) 了解详细工作流程。
 
 ---
 

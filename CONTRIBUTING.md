@@ -1,137 +1,96 @@
 ---
-title: Contributing Guide
-description: Contribution workflow, validation commands, and documentation/changelog expectations for Note Sync Now.
+title: 贡献指南
+description: Note Sync Now 的贡献流程、本地验证命令与文档/更新日志维护约定。
 permalink: /contributing/
 ---
 
-# Contributing to Note Sync Now / Brave Sync Notes
+# 贡献指南
 
-Thank you for your interest in contributing.
+感谢你有兴趣为本项目贡献代码。这是一个追求**小巧灵**的业余项目，流程尽量保持轻量。
 
-## Navigation
+## 导航
 
-- Docs home: <https://lessup.github.io/brave-sync-notes/>
-- Repository overview: <https://lessup.github.io/brave-sync-notes/overview/>
-- Changelog: <https://lessup.github.io/brave-sync-notes/changelog/>
+- 文档首页：<https://lessup.github.io/brave-sync-notes/>
+- 项目概览：<https://lessup.github.io/brave-sync-notes/overview/>
+- 更新日志：<https://lessup.github.io/brave-sync-notes/changelog/>
 
-## Ways to contribute
+## 贡献方式
 
-- Report bugs and request features via GitHub Issues.
-- Improve documentation and examples.
-- Submit pull requests for bug fixes or new features.
+- 通过 GitHub Issues 报告 bug、提出功能建议
+- 改进文档和示例
+- 提交 pull request 修复 bug 或实现新功能
 
-## Workflow
+## 开发流程
 
-### Spec-Driven Development
+### 1. 准备分支
 
-This project follows **Spec-Driven Development (SDD)**. Before writing code:
-
-1. **Review existing specs**: Check `/specs` directory for relevant product requirements, RFCs, and API definitions.
-2. **Update specs first**: If introducing new features or changing interfaces, update the relevant spec documents first.
-3. **Get spec approval**: Ensure spec changes are reviewed and approved before implementation.
-4. **Implement to spec**: Write code that strictly follows the specifications.
-5. **Test against specs**: Ensure tests verify all acceptance criteria defined in specs.
-
-### Spec Directory Structure
-
-```
-specs/
-├── product/            # Product requirements (What to build)
-├── rfc/                # Technical design (How to build)
-├── api/                # API interface definitions
-├── db/                 # Database schema definitions
-└── testing/            # Testing strategy and properties
+```bash
+git checkout -b feature/your-feature-name
 ```
 
-### Development Steps
+### 2. 动手前先读代码
 
-1. Fork the repository and create a feature branch:
-   - `git checkout -b feature/your-feature-name`
-2. Review and update specs in `/specs` directory if needed
-3. Make your changes in small, focused commits.
-4. Run the relevant validation locally:
-   - `cd apps/web && npm ci && npm test -- --run && npm run build`
-   - `cd apps/api && npm ci && npm test`
-   - `cd apps/api && npm run test:property` (recommended when touching sync, persistence, or validation logic)
-5. Add or update a record in `changelog/` for every submitted change set.
-6. Open a pull request with a clear description of the change and related issue(s).
+先理解相关模块和现有模式，模仿既有约定。关键入口见 [AGENTS.md](./AGENTS.md) 的「关键文件」一节。
 
-## Documentation expectations
+### 3. 小步提交
 
-- **Specs are the source of truth**: All product requirements, architecture decisions, and API definitions must be in `/specs`.
-- **Keep docs in sync**: Update relevant specs when changing functionality. Code and specs must always match.
-- **User documentation**: Place tutorials, guides, and how-to content in `/docs/setup` or `/docs/tutorials`.
-- **Architecture docs**: High-level architecture goes in `/docs/architecture` (can link to detailed RFCs in `/specs/rfc`).
-- **Changelog**: Update `CHANGELOG.md` for user-facing changes.
+每个 commit 聚焦一件事，建议使用 conventional commits 风格（`feat:`、`fix:`、`docs:`、`refactor:`、`chore:`）。
 
-## Creating New Specs
+### 4. 本地验证
 
-### Product Specs
+```bash
+# 前端
+cd apps/web && npm ci && npm test -- --run && npm run build
 
-Place in `/specs/product/`. Use this structure:
+# 后端
+cd apps/api && npm ci && npm test
 
-```markdown
-# Feature Name - Product Requirements
+# 属性测试（触碰 sync / persistence / validation 逻辑时推荐）
+cd apps/api && npm run test:property
 
-> **Status:** Draft|Active|Deprecated
-> **Created:** YYYY-MM-DD
-> **Last Updated:** YYYY-MM-DD
-
-## Overview
-
-## Requirements
-
-### Requirement N: Requirement Title
-
-**User Story:** As a [user], I want [goal] so that [benefit].
-
-#### Acceptance Criteria
-
-1. WHEN [condition] THEN the System SHALL [behavior]
+# 文档
+cd docs && npm run build
 ```
 
-### RFCs (Technical Design)
+### 5. 维护更新日志
 
-Place in `/specs/rfc/`. Use naming convention: `NNNN-short-description.md`
+凡是用户可见的变更，**必须**在 [`CHANGELOG.md`](./CHANGELOG.md) 的 `[Unreleased]` 段落追加一条记录，分类如下：
 
-```markdown
-# RFC NNNN: Title
+| 分类 | 含义 |
+|------|------|
+| `Added` | 新增功能 |
+| `Changed` | 对已有功能的变更 |
+| `Deprecated` | 即将移除的功能 |
+| `Removed` | 已移除的功能 |
+| `Fixed` | Bug 修复 |
+| `Security` | 安全相关修复 |
 
-> **Status:** Draft|Active|Accepted|Deprecated|Rejected
-> **Created:** YYYY-MM-DD
-> **Last Updated:** YYYY-MM-DD
-> **Supersedes:** Previous RFC (if any)
+### 6. 提交 PR
 
-## Summary
+PR 描述请写清楚改了什么、为什么改、关联的 issue 编号。
 
-## Motivation
+## 文档约定
 
-## Architecture
+- **更新日志是唯一的变更记录**：所有用户可见变更写入 `CHANGELOG.md`
+- **保持文档同步**：功能变化时同步更新 `docs/` 下相关页面
+- **教程类内容**：放在 `docs/zh/` 下
+- **架构类内容**：放在 `docs/zh/architecture.md`，可链接到具体设计文档
 
-## Components and Interfaces
+## 代码风格
 
-## Data Models
+- 函数保持短小、聚焦
+- 命名清晰优先于简短
+- 复用现有测试框架和项目结构，不擅自引入新工具链
+- 用 JSDoc 注释文档化函数
+- 遵循项目根目录的 ESLint 配置和 `.editorconfig`
+- 异步操作统一使用 `async/await`
 
-## Correctness Properties
+## 提交信息
 
-## Implementation Phases
-```
+- 使用描述性提交信息
+- 可选 conventional commits 风格（`feat:`、`fix:`、`docs:` 等）
 
-## Code style
+## 安全
 
-- Keep functions small and focused.
-- Prefer clear naming over short names.
-- Reuse existing test frameworks and project structure before introducing new tooling.
-- Use JSDoc comments for function documentation.
-- Follow ESLint configuration in project root.
-- Use `async/await` for asynchronous operations.
-
-## Commit messages
-
-- Use descriptive commit messages.
-- Optionally follow the conventional commits style (e.g. `feat:`, `fix:`, `docs:`).
-
-## Security
-
-- Do not commit secrets (API keys, passwords, tokens).
-- If you discover a security issue, please report it privately instead of creating a public issue first.
+- 不要提交密钥、密码、令牌等敏感信息
+- 发现安全问题请**私下**报告，不要先开公开 issue

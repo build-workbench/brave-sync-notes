@@ -1,38 +1,28 @@
-# Documentation
+# 文档目录
 
-This directory contains the VitePress-powered documentation site for Note Sync Now.
+本目录是 Note Sync Now 的 VitePress 文档站源码。
 
-## Structure
+## 结构
 
 ```
 docs/
-├── .vitepress/         # VitePress configuration
-├── assets/             # Images, diagrams, and static resources
-├── public/             # Public static files (logos, screenshots)
-├── en/                 # English documentation
-├── zh-CN/              # Chinese documentation
-├── api/                # API reference documentation
-└── changelog/          # Version history archive
+├── .vitepress/         # VitePress 配置
+├── assets/             # 图片、图表等静态资源
+├── public/             # 公共静态文件（logo、截图等）
+├── zh/                 # 中文文档
+├── api/                # API 参考文档
+└── changelog/          # 版本历史归档
 ```
 
-## Development
+## 本地开发
 
 ```bash
-# Start VitePress dev server
-cd docs && npm run dev
-
-# Build documentation
-cd docs && npm run build
+cd docs && npm run dev      # 启动 VitePress 开发服务
+cd docs && npm run build    # 构建文档站
 ```
 
-## For Technical Specifications
+## 变更记录
 
-Technical specifications are maintained in the `/specs` directory:
+项目的变更历史统一维护在仓库根目录的 [`CHANGELOG.md`](https://github.com/LessUp/brave-sync-notes/blob/main/CHANGELOG.md)，遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 格式。
 
-- `/specs/product/` - Product requirements
-- `/specs/rfc/` - Technical design documents (RFCs)
-- `/specs/api/` - API specifications
-- `/specs/db/` - Database schemas
-- `/specs/testing/` - Testing strategy
-
-See [AGENTS.md](https://github.com/LessUp/brave-sync-notes/blob/main/AGENTS.md) for the spec-driven development workflow.
+协作约定见 [`AGENTS.md`](https://github.com/LessUp/brave-sync-notes/blob/main/AGENTS.md)。
