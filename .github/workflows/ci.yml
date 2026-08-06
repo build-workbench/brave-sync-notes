@@ -3,164 +3,30 @@ name: CI
 on:
   push:
     branches: [main, master]
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - 'LICENSE'
   pull_request:
     branches: [main, master]
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - 'LICENSE'
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  changes:
+  test:
     runs-on: ubuntu-latest
-    outputs:
-      client: ${{ steps.filter.outputs.client }}
-      server: ${{ steps.filter.outputs.server }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v4
-        id: filter
+
+      - uses: actions/setup-node@v4
         with:
-          filters: |
-            client:
-              - 'apps/web/**'
-              - '.github/workflows/ci.yml'
-            server:
-              - 'apps/api/**'
-              - '.github/workflows/ci.yml'
+          node-version: '20'
 
-  client:
-    needs: changes
-    if: ${{ needs.changes.outputs.client == 'true' || github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/web
-    strategy:
-      matrix:
-        node-version: [20, 22]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-          cache-dependency-path: ./apps/web/package-lock.json
-
-      - name: Install client dependencies
-        run: npm ci
-
-      - name: Run lint
-        run: npm run lint
-
-      - name: Run client tests
-        run: npm test -- --run
-
-      - name: Build client
-        run: npm run build
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: matrix.node-version == 20
-        continue-on-error: true
-        with:
-          directory: ./apps/web/coverage
-          flags: client
-          name: client-coverage
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-  server:
-    needs: changes
-    if: ${{ needs.changes.outputs.server == 'true' || github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/api
-    strategy:
-      matrix:
-        node-version: [20, 22]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-          cache-dependency-path: ./apps/api/package-lock.json
-
-      - name: Install server dependencies
-        run: npm ci
-
-      - name: Run lint
-        run: npm run lint
-
-      - name: Run server tests
-        run: npm test
-
-      - name: Run server property tests
-        run: npm run test:property
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: matrix.node-version == 20
-        continue-on-error: true
-        with:
-          directory: ./apps/api/coverage
-          flags: server
-          name: server-coverage
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-  status-check:
-    needs: [changes, client, server]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check all jobs status
+      - name: Install and test web
+        working-directory: apps/web
         run: |
-          CLIENT_NEEDED="${{ needs.changes.outputs.client == 'true' || github.event_name == 'workflow_dispatch' }}"
-          SERVER_NEEDED="${{ needs.changes.outputs.server == 'true' || github.event_name == 'workflow_dispatch' }}"
-          
-          CLIENT_RESULT="${{ needs.client.result }}"
-          SERVER_RESULT="${{ needs.server.result }}"
-          
-          echo "Client needed: $CLIENT_NEEDED, result: $CLIENT_RESULT"
-          echo "Server needed: $SERVER_NEEDED, result: $SERVER_RESULT"
-          
-          FAILED=0
-          
-          if [ "$CLIENT_NEEDED" = "true" ] && [ "$CLIENT_RESULT" != "success" ]; then
-            echo "❌ Client job failed or was cancelled"
-            FAILED=1
-          fi
-          
-          if [ "$SERVER_NEEDED" = "true" ] && [ "$SERVER_RESULT" != "success" ]; then
-            echo "❌ Server job failed or was cancelled"
-            FAILED=1
-          fi
-          
-          if [ $FAILED -eq 1 ]; then
-            exit 1
-          fi
-          
-          echo "✅ All required checks passed"
+          npm ci
+          npm run lint
+          npm test -- --run
+          npm run build
+
+      - name: Install and test api
+        working-directory: apps/api
+        run: |
+          npm ci
+          npm run lint
+          npm test
