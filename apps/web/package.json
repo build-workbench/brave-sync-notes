@@ -38,7 +38,7 @@
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.292.0",
     "process": "^0.11.10",
-    "qrcode.react": "^3.1.0",
+    "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
