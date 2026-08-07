@@ -142,7 +142,8 @@ export const validateMnemonic = (mnemonic) => {
   const words = mnemonic.trim().split(/\s+/);
   const validLengths = [12, 15, 18, 21, 24];
   if (!validLengths.includes(words.length)) return false;
-  return words.every((word) => /^[a-z]+$/.test(word));
+  if (!words.every((word) => /^[a-z]+$/.test(word))) return false;
+  return bip39.validateMnemonic(words.join(' '));
 };
 
 export { PBKDF2_ITERATIONS };

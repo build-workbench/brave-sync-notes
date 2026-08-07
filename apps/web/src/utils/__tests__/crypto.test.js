@@ -147,6 +147,14 @@ describe('crypto', () => {
       const mnemonic = generateSyncChain();
       expect(validateMnemonic('  ' + mnemonic + '  ')).toBe(true);
     });
+
+    it('should reject mnemonics with invalid BIP39 checksum', () => {
+      const mnemonic = generateSyncChain();
+      const words = mnemonic.split(' ');
+      const original = words[3];
+      words[3] = original === 'abandon' ? 'zoo' : 'abandon';
+      expect(validateMnemonic(words.join(' '))).toBe(false);
+    });
   });
 
   describe('PBKDF2_ITERATIONS', () => {
