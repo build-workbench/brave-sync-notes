@@ -13,14 +13,11 @@ import {
   getSocketUrl,
   getMessages,
   hashContent,
-  createChunkSessionManager,
   HISTORY_THROTTLE_MS,
   MAX_RECONNECTION_ATTEMPTS,
   RECONNECTION_DELAY_MIN,
   RECONNECTION_DELAY_MAX,
   SOCKET_TIMEOUT,
-  CHUNK_SESSION_TIMEOUT,
-  CHUNK_CLEANUP_INTERVAL,
 } from '../utils/sync';
 
 /**
@@ -37,9 +34,6 @@ export const useSocket = () => {
   const lastSyncedHashRef = useRef('');
   const reconnectAttemptRef = useRef(0);
   const isReconnectingRef = useRef(false);
-
-  // Chunk session manager
-  const chunkManagerRef = useRef(createChunkSessionManager());
 
   // Conflict management
   const conflictManagerRef = useRef(null);
@@ -268,8 +262,6 @@ export const useSocket = () => {
         if (debouncedPushRef.current) {
           debouncedPushRef.current.cancel();
         }
-        chunkManagerRef.current.clear();
-
         // Create new socket
         socketRef.current = io(socketUrl, {
           transports: ['websocket', 'polling'],
@@ -292,7 +284,6 @@ export const useSocket = () => {
           initOfflineQueue,
           processQueuedOperations,
           handleRemoteContent,
-          chunkManager: chunkManagerRef.current,
           reconnectAttemptRef,
           isReconnectingRef,
         });
@@ -340,7 +331,6 @@ export const useSocket = () => {
       socketRef.current = null;
     }
     keysRef.current = null;
-    chunkManagerRef.current.clear();
     conflictManagerRef.current?.clearConflicts();
     setPendingConflicts([]);
     setConflictCount(0);
@@ -403,15 +393,6 @@ export const useSocket = () => {
       window.removeEventListener('offline', handleOffline);
     };
   }, [t, setStatus]);
-
-  // Cleanup stale chunk sessions
-  useEffect(() => {
-    const cleanup = setInterval(() => {
-      chunkManagerRef.current.cleanupStale(CHUNK_SESSION_TIMEOUT);
-    }, CHUNK_CLEANUP_INTERVAL);
-
-    return () => clearInterval(cleanup);
-  }, []);
 
   // Cleanup on unmount
   useEffect(() => {

@@ -11,7 +11,6 @@ export const bindSocketEvents = ({
   initOfflineQueue,
   processQueuedOperations,
   handleRemoteContent,
-  chunkManager,
   reconnectAttemptRef,
   isReconnectingRef,
   processSyncPayload = processEncryptedSyncPayload,
@@ -42,7 +41,6 @@ export const bindSocketEvents = ({
         await processSyncPayload({
           payload,
           encryptionKey: keys.encryptionKey,
-          chunkManager,
           onRemoteContent: handleRemoteContent,
         });
       } catch (err) {

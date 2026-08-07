@@ -49,7 +49,6 @@ describe('socket-event-binding', () => {
       initOfflineQueue,
       processQueuedOperations,
       handleRemoteContent: vi.fn(),
-      chunkManager: { reassemble: vi.fn() },
       reconnectAttemptRef,
       isReconnectingRef,
     });
@@ -87,7 +86,6 @@ describe('socket-event-binding', () => {
       initOfflineQueue: vi.fn().mockResolvedValue(undefined),
       processQueuedOperations: vi.fn().mockResolvedValue(undefined),
       handleRemoteContent: vi.fn(),
-      chunkManager: { reassemble: vi.fn() },
       reconnectAttemptRef: { current: 0 },
       isReconnectingRef: { current: false },
       processSyncPayload,
@@ -98,7 +96,6 @@ describe('socket-event-binding', () => {
     expect(processSyncPayload).toHaveBeenCalledWith({
       payload,
       encryptionKey: 'key-1',
-      chunkManager: expect.any(Object),
       onRemoteContent: expect.any(Function),
     });
   });
