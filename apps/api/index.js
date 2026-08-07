@@ -126,22 +126,7 @@ const chainStore = new Map();
 // Track socket metadata: socketId -> { roomId, deviceName, joinedAt }
 const socketMeta = new Map();
 
-// Chunked transfer storage: sessionId -> { chunks: [], total, received }
-const chunkStore = new Map();
-
 const ROOM_TTL_MS = Number(process.env.ROOM_TTL_MS) || 24 * 60 * 60 * 1000;
-
-// Cleanup old chunk sessions (older than 5 minutes)
-const chunkCleanupTimer = setInterval(() => {
-  const now = Date.now();
-  for (const [sessionId, session] of chunkStore.entries()) {
-    if (now - session.startTime > 5 * 60 * 1000) {
-      chunkStore.delete(sessionId);
-      console.log(`Cleaned up stale chunk session: ${sessionId}`);
-    }
-  }
-}, 60000);
-chunkCleanupTimer.unref?.();
 
 // Cleanup stale rooms — runs every 30 minutes
 // Removes rooms with no connected clients that are older than TTL.
@@ -253,8 +238,8 @@ function handleSocketConnection(socket) {
     }
   });
 
-  // Receive an update from a client (supports chunked transfer)
-  socket.on('push-update', async ({ roomId, encryptedData, timestamp, _chunkIndex, _totalChunks }) => {
+  // Receive an update from a client
+  socket.on('push-update', async ({ roomId, encryptedData, timestamp }) => {
     try {
       // Validate room membership
       const meta = socketMeta.get(socket.id);
@@ -494,7 +479,6 @@ module.exports = {
   stores: {
     chainStore,
     socketMeta,
-    chunkStore,
   },
 };
 

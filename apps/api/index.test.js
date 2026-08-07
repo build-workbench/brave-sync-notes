@@ -29,7 +29,6 @@ describe('server sync flow', () => {
         ({ app, server, stores, startServer, gracefulShutdown, handleSocketConnection, registerShutdownHandlers } = require('./index'));
         stores.chainStore.clear();
         stores.socketMeta.clear();
-        stores.chunkStore.clear();
     });
 
     afterEach(async () => {
@@ -113,6 +112,44 @@ describe('server sync flow', () => {
             deviceName: 'Device B',
         });
         expect(emit).toHaveBeenCalledWith('update-ack', { timestamp: 2, success: true });
+    });
+
+    test('new joiner recovers full large content after single push', async () => {
+        const emitA = jest.fn();
+        const emitB = jest.fn();
+        const makeSocket = (id, emit) => {
+            const s = {
+                id,
+                on: jest.fn((event, handler) => { s.handlers[event] = handler; }),
+                emit,
+                join: jest.fn(),
+                leave: jest.fn(),
+                handlers: {},
+                to: jest.fn(() => ({ emit: jest.fn() })),
+            };
+            return s;
+        };
+
+        // Device A pushes a large note as a single encrypted payload
+        const socketA = makeSocket('socket-A', emitA);
+        handleSocketConnection(socketA);
+        await socketA.handlers['join-chain']({ roomId, deviceName: 'Device A' });
+
+        const largeEncrypted = 'enc:' + 'x'.repeat(100 * 1024); // > 50KB, previously chunked
+        await socketA.handlers['push-update']({
+            roomId,
+            encryptedData: largeEncrypted,
+            timestamp: 2,
+        });
+
+        // Device B joins afterwards and must recover the full content
+        const socketB = makeSocket('socket-B', emitB);
+        handleSocketConnection(socketB);
+        await socketB.handlers['join-chain']({ roomId, deviceName: 'Device B' });
+
+        expect(emitB).toHaveBeenCalledWith('sync-update', expect.objectContaining({
+            encryptedData: largeEncrypted,
+        }));
     });
 
     test('request-sync returns existing room data', async () => {
