@@ -145,8 +145,10 @@ const Header = ({ onLeave }) => {
               <Menu size={20} />
             </button>
             <div className="flex items-center gap-2">
-              <Shield className="text-orange-500" size={24} />
-              <span className="font-bold text-lg hidden sm:inline">{t.headerTitle}</span>
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30">
+                <Shield size={20} />
+              </div>
+              <span className="font-bold text-lg hidden sm:inline bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">{t.headerTitle}</span>
             </div>
           </div>
 
@@ -187,6 +189,9 @@ const Header = ({ onLeave }) => {
               <Settings size={20} />
             </button>
 
+            {/* Divider between tools and status */}
+            <div className={`w-px h-6 mx-1 ${darkMode ? 'bg-slate-700' : 'bg-slate-200'}`} />
+
             {/* Save Status Indicator */}
             {storageInitialized && (
               <div
@@ -216,9 +221,18 @@ const Header = ({ onLeave }) => {
 
             {/* Status */}
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${currentStatus.color}`}>
+              {status === 'connected' && (
+                <span className="relative flex w-2 h-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                </span>
+              )}
               <StatusIcon size={16} />
               <span className="hidden sm:inline">{currentStatus.label}</span>
             </div>
+
+            {/* Divider before leave */}
+            <div className={`w-px h-6 mx-1 ${darkMode ? 'bg-slate-700' : 'bg-slate-200'}`} />
 
             {/* Leave */}
             <button

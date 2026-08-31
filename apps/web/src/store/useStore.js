@@ -16,7 +16,7 @@ export const useAppStore = create(
   persist(
     (set, get) => ({
       // UI State
-      darkMode: true,
+      darkMode: false,
       lang: 'zh',
       showPreview: false,
       showSidebar: true,

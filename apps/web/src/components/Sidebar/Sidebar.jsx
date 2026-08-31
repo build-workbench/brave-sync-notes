@@ -149,17 +149,30 @@ const Sidebar = ({ socketId }) => {
                 <Monitor size={14} />
                 {t.devicesInChain}
               </h3>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
+              <div className="space-y-1.5 max-h-32 overflow-y-auto">
                 {members.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                        member.status === 'online' ? 'bg-green-500 animate-pulse' : 'bg-slate-500'
+                  <div key={member.id} className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm transition-colors ${
+                    member.id === socketId
+                      ? darkMode ? 'bg-orange-500/10' : 'bg-orange-50'
+                      : darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50'
+                  }`}>
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                      member.id === socketId
+                        ? 'bg-orange-500 text-white'
+                        : darkMode
+                          ? 'bg-slate-700 text-slate-300'
+                          : 'bg-slate-200 text-slate-500'
+                    }`}>
+                      {member.name?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                        member.status === 'online' ? 'bg-green-500' : 'bg-slate-400'
                       }`} />
-                      <span className={`truncate max-w-[140px] ${
+                      <span className={`truncate max-w-[120px] ${
                         member.id === socketId
-                          ? 'font-bold text-orange-500'
-                          : ''
+                          ? 'font-semibold text-orange-600 dark:text-orange-400'
+                          : darkMode ? 'text-slate-200' : 'text-slate-700'
                       }`}>
                         {member.name}
                         {member.id === socketId && ` (${lang === 'zh' ? '你' : 'You'})`}
@@ -189,10 +202,10 @@ const Sidebar = ({ socketId }) => {
                   {activeNotebook.name}
                 </p>
               )}
-              <div className={`p-3 rounded-lg border text-xs font-mono break-words select-all ${
+              <div className={`p-3 rounded-xl border text-xs font-mono break-words select-all shadow-sm ${
                 darkMode
-                  ? 'bg-slate-900 border-slate-700 text-slate-300'
-                  : 'bg-slate-50 border-slate-200 text-slate-600'
+                  ? 'bg-slate-900/60 border-slate-700 text-slate-300'
+                  : 'bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200 text-slate-600'
               }`}>
                 {activeMnemonic}
               </div>

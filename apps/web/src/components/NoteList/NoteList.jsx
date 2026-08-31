@@ -318,12 +318,12 @@ const NoteListInner = () => {
           {notebooks.map((notebook) => (
             <div
               key={notebook.id}
-              className={`group flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm ${
+              className={`group flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-all border ${
                 activeNotebookId === notebook.id
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20'
                   : darkMode
-                  ? 'text-slate-200 hover:bg-slate-700'
-                  : 'text-slate-700 hover:bg-slate-100'
+                  ? 'border-transparent text-slate-200 hover:bg-slate-700/70'
+                  : 'border-transparent text-slate-700 hover:bg-white hover:border-slate-200 hover:shadow-sm'
               }`}
             >
               {editingNotebookId === notebook.id ? (
@@ -353,12 +353,12 @@ const NoteListInner = () => {
                     <FolderOpen size={14} />
                     <span className="truncate">{notebook.name}</span>
                     <span
-                      className={`ml-auto text-xs ${
+                      className={`ml-auto text-xs min-w-[1.25rem] text-center rounded-full px-1.5 py-0.5 ${
                         activeNotebookId === notebook.id
-                          ? 'text-white/70'
+                          ? 'bg-white/20 text-white'
                           : darkMode
-                          ? 'text-slate-400'
-                          : 'text-slate-500'
+                          ? 'bg-slate-700 text-slate-400'
+                          : 'bg-slate-100 text-slate-500'
                       }`}
                     >
                       {notebookNoteCounts[notebook.id] || 0}
@@ -448,12 +448,12 @@ const NoteListInner = () => {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 10 }}
-                    className={`group relative rounded-lg p-2 cursor-pointer transition-colors ${
+                    className={`group relative rounded-xl p-2.5 cursor-pointer transition-all border ${
                       activeNoteId === note.id
-                        ? 'bg-orange-500 text-white'
+                        ? 'bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/25'
                         : darkMode
-                        ? 'hover:bg-slate-700 text-slate-200'
-                        : 'hover:bg-slate-100 text-slate-700'
+                        ? 'border-transparent hover:bg-slate-700/70 hover:border-slate-600 text-slate-200'
+                        : 'border-transparent bg-white/70 hover:bg-white hover:border-slate-200 hover:shadow-md text-slate-700'
                     }`}
                     onClick={() => setActiveNoteId(note.id)}
                   >
