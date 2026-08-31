@@ -9,6 +9,7 @@
 
 ### Added
 - README 新增主界面产品截图（`docs/screenshots/main.png`）
+- README 截图补充 macOS 窗口框与浏览器窗口框两种展示样式，便于对比（`docs/screenshots/macos.png`、`browser.png`）
 
 ### Changed
 - 默认主题改为浅色模式（此前默认深色），用户仍可手动切换
