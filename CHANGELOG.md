@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+### Added
+- README 新增主界面产品截图（`docs/screenshots/main.png`）
+
+### Fixed
+- 修复浏览器中创建同步链失败：bip39 依赖 Node `Buffer`，入口现在注入 polyfill
+- 修复侧边栏助记词断词：`break-all` 改为 `break-words`，单词不再被硬截断
+
 ### Removed
 - 移除 VitePress 文档站（37 文件）及全部构建配置，核心架构信息合并至 `ARCHITECTURE.md`
 - 移除 Docker 部署基础设施（`docker-compose.yml`、两个 `Dockerfile`、`nginx.conf`）

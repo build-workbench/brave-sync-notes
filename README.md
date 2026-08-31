@@ -8,6 +8,10 @@
 
 ---
 
+## 截图
+
+![主界面](./docs/screenshots/main.png)
+
 ## 核心特性
 
 - **端到端加密**：客户端 AES-256-GCM，服务器只转发密文
@@ -37,6 +41,7 @@ brave-sync-notes/
 │   ├── web/                 # React + Vite 前端
 │   └── api/                 # Express + Socket.IO 后端
 ├── .github/workflows/ci.yml # CI
+├── docs/screenshots/        # 产品截图
 ├── ARCHITECTURE.md          # 架构设计文档
 ├── CHANGELOG.md             # 更新日志
 └── AGENTS.md                # AI 协作指南

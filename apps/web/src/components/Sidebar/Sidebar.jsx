@@ -189,7 +189,7 @@ const Sidebar = ({ socketId }) => {
                   {activeNotebook.name}
                 </p>
               )}
-              <div className={`p-3 rounded-lg border text-xs font-mono break-all select-all ${
+              <div className={`p-3 rounded-lg border text-xs font-mono break-words select-all ${
                 darkMode
                   ? 'bg-slate-900 border-slate-700 text-slate-300'
                   : 'bg-slate-50 border-slate-200 text-slate-600'
