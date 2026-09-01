@@ -10,9 +10,7 @@
 
 ## 截图
 
-| macOS 风格 | 浏览器风格 |
-| --- | --- |
-| ![macOS 窗口框](./docs/screenshots/macos.png) | ![浏览器窗口框](./docs/screenshots/browser.png) |
+![浏览器窗口框](./docs/screenshots/browser.png)
 
 ## 核心特性
 
