@@ -7,6 +7,7 @@ import {
   encryptData,
   decryptData,
   validateMnemonic,
+  clearKeyCache,
   PBKDF2_ITERATIONS,
 } from '../crypto';
 
@@ -85,6 +86,33 @@ describe('crypto', () => {
       expect(decrypted).toEqual(data);
     });
 
+    it('round-trips with additionalData bound to the ciphertext', async () => {
+      const key = (await deriveKeys(generateSyncChain())).encryptionKey;
+      const data = { content: 'bound' };
+      const aad = 'ns2|room-1|device-ab12cd34|42|1000';
+
+      const encrypted = await encryptData(data, key, aad);
+      const decrypted = await decryptData(encrypted, key, aad);
+      expect(decrypted).toEqual(data);
+    });
+
+    it('fails decryption when AAD does not match the encryption context', async () => {
+      const key = (await deriveKeys(generateSyncChain())).encryptionKey;
+      const data = { content: 'bound' };
+
+      const encrypted = await encryptData(data, key, 'ns2|room-1|device-ab12cd34|42|1000');
+
+      // 同一密文换 seq / 换 roomId 解密必须失败
+      await expect(decryptData(encrypted, key, 'ns2|room-1|device-ab12cd34|43|1000')).rejects.toThrow();
+      await expect(decryptData(encrypted, key, 'ns2|room-2|device-ab12cd34|42|1000')).rejects.toThrow();
+    });
+
+    it('ciphertext without AAD cannot be decrypted with a different AAD', async () => {
+      const key = (await deriveKeys(generateSyncChain())).encryptionKey;
+      const encrypted = await encryptData({ content: 'plain ctx' }, key);
+      await expect(decryptData(encrypted, key, 'some-aad')).rejects.toThrow();
+    });
+
     it('should produce different ciphertext for same data', async () => {
       const key = (await deriveKeys(generateSyncChain())).encryptionKey;
       const data = { content: 'Test data' };
@@ -159,7 +187,17 @@ describe('crypto', () => {
 
   describe('PBKDF2_ITERATIONS', () => {
     it('should have a reasonable default value', () => {
-      expect(PBKDF2_ITERATIONS).toBeGreaterThanOrEqual(10000);
+      expect(PBKDF2_ITERATIONS).toBeGreaterThanOrEqual(100000);
+    });
+  });
+
+  describe('clearKeyCache', () => {
+    it('drops memoized keys so a fresh derivation creates a new CryptoKey', async () => {
+      const mnemonic = generateSyncChain();
+      const key1 = await deriveEncryptionKey(mnemonic);
+      clearKeyCache();
+      const key2 = await deriveEncryptionKey(mnemonic);
+      expect(key2).not.toBe(key1);
     });
   });
 });

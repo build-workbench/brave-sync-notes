@@ -6,6 +6,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const PersistenceManager = require('./src/persistence/PersistenceManager');
 const { DataValidator } = require('./src/persistence/PersistenceAdapter');
+const { logger } = require('./src/utils/logger');
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const DEFAULT_DEV_ORIGIN = 'http://localhost:5173';
@@ -19,7 +20,7 @@ function resolveCorsOrigin() {
     throw new Error('CORS_ORIGIN must be set in production');
   }
 
-  console.warn(`CORS_ORIGIN not set, defaulting to ${DEFAULT_DEV_ORIGIN} for ${NODE_ENV}`);
+  logger.warn(`CORS_ORIGIN not set, defaulting to ${DEFAULT_DEV_ORIGIN} for ${NODE_ENV}`);
   return DEFAULT_DEV_ORIGIN;
 }
 
@@ -27,7 +28,8 @@ const corsOrigin = resolveCorsOrigin();
 
 const app = express();
 app.use(cors({ origin: corsOrigin }));
-app.use(express.json({ limit: '50mb' }));
+// 服务只提供 GET 端点与 Socket.IO 通道,无需 body 解析
+// (Socket.IO 载荷上限由 maxHttpBufferSize 单独控制)
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
@@ -55,26 +57,34 @@ app.get('/health', async (req, res) => {
   res.json(health);
 });
 
-// Stats endpoint
+// Stats endpoint — 仅暴露运行概况,不泄露基础设施细节(host/port/db 等)
 app.get('/stats', async (req, res) => {
   const stats = {
     activeConnections: io.engine.clientsCount,
     activeRooms: chainStore.size,
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
+    uptimeSeconds: Math.round(process.uptime()),
     persistence: null
   };
 
   if (persistenceManager) {
     try {
-      stats.persistence = await persistenceManager.getStats();
+      const fullStats = await persistenceManager.getStats();
+      stats.persistence = {
+        currentAdapter: fullStats.current?.adapter || null,
+        connected: fullStats.current?.connected ?? null,
+        roomCount: fullStats.current?.roomCount ?? null,
+        totalKeys: fullStats.current?.totalKeys ?? null,
+      };
     } catch (error) {
-      stats.persistence = { error: error.message };
+      stats.persistence = { error: 'stats unavailable' };
     }
   }
 
   res.json(stats);
 });
+
+// 单条密文推送上限(5MB),Socket.IO 缓冲与事件校验共用
+const MAX_DATA_SIZE_BYTES = 5 * 1024 * 1024;
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -82,8 +92,8 @@ const io = new Server(server, {
     origin: corsOrigin,
     methods: ["GET", "POST"]
   },
-  // Increase max buffer size for large files
-  maxHttpBufferSize: 10e6, // 10MB
+  // 与 push-update 的 MAX_DATA_SIZE_BYTES 对齐,留出信封余量
+  maxHttpBufferSize: Math.ceil(MAX_DATA_SIZE_BYTES * 1.1),
   pingTimeout: 60000,
   pingInterval: 25000,
   transports: ['websocket', 'polling'],
@@ -110,11 +120,11 @@ async function initializePersistence() {
 
   try {
     await persistenceManager.initialize();
-    console.log('✅ Persistence layer initialized successfully');
+    logger.info('Persistence layer initialized successfully');
   } catch (error) {
-    console.error('❌ Failed to initialize persistence layer:', error);
+    logger.error('Failed to initialize persistence layer:', { error: error.message });
     // 如果持久化初始化失败，回退到内存存储
-    console.log('🔄 Falling back to in-memory storage');
+    logger.warn('Falling back to in-memory storage');
     persistenceManager = null;
   }
 }
@@ -133,7 +143,7 @@ const ROOM_TTL_MS = Number(process.env.ROOM_TTL_MS) || 24 * 60 * 60 * 1000;
 // Also enforces a hard cap on total in-memory rooms to prevent unbounded growth.
 const MAX_MEMORY_ROOMS = Number(process.env.MAX_MEMORY_ROOMS) || 10000;
 
-const roomCleanupTimer = setInterval(() => {
+const roomCleanupTimer = setInterval(async () => {
   const now = Date.now();
   let evictedTTL = 0;
   let evictedCap = 0;
@@ -164,16 +174,46 @@ const roomCleanupTimer = setInterval(() => {
   }
 
   if (evictedTTL + evictedCap > 0) {
-    console.log(`Room cleanup: ${evictedTTL} expired, ${evictedCap} over-cap. Remaining: ${chainStore.size}`);
+    logger.info(`Room cleanup: ${evictedTTL} expired, ${evictedCap} over-cap. Remaining: ${chainStore.size}`);
+  }
+
+  // 持久层过期清理:Redis 靠自身 TTL 兜底,SQLite 没有任何清理机制,
+  // 必须周期性调用 cleanupExpired,否则磁盘无限膨胀。
+  if (persistenceManager) {
+    try {
+      const deleted = await persistenceManager.cleanupExpired(new Date(now - ROOM_TTL_MS));
+      if (deleted > 0) {
+        logger.info(`Persistence cleanup: removed ${deleted} expired rooms`);
+      }
+    } catch (error) {
+      logger.error('Persistence cleanup failed:', { error: error.message });
+    }
   }
 }, 30 * 60 * 1000);
 roomCleanupTimer.unref?.();
 
-// Chunk size for validation (5MB in bytes)
-const MAX_DATA_SIZE_BYTES = 5 * 1024 * 1024;
+// 每连接每分钟事件预算(按事件分桶计数)
+const RATE_LIMITS = {
+  'push-update': 30,
+  'join-chain': 10,
+  'request-sync': 60,
+};
+const RATE_WINDOW_MS = 60000;
+
+// 固定窗口限流:超预算返回 false。计数挂在 socketMeta 上,断开即释放。
+function consumeRateBudget(meta, event) {
+  const now = Date.now();
+  if (!meta._rate || now - meta._rate.startedAt > RATE_WINDOW_MS) {
+    meta._rate = { startedAt: now, counts: {} };
+  }
+  const limit = RATE_LIMITS[event];
+  if (!limit) return true;
+  meta._rate.counts[event] = (meta._rate.counts[event] || 0) + 1;
+  return meta._rate.counts[event] <= limit;
+}
 
 function handleSocketConnection(socket) {
-  console.log(`[${new Date().toISOString()}] User connected: ${socket.id}`);
+  logger.info(`User connected: ${socket.id}`);
 
   // Join a specific sync chain
   socket.on('join-chain', async (payload = {}) => {
@@ -182,6 +222,13 @@ function handleSocketConnection(socket) {
       // Validate input
       if (!DataValidator.isValidRoomId(roomId)) {
         socket.emit('error', { message: 'Invalid room ID' });
+        return;
+      }
+
+      // 限流:防止滥用 join 触发持久化读 + 全房间广播
+      const meta = socketMeta.get(socket.id);
+      if (meta && !consumeRateBudget(meta, 'join-chain')) {
+        socket.emit('error', { message: 'Rate limit exceeded' });
         return;
       }
 
@@ -207,7 +254,7 @@ function handleSocketConnection(socket) {
         joinedAt: Date.now()
       });
 
-      console.log(`[${new Date().toISOString()}] Socket ${socket.id} (${sanitizedDeviceName}) joined chain: ${roomId.substring(0, 8)}...`);
+      logger.room('join', roomId, { socketId: socket.id, deviceName: sanitizedDeviceName });
 
       // 1. Send existing data to the new device
       let existingData = null;
@@ -217,7 +264,7 @@ function handleSocketConnection(socket) {
         try {
           existingData = await persistenceManager.getRoom(roomId);
         } catch (error) {
-          console.error('Failed to get room from persistence:', error);
+          logger.error('Failed to get room from persistence:', { error: error.message });
         }
       }
 
@@ -233,14 +280,15 @@ function handleSocketConnection(socket) {
       // 2. Broadcast updated member list to everyone in the room
       updateRoomMembers(roomId);
     } catch (error) {
-      console.error('Error in join-chain:', error);
+      logger.error('Error in join-chain:', { error: error.message });
       socket.emit('error', { message: 'Failed to join chain' });
     }
   });
 
-  // Receive an update from a client
-  socket.on('push-update', async ({ roomId, encryptedData, timestamp }) => {
+  // Receive an update from a client (supports both legacy and v2 envelope)
+  socket.on('push-update', async (incoming = {}) => {
     try {
+      const { roomId, encryptedData, timestamp, v, deviceId, seq } = incoming;
       // Validate room membership
       const meta = socketMeta.get(socket.id);
       if (!meta || meta.roomId !== roomId) {
@@ -261,13 +309,7 @@ function handleSocketConnection(socket) {
       }
 
       // Rate limiting: max 30 updates per minute per socket
-      const now = Date.now();
-      if (!meta._rateWindow || now - meta._rateWindow > 60000) {
-        meta._rateWindow = now;
-        meta._rateCount = 0;
-      }
-      meta._rateCount = (meta._rateCount || 0) + 1;
-      if (meta._rateCount > 30) {
+      if (!consumeRateBudget(meta, 'push-update')) {
         socket.emit('error', { message: 'Rate limit exceeded' });
         return;
       }
@@ -278,6 +320,10 @@ function handleSocketConnection(socket) {
         deviceName: meta.deviceName,
         version: Date.now(),
       };
+      // v2 信封透传：若客户端发送则一并持久化并广播，保持与存量 legacy 的兼容
+      if (v !== undefined) payload.v = v;
+      if (typeof deviceId === 'string') payload.deviceId = deviceId;
+      if (Number.isInteger(seq)) payload.seq = seq;
 
       // 保存到内存存储
       chainStore.set(roomId, payload);
@@ -287,7 +333,7 @@ function handleSocketConnection(socket) {
         try {
           await persistenceManager.saveRoom(roomId, payload);
         } catch (error) {
-          console.error('Failed to save room to persistence:', error);
+          logger.error('Failed to save room to persistence:', { error: error.message });
           // 持久化失败不影响实时同步
         }
       }
@@ -298,7 +344,7 @@ function handleSocketConnection(socket) {
       // Acknowledge receipt
       socket.emit('update-ack', { timestamp, success: true });
     } catch (error) {
-      console.error('Error in push-update:', error);
+      logger.error('Error in push-update:', { error: error.message });
       socket.emit('error', { message: 'Failed to push update' });
     }
   });
@@ -306,6 +352,18 @@ function handleSocketConnection(socket) {
   // Request sync (for reconnection scenarios)
   socket.on('request-sync', async ({ roomId }) => {
     try {
+      // 与 push-update 一致的成员校验:防止任意连接枚举/拉取任意房间密文
+      const meta = socketMeta.get(socket.id);
+      if (!meta || meta.roomId !== roomId) {
+        socket.emit('error', { message: 'Not a member of this room' });
+        return;
+      }
+
+      if (!consumeRateBudget(meta, 'request-sync')) {
+        socket.emit('error', { message: 'Rate limit exceeded' });
+        return;
+      }
+
       let existingData = null;
 
       // 尝试从持久化存储获取数据
@@ -313,7 +371,7 @@ function handleSocketConnection(socket) {
         try {
           existingData = await persistenceManager.getRoom(roomId);
         } catch (error) {
-          console.error('Failed to get room from persistence:', error);
+          logger.error('Failed to get room from persistence:', { error: error.message });
         }
       }
 
@@ -326,7 +384,7 @@ function handleSocketConnection(socket) {
         socket.emit('sync-update', existingData);
       }
     } catch (error) {
-      console.error('Error in request-sync:', error);
+      logger.error('Error in request-sync:', { error: error.message });
     }
   });
 
@@ -338,7 +396,7 @@ function handleSocketConnection(socket) {
   });
 
   socket.on('disconnect', (reason) => {
-    console.log(`[${new Date().toISOString()}] User disconnected: ${socket.id}, reason: ${reason}`);
+    logger.info(`User disconnected: ${socket.id}`, { reason });
     if (socketMeta.has(socket.id)) {
       const { roomId } = socketMeta.get(socket.id);
       socketMeta.delete(socket.id);
@@ -348,7 +406,7 @@ function handleSocketConnection(socket) {
   });
 
   socket.on('error', (error) => {
-    console.error(`Socket error for ${socket.id}:`, error);
+    logger.error(`Socket error for ${socket.id}:`, { error: error.message });
   });
 }
 
@@ -384,29 +442,29 @@ function updateRoomMembers(roomId) {
 
 // Graceful shutdown
 async function gracefulShutdown(signal) {
-  console.log(`${signal} received, shutting down gracefully...`);
+  logger.warn(`${signal} received, shutting down gracefully...`);
 
   try {
     if (server.listening) {
       await new Promise((resolve) => {
         server.close(resolve);
       });
-      console.log('HTTP server closed');
+      logger.info('HTTP server closed');
     }
 
     // 关闭持久化存储
     if (persistenceManager) {
       await persistenceManager.close();
-      console.log('Persistence layer closed');
+      logger.info('Persistence layer closed');
       persistenceManager = null;
     }
 
-    console.log('Graceful shutdown completed');
+    logger.info('Graceful shutdown completed');
     if (require.main === module) {
       process.exit(0);
     }
   } catch (error) {
-    console.error('Error during shutdown:', error);
+    logger.error('Error during shutdown:', { error: error.message });
     if (require.main === module) {
       process.exit(1);
     }
@@ -423,7 +481,7 @@ function registerShutdownHandlers() {
 
   const handleSignal = (signal) => {
     gracefulShutdown(signal).catch((error) => {
-      console.error(`Failed to shut down after ${signal}:`, error);
+      logger.error(`Failed to shut down after ${signal}:`, { error: error.message });
     });
   };
 
@@ -442,21 +500,20 @@ async function startServer() {
       server.once('error', reject);
       server.listen(PORT, '0.0.0.0', () => {
         server.off('error', reject);
-        console.log(`🚀 Secure Note Sync Server running on port ${PORT}`);
-        console.log(`📊 Health check: http://localhost:${PORT}/health`);
-        console.log(`📈 Stats: http://localhost:${PORT}/stats`);
+        logger.info(`Secure Note Sync Server running on port ${PORT}`);
+        logger.info(`Health check: http://localhost:${PORT}/health | Stats: http://localhost:${PORT}/stats`);
 
         if (persistenceManager) {
-          console.log(`💾 Persistence: ${persistenceManager.getCurrentAdapter()}`);
+          logger.info(`Persistence: ${persistenceManager.getCurrentAdapter()}`);
         } else {
-          console.log(`⚠️  Persistence: In-memory only`);
+          logger.warn('Persistence: In-memory only');
         }
 
         resolve();
       });
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.error('Failed to start server:', { error: error.message });
     if (require.main === module) {
       process.exit(1);
     }
@@ -483,6 +540,15 @@ module.exports = {
 };
 
 if (require.main === module) {
+  // 兜底:未捕获异常/拒绝不应让进程无声挂掉或带着未知状态继续跑
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught exception, shutting down:', error);
+    gracefulShutdown('uncaughtException').catch(() => process.exit(1));
+  });
+  process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled rejection:', reason);
+  });
+
   registerShutdownHandlers();
   startServer();
 }

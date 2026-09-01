@@ -175,6 +175,7 @@ describe('server sync flow', () => {
 
         handleSocketConnection(socket);
 
+        await socket.handlers['join-chain']({ roomId, deviceName: 'Device C' });
         await socket.handlers['request-sync']({ roomId });
 
         expect(emit).toHaveBeenCalledWith('sync-update', expect.objectContaining({
@@ -182,6 +183,80 @@ describe('server sync flow', () => {
             deviceName: 'Seed Device',
             version: 99,
         }));
+    });
+
+    test('request-sync rejects non-members without touching storage', async () => {
+        const emit = jest.fn();
+        const socket = {
+            id: 'socket-no-member',
+            on: jest.fn((event, handler) => {
+                socket.handlers[event] = handler;
+            }),
+            emit,
+            join: jest.fn(),
+            leave: jest.fn(),
+            handlers: {},
+            to: jest.fn(() => ({ emit: jest.fn() })),
+        };
+
+        stores.chainStore.set(roomId, { encryptedData: 'secret', timestamp: 1, deviceName: 'X' });
+        handleSocketConnection(socket);
+
+        await socket.handlers['request-sync']({ roomId });
+
+        expect(emit).toHaveBeenCalledWith('error', { message: 'Not a member of this room' });
+        expect(emit).not.toHaveBeenCalledWith('sync-update', expect.anything());
+    });
+
+    test('request-sync is rate limited per socket', async () => {
+        const emit = jest.fn();
+        const socket = {
+            id: 'socket-rate',
+            on: jest.fn((event, handler) => {
+                socket.handlers[event] = handler;
+            }),
+            emit,
+            join: jest.fn(),
+            leave: jest.fn(),
+            handlers: {},
+            to: jest.fn(() => ({ emit: jest.fn() })),
+        };
+
+        handleSocketConnection(socket);
+        await socket.handlers['join-chain']({ roomId, deviceName: 'Device D' });
+
+        // 预算 60/分钟:发满 60 次后再来一次应被拒
+        for (let i = 0; i < 61; i++) {
+            await socket.handlers['request-sync']({ roomId });
+        }
+
+        expect(emit).toHaveBeenCalledWith('error', { message: 'Rate limit exceeded' });
+    });
+
+    test('push-update is rate limited after 30 updates per minute', async () => {
+        const emit = jest.fn();
+        const socket = {
+            id: 'socket-push-rate',
+            on: jest.fn((event, handler) => {
+                socket.handlers[event] = handler;
+            }),
+            emit,
+            join: jest.fn(),
+            leave: jest.fn(),
+            handlers: {},
+            to: jest.fn(() => ({ emit: jest.fn() })),
+        };
+
+        handleSocketConnection(socket);
+        await socket.handlers['join-chain']({ roomId, deviceName: 'Device E' });
+
+        for (let i = 0; i < 31; i++) {
+            await socket.handlers['push-update']({ roomId, encryptedData: `e-${i}`, timestamp: i });
+        }
+
+        // 前 30 次成功落库,第 31 次被限流
+        expect(emit).toHaveBeenCalledWith('error', { message: 'Rate limit exceeded' });
+        expect(stores.chainStore.get(roomId)).toMatchObject({ encryptedData: 'e-29' });
     });
 
     test('registerShutdownHandlers wires SIGINT and SIGTERM', () => {

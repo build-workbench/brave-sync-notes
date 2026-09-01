@@ -62,7 +62,15 @@ function sha256Hex(message) {
 // Crypto API
 // ---------------------------------------------------------------------------
 
-const PBKDF2_ITERATIONS = parseInt(import.meta.env.VITE_PBKDF2_ITERATIONS) || 10000;
+// 低于该值的迭代次数没有实际抗暴力破解意义,环境变量配置不允许突破下限
+const MIN_PBKDF2_ITERATIONS = 100000;
+const DEFAULT_PBKDF2_ITERATIONS = 310000; // OWASP 2023 对 PBKDF2-HMAC-SHA256 的建议值
+
+const PBKDF2_ITERATIONS = (() => {
+  const configured = parseInt(import.meta.env.VITE_PBKDF2_ITERATIONS);
+  if (!Number.isFinite(configured)) return DEFAULT_PBKDF2_ITERATIONS;
+  return Math.max(configured, MIN_PBKDF2_ITERATIONS);
+})();
 const encoder = new TextEncoder();
 
 const KEY_CACHE = new Map();
@@ -86,7 +94,9 @@ export const generateSyncChain = () => bip39.generateMnemonic();
 export const deriveRoomId = (mnemonic) => sha256Hex(mnemonic);
 
 export const deriveEncryptionKey = async (mnemonic) => {
-  if (KEY_CACHE.has(mnemonic)) return KEY_CACHE.get(mnemonic);
+  // 缓存以 roomId(公开哈希)为键,避免明文助记词长期驻留内存
+  const cacheKey = deriveRoomId(mnemonic);
+  if (KEY_CACHE.has(cacheKey)) return KEY_CACHE.get(cacheKey);
 
   const salt = await crypto.subtle.digest('SHA-256', encoder.encode('notesync-salt:' + mnemonic));
   const keyMaterial = await crypto.subtle.importKey(
@@ -101,8 +111,15 @@ export const deriveEncryptionKey = async (mnemonic) => {
   );
 
   if (KEY_CACHE.size >= MAX_CACHE_SIZE) KEY_CACHE.delete(KEY_CACHE.keys().next().value);
-  KEY_CACHE.set(mnemonic, key);
+  KEY_CACHE.set(cacheKey, key);
   return key;
+};
+
+/**
+ * 清除派生密钥缓存(断开连接时调用,缩短密钥在内存中的暴露窗口)
+ */
+export const clearKeyCache = () => {
+  KEY_CACHE.clear();
 };
 
 export const deriveKeys = async (mnemonic) => ({
@@ -110,10 +127,14 @@ export const deriveKeys = async (mnemonic) => ({
   encryptionKey: await deriveEncryptionKey(mnemonic),
 });
 
-export const encryptData = async (data, key) => {
+export const encryptData = async (data, key, additionalData) => {
   const iv = crypto.getRandomValues(new Uint8Array(12));
+  const params = { name: 'AES-GCM', iv };
+  if (additionalData !== undefined) {
+    params.additionalData = encoder.encode(additionalData);
+  }
   const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
+    params,
     key,
     encoder.encode(JSON.stringify(data)),
   );
@@ -123,11 +144,15 @@ export const encryptData = async (data, key) => {
   return bytesToBase64(combined);
 };
 
-export const decryptData = async (ciphertext, key) => {
+export const decryptData = async (ciphertext, key, additionalData) => {
   try {
     const combined = base64ToBytes(ciphertext);
+    const params = { name: 'AES-GCM', iv: combined.slice(0, 12) };
+    if (additionalData !== undefined) {
+      params.additionalData = encoder.encode(additionalData);
+    }
     const decrypted = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: combined.slice(0, 12) },
+      params,
       key,
       combined.slice(12),
     );

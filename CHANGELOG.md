@@ -9,18 +9,44 @@
 
 ### Added
 - README 新增主界面产品截图（`docs/screenshots/main.png`）
-- README 截图补充 macOS 窗口框与浏览器窗口框两种展示样式，便于对比（`docs/screenshots/macos.png`、`browser.png`）
-
-### Changed
-- 默认主题改为浅色模式（此前默认深色），用户仍可手动切换
-- UI 布局优化：顶栏品牌标识改为橙色渐变徽标与渐变标题、控件分组加分隔线、
-  连接状态加呼吸绿点；侧边栏设备增加首字母头像与选中高亮、同步码改为渐变卡片；
-  笔记列表改为卡片化（选中橙色 + 悬停描边阴影）、笔记本计数徽标
-- README 产品截图更新为浅色模式界面
 
 ### Fixed
 - 修复浏览器中创建同步链失败：bip39 依赖 Node `Buffer`，入口现在注入 polyfill
 - 修复侧边栏助记词断词：`break-all` 改为 `break-words`，单词不再被硬截断
+- 修复离线队列失败重试逻辑失效：`processQueue` 的 processor 现在正确解析 `{ success: boolean }`
+  返回值，此前对象恒为 truthy 导致发送失败的离线编辑被静默删除
+- 修复内容哈希只覆盖前 1000 字符导致的静默数据丢失：尾部编辑被误判为"未变更"后遭远程覆盖；
+  `hashContent` 改为覆盖全部内容
+- 修复 `joinChain` 后 `lastSyncedHashRef` 哨兵值依赖旧弱哈希巧合的问题
+- 修复冲突检测中失效的版本比较分支：服务端 version（毫秒时间戳）与本地（小计数器）量纲不同，
+  该分支此前恒真/恒假方向错误；现改为"内容不同 + 时间窗外 = offline_divergence"，双向一致
+- 修复历史记录弱去重与同毫秒 id 撞号：去重改为全文比较，id 使用加密安全随机串
+- 修复服务端 `request-sync` 无成员校验、无限流：任意连接可拉取任意房间密文；
+  现与 `push-update` 一致要求房间成员身份
+- 修复 Redis 客户端使用 v3 API 连接 v4 依赖：顶层 `host/port/db/retry_strategy`
+  被 v4 静默忽略（配置 `REDIS_HOST` 实际无效）；改用 v4 的 `socket:{}` / `database` /
+  `reconnectStrategy`
+- 修复 SQLite 持久层无过期清理导致的磁盘无限增长：周期任务现在调用 `cleanupExpired`
+- 修复 `LOG_LEVEL` 环境变量无效：logger 现在读取该配置；服务入口的裸 `console.*` 统一替换为结构化 logger
+
+### Changed
+- PBKDF2 迭代次数默认值提升至 310,000（OWASP 建议），并强制下限 100,000——
+  此前可经 `VITE_PBKDF2_ITERATIONS` 配置为任意低值甚至 1
+- 密钥缓存改以 roomId（公开哈希）为键，避免明文助记词长期驻留内存；
+  新增 `clearKeyCache()` 并在断开连接时调用
+- 服务端 `/stats` 脱敏：不再暴露进程内存、Redis host/port/db 等基础设施细节
+- 移除无效的 `express.json({ limit: '50mb' })`（服务无 JSON body 端点）；
+  Socket.IO `maxHttpBufferSize` 与密文上限（5MB）对齐
+- socket 重连不再重复发送 `join-chain`（socket.io 重连必先触发 connect）
+- socket 事件文案惰性解析当前语言，切换语言后提示不再使用旧快照
+- store.isOnline 由 socket 连接事件实时驱动，修复挂载后永不更新的死状态
+- `joinChain` 增加防重入保护，消除 StrictMode/依赖抖动下的并发连接竞态
+- 移除未使用的 `useOffline` hook 及其测试（与 useSocket 内离线逻辑完全重复）
+
+### Docs
+- ARCHITECTURE/SECURITY 补充已知安全局限披露：助记词明文本地持久化、无重放防护、
+  无前向保密、salt 由密码派生、服务器可见元数据范围
+- Landing 页"无追踪、无数据收集"文案修正为如实描述
 
 ### Removed
 - 移除 VitePress 文档站（37 文件）及全部构建配置，核心架构信息合并至 `ARCHITECTURE.md`

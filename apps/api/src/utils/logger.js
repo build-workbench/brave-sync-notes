@@ -20,7 +20,9 @@ const LOG_COLORS = {
 
 class Logger {
   constructor(options = {}) {
-    this.level = options.level || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
+    this.level = options.level
+      || process.env.LOG_LEVEL
+      || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
     this.serviceName = options.serviceName || 'NoteSync';
     this.includeTimestamp = options.includeTimestamp !== false;
     this.colorize = options.colorize !== false && process.stdout.isTTY;

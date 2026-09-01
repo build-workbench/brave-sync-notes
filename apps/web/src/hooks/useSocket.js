@@ -1,7 +1,7 @@
-import { useRef, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAppStore } from '../store/useStore';
-import { deriveKeys } from '../utils/crypto';
+import { deriveKeys, clearKeyCache } from '../utils/crypto';
 import { ConflictService } from '../utils/conflict';
 import { OfflineQueue } from '../utils/offline';
 import { createStorageManager } from '../utils/storage';
@@ -34,6 +34,7 @@ export const useSocket = () => {
   const lastSyncedHashRef = useRef('');
   const reconnectAttemptRef = useRef(0);
   const isReconnectingRef = useRef(false);
+  const isJoiningRef = useRef(false);
 
   // Conflict management
   const conflictManagerRef = useRef(null);
@@ -53,9 +54,6 @@ export const useSocket = () => {
   const setView = useAppStore((state) => state.setView);
   const addToHistory = useAppStore((state) => state.addToHistory);
   const syncDebounceMs = useAppStore((state) => state.syncDebounceMs);
-  const lang = useAppStore((state) => state.lang);
-
-  const t = useMemo(() => getMessages(lang), [lang]);
 
   // Initialize conflict manager
   if (!conflictManagerRef.current) {
@@ -88,6 +86,11 @@ export const useSocket = () => {
   const isOffline = useCallback(() => {
     return !navigator.onLine || !socketRef.current?.connected;
   }, []);
+
+  // Keep store.isOnline in sync with socket connectivity so UI reads a live value
+  const syncOnlineStatus = useCallback(() => {
+    useAppStore.getState().setIsOnline(!isOffline());
+  }, [isOffline]);
 
   // ==================== History Management ====================
 
@@ -151,9 +154,9 @@ export const useSocket = () => {
     const isDirty = localHash !== lastSyncedHashRef.current;
 
     const remoteMeta = {
-      version: payload.version ?? 0,
+      version: payload.version ?? payload.seq ?? 0,
       timestamp: payload.timestamp ?? Date.now(),
-      deviceId: payload.deviceName || 'remote',
+      deviceId: payload.deviceName || payload.deviceId || 'remote',
     };
 
     if (!isDirty || !conflictManagerRef.current) {
@@ -235,6 +238,12 @@ export const useSocket = () => {
   // ==================== Connection Management ====================
 
   const joinChain = useCallback(async (chainMnemonic, name) => {
+      // 防重入:上一次 join 尚未完成时(deriveKeys 是异步的)忽略并发调用,
+      // 避免 StrictMode 双挂载/依赖抖动导致连接被反复 teardown。
+      if (isJoiningRef.current) {
+        return false;
+      }
+      isJoiningRef.current = true;
       try {
         const socketUrl = getSocketUrl();
         if (!socketUrl) {
@@ -245,7 +254,7 @@ export const useSocket = () => {
         const keys = await deriveKeys(chainMnemonic);
         keysRef.current = keys;
 
-        lastSyncedHashRef.current = '00';
+        lastSyncedHashRef.current = hashContent('');
         conflictManagerRef.current?.clearConflicts();
         setPendingConflicts([]);
         setConflictCount(0);
@@ -277,13 +286,15 @@ export const useSocket = () => {
         bindSocketEvents({
           socket,
           keys,
+          // 惰性传入,事件触发时才解析当前语言的文案
+          t: () => getMessages(useAppStore.getState().lang),
           name,
-          t,
           setStatus,
           setMembers,
           initOfflineQueue,
           processQueuedOperations,
           handleRemoteContent,
+          syncOnlineStatus,
           reconnectAttemptRef,
           isReconnectingRef,
         });
@@ -292,10 +303,12 @@ export const useSocket = () => {
         return true;
       } catch (e) {
         console.error('Error joining chain', e);
-        toast.error(t.joinError);
+        toast.error(getMessages(useAppStore.getState().lang).joinError);
         return false;
+      } finally {
+        isJoiningRef.current = false;
       }
-  }, [setStatus, setMembers, setView, t, initOfflineQueue, processQueuedOperations, handleRemoteContent]);
+  }, [setStatus, setMembers, setView, initOfflineQueue, processQueuedOperations, handleRemoteContent, syncOnlineStatus]);
 
   // ==================== Public API ====================
 
@@ -312,14 +325,14 @@ export const useSocket = () => {
         });
         const size = await queue.getQueueSize();
         setQueueSize(size);
-        toast.success(t.networkOffline || 'Changes queued for sync');
+        toast.success(getMessages(useAppStore.getState().lang).networkOffline || 'Changes queued for sync');
       }
       return;
     }
 
     setStatus('syncing');
     debouncedPushRef.current?.(content);
-  }, [setStatus, isOffline, initOfflineQueue, t]);
+  }, [setStatus, isOffline, initOfflineQueue]);
 
   const disconnect = useCallback(() => {
     if (debouncedPushRef.current) {
@@ -331,6 +344,7 @@ export const useSocket = () => {
       socketRef.current = null;
     }
     keysRef.current = null;
+    clearKeyCache();
     conflictManagerRef.current?.clearConflicts();
     setPendingConflicts([]);
     setConflictCount(0);
@@ -374,14 +388,14 @@ export const useSocket = () => {
   // Network status monitoring
   useEffect(() => {
     const handleOnline = () => {
-      toast.success(t.networkOnline);
+      toast.success(getMessages(useAppStore.getState().lang).networkOnline);
       if (socketRef.current && !socketRef.current.connected && keysRef.current) {
         socketRef.current.connect();
       }
     };
 
     const handleOffline = () => {
-      toast.error(t.networkOffline);
+      toast.error(getMessages(useAppStore.getState().lang).networkOffline);
       setStatus('disconnected');
     };
 
@@ -392,7 +406,7 @@ export const useSocket = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [t, setStatus]);
+  }, [setStatus]);
 
   // Cleanup on unmount
   useEffect(() => {

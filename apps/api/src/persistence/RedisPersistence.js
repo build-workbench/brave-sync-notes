@@ -41,26 +41,22 @@ class RedisPersistence extends PersistenceAdapter {
 
     async _doConnect() {
         try {
+            // redis v4 API:连接参数必须放 socket:{} / database / password,
+            // 顶层的 host/port/db/retry_strategy 会被 v4 静默忽略。
             this.client = Redis.createClient({
-                host: this.options.host,
-                port: this.options.port,
-                password: this.options.password,
-                db: this.options.db,
-                retry_strategy: (options) => {
-                    if (options.error && options.error.code === 'ECONNREFUSED') {
-                        console.error('Redis connection refused');
-                        return new Error('Redis connection refused');
-                    }
-                    if (options.total_retry_time > 1000 * 60 * 60) {
-                        console.error('Redis retry time exhausted');
-                        return new Error('Retry time exhausted');
-                    }
-                    if (options.attempt > this.options.maxRetries) {
-                        console.error('Redis max retries exceeded');
-                        return new Error('Max retries exceeded');
-                    }
-                    return Math.min(options.attempt * this.options.retryDelay, 3000);
-                }
+                socket: {
+                    host: this.options.host,
+                    port: this.options.port,
+                    reconnectStrategy: (retries) => {
+                        if (retries > this.options.maxRetries) {
+                            console.error('Redis max retries exceeded');
+                            return new Error('Max retries exceeded');
+                        }
+                        return Math.min(retries * this.options.retryDelay, 3000);
+                    },
+                },
+                password: this.options.password || undefined,
+                database: this.options.db || 0,
             });
 
             this.client.on('error', (err) => {

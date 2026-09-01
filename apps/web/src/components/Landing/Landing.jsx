@@ -101,7 +101,7 @@ const Landing = ({ onJoinChain }) => {
     {
       icon: Globe,
       title: lang === 'zh' ? '无需注册' : 'No Registration',
-      desc: lang === 'zh' ? '无账号、无追踪、无数据收集' : 'No accounts, no tracking, no data collection',
+      desc: lang === 'zh' ? '无账号体系，服务器只存密文与基本元数据' : 'No accounts; server stores ciphertext and basic metadata only',
     },
   ];
 

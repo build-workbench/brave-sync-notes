@@ -60,6 +60,29 @@ describe('RedisPersistence', () => {
     it('should connect to Redis', async () => {
       await expect(redisPersistence.connect()).resolves.not.toThrow();
     });
+
+    it('passes connection options in redis v4 format', async () => {
+      const Redis = require('redis');
+      const rp = new RedisPersistence({
+        host: 'redis.example.com',
+        port: 6380,
+        password: 'secret',
+        db: 2,
+      });
+
+      await rp.connect();
+
+      expect(Redis.createClient).toHaveBeenCalledWith(expect.objectContaining({
+        socket: expect.objectContaining({ host: 'redis.example.com', port: 6380 }),
+        password: 'secret',
+        database: 2,
+      }));
+      // v3 顶层字段不应再出现
+      const config = Redis.createClient.mock.calls.at(-1)[0];
+      expect(config).not.toHaveProperty('host');
+      expect(config).not.toHaveProperty('retry_strategy');
+      await rp.close().catch(() => {});
+    });
   });
 
   describe('isHealthy', () => {

@@ -1,6 +1,7 @@
 /**
  * 同步相关常量和消息
  */
+import { hashContent as sharedHashContent } from '../shared';
 
 // Minimum interval between history saves (5 seconds)
 export const HISTORY_THROTTLE_MS = 5000;
@@ -58,19 +59,34 @@ export const messages = {
 export const getMessages = (lang) => messages[lang] || messages.zh;
 
 /**
- * 哈希函数用于内容比较（针对大内容优化）
+ * 哈希函数用于内容比较
+ * 委托给共享实现：覆盖全部内容（而非前 1000 字符），
+ * 避免尾部编辑被误判为"内容未变"导致静默覆盖。
  * @param {string} content - 内容
  * @returns {string} 哈希值
  */
-export const hashContent = (content) => {
-  let hash = 0;
-  for (let i = 0; i < Math.min(content.length, 1000); i++) {
-    const char = content.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash.toString() + content.length;
-};
+export const hashContent = (content) => sharedHashContent(content);
+
+// ==================== v2 信封协议 ====================
+
+// 协议版本号(push-update/sync-update 信封必填)
+export const PROTOCOL_VERSION = 2;
+
+/**
+ * 构造 AES-GCM additionalData。
+ * 收发双方必须用完全一致的紧凑格式,避免 JSON 键序歧义;
+ * 绑定 roomId/deviceId/seq/timestamp 后,密文跨上下文搬运即解密失败。
+ * @param {string} roomId
+ * @param {string} deviceId
+ * @param {number} seq - 发送端单调序号
+ * @param {number} timestamp
+ * @returns {string}
+ */
+export const buildAad = (roomId, deviceId, seq, timestamp) =>
+  `ns2|${roomId}|${deviceId}|${seq}|${timestamp}`;
+
+// seq 计数器的 localStorage key 前缀(完整 key: `${PREFIX}${roomId}`)
+export const SEQ_KEY_PREFIX = 'notesync-seq:';
 
 /**
  * 获取 Socket URL
@@ -101,4 +117,7 @@ export default {
   getMessages,
   hashContent,
   getSocketUrl,
+  PROTOCOL_VERSION,
+  buildAad,
+  SEQ_KEY_PREFIX,
 };

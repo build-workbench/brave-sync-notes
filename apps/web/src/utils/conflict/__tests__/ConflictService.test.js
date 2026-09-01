@@ -91,6 +91,39 @@ describe('ConflictService', () => {
             expect(conflict.type).toBe('offline_divergence');
         });
 
+        it('should treat differing content outside the time window as a conflict regardless of version ordering', () => {
+            // Server-assigned versions are Date.now() values while local
+            // versions are small counters, so version comparison is
+            // meaningless — divergence must be detected by time window only.
+            const local = {
+                content: 'Local changes',
+                version: 42, // small local counter
+                timestamp: 1000,
+                deviceId: 'device-1',
+                hash: service.hashContent('Local changes'),
+            };
+
+            const remote = {
+                content: 'Remote changes',
+                version: 1755000000000, // Date.now() style server version
+                timestamp: 100000, // outside the 5s window
+                deviceId: 'device-2',
+                hash: service.hashContent('Remote changes'),
+            };
+
+            const conflict = service.detectConflict(local, remote);
+            expect(conflict).not.toBeNull();
+            expect(conflict.type).toBe('offline_divergence');
+
+            // And the mirrored ordering must also be a conflict
+            const mirrored = service.detectConflict(
+                { ...local, version: 1755000000000 },
+                { ...remote, version: 42 }
+            );
+            expect(mirrored).not.toBeNull();
+            expect(mirrored.type).toBe('offline_divergence');
+        });
+
         it('should not detect conflict when versions differ but within time window', () => {
             const local = {
                 content: 'Content A',

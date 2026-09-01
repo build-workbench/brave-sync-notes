@@ -60,7 +60,6 @@ function App() {
     resolveConflict,
     clearConflicts,
     queueSize,
-    isOffline,
   } = useSocket();
   const t = useTranslation(lang);
 
@@ -73,10 +72,11 @@ function App() {
     setOfflineQueueSize(queueSize);
   }, [queueSize, setOfflineQueueSize]);
 
-  // Sync offline status to store
+  // Initialize isOnline once on mount; live updates come from useSocket's
+  // syncOnlineStatus (wired to socket connect/disconnect events).
   useEffect(() => {
-    setIsOnline(!isOffline());
-  }, [isOffline, setIsOnline]);
+    setIsOnline(navigator.onLine);
+  }, [setIsOnline]);
   const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
   const [activeConflictId, setActiveConflictId] = useState(null);
   const [storageInitAttempted, setStorageInitAttempted] = useState(false);

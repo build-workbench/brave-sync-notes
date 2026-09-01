@@ -11,6 +11,7 @@ import {
   applyUpdateNote,
   applyUpdateNotebook,
 } from './domain/notebook-domain';
+import { generateUniqueId } from '../utils/shared';
 
 export const useAppStore = create(
   persist(
@@ -92,12 +93,7 @@ export const useAppStore = create(
           return {};
         }
 
-        // Check for duplicate content (compare first 100 chars and length)
-        const contentPreview = entry.content.substring(0, 100);
-        const contentLength = entry.content.length;
-        const isDuplicate = state.history.some(
-          (h) => h.preview === contentPreview && h.content.length === contentLength
-        );
+        const isDuplicate = state.history.some((h) => h.content === entry.content);
 
         if (isDuplicate) {
           return {};
@@ -105,11 +101,11 @@ export const useAppStore = create(
 
         const newHistory = [
           {
-            id: Date.now(),
+            id: generateUniqueId('hist_'),
             content: entry.content,
             timestamp: new Date().toISOString(),
             deviceName: entry.deviceName || state.deviceName,
-            preview: contentPreview,
+            preview: entry.content.substring(0, 100),
           },
           ...state.history,
         ].slice(0, state.maxHistoryItems);

@@ -96,7 +96,7 @@ class ConflictService {
         // 检查时间戳差异
         const timeDiff = Math.abs(local.timestamp - remote.timestamp);
 
-        // 如果在冲突窗口内且版本号不同，可能是并发编辑
+        // 如果在冲突窗口内，可能是并发编辑
         if (timeDiff < this.conflictWindow) {
             return {
                 type: 'concurrent_edit',
@@ -105,17 +105,14 @@ class ConflictService {
             };
         }
 
-        // 如果本地版本比远程版本旧，但本地有修改
-        if (local.version < remote.version && local.hash !== remote.hash) {
-            return {
-                type: 'offline_divergence',
-                localVersion: local,
-                remoteVersion: remote
-            };
-        }
-
-        // 没有冲突
-        return null;
+        // 内容不同且超出冲突窗口：离线分歧。
+        // 注意不能用版本号排序判断——服务端 version 是 Date.now() 毫秒值，
+        // 本地是小计数器，二者不可比；只要双方内容有差异就必须走冲突流程。
+        return {
+            type: 'offline_divergence',
+            localVersion: local,
+            remoteVersion: remote
+        };
     }
 
     /**

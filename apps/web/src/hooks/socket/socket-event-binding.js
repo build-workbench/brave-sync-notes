@@ -1,6 +1,9 @@
 import toast from 'react-hot-toast';
 import { processEncryptedSyncPayload } from './socket-sync-utils';
 
+// 允许传入函数以惰性解析文案,避免语言切换后仍使用加入时的旧快照
+const resolveT = (t) => (typeof t === 'function' ? t() : t);
+
 export const bindSocketEvents = ({
   socket,
   keys,
@@ -11,12 +14,16 @@ export const bindSocketEvents = ({
   initOfflineQueue,
   processQueuedOperations,
   handleRemoteContent,
+  syncOnlineStatus,
   reconnectAttemptRef,
   isReconnectingRef,
   processSyncPayload = processEncryptedSyncPayload,
 }) => {
   socket.on('connect', async () => {
     setStatus('connected');
+    if (typeof syncOnlineStatus === 'function') {
+      syncOnlineStatus();
+    }
     reconnectAttemptRef.current = 0;
 
     socket.emit('join-chain', {
@@ -28,10 +35,10 @@ export const bindSocketEvents = ({
     await processQueuedOperations();
 
     if (isReconnectingRef.current) {
-      toast.success(t.reconnected);
+      toast.success(resolveT(t).reconnected);
       isReconnectingRef.current = false;
     } else {
-      toast.success(t.connected);
+      toast.success(resolveT(t).connected);
     }
   });
 
@@ -57,8 +64,11 @@ export const bindSocketEvents = ({
 
   socket.on('disconnect', (reason) => {
     setStatus('disconnected');
+    if (typeof syncOnlineStatus === 'function') {
+      syncOnlineStatus();
+    }
     if (reason !== 'io client disconnect') {
-      toast.error(t.disconnected);
+      toast.error(resolveT(t).disconnected);
     }
   });
 
@@ -67,22 +77,19 @@ export const bindSocketEvents = ({
     isReconnectingRef.current = true;
     setStatus('syncing');
     if (attempt === 1) {
-      toast.loading(t.reconnecting, { id: 'reconnecting' });
+      toast.loading(resolveT(t).reconnecting, { id: 'reconnecting' });
     }
   });
 
-  socket.on('reconnect', async () => {
+  // socket.io 重连必然先触发 connect(已重新 join-chain 并冲刷队列),
+  // 这里只负责清理重连提示,避免重复 join。
+  socket.on('reconnect', () => {
     toast.dismiss('reconnecting');
-    socket.emit('join-chain', {
-      roomId: keys.roomId,
-      deviceName: name,
-    });
-    await processQueuedOperations();
   });
 
   socket.on('reconnect_failed', () => {
     toast.dismiss('reconnecting');
-    toast.error(t.disconnected);
+    toast.error(resolveT(t).disconnected);
     setStatus('disconnected');
   });
 
@@ -95,6 +102,6 @@ export const bindSocketEvents = ({
 
   socket.on('error', (error) => {
     console.error('Socket error:', error);
-    toast.error(t.syncError);
+    toast.error(resolveT(t).syncError);
   });
 };

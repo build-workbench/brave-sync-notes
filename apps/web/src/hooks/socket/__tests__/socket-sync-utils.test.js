@@ -1,17 +1,28 @@
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('../../../utils/crypto', () => ({
-  encryptData: vi.fn(async (data) => 'encrypted:' + JSON.stringify(data)),
-  decryptData: vi.fn(async (ct) => JSON.parse(ct.replace('encrypted:', ''))),
+  encryptData: vi.fn(async (data, key, aad) => 'encrypted:' + JSON.stringify(data) + ':aad=' + (aad ?? '')),
+  decryptData: vi.fn(async (ct, key, aad) => {
+    const marker = ':aad=' + (aad ?? '');
+    if (!ct.endsWith(marker)) {
+      throw new Error('Decryption failed: AAD mismatch');
+    }
+    return JSON.parse(ct.slice('encrypted:'.length, -marker.length));
+  }),
+}));
+
+vi.mock('../../../utils/sync/device', () => ({
+  getDeviceId: vi.fn(() => 'device-test01'),
 }));
 
 import {
   emitEncryptedUpdate,
   processEncryptedSyncPayload,
 } from '../socket-sync-utils';
+import { buildAad } from '../../../utils/sync/constants';
 
-describe('socket-sync-utils', () => {
-  it('emitEncryptedUpdate emits a single encrypted push-update', async () => {
+describe('socket-sync-utils v2 envelope', () => {
+  it('emitEncryptedUpdate sends a v2 envelope bound to seq/deviceId', async () => {
     const socket = { emit: vi.fn() };
     const keys = { roomId: 'room-1', encryptionKey: {} };
 
@@ -20,41 +31,50 @@ describe('socket-sync-utils', () => {
       keys,
       content: 'hello world',
       timestamp: 12345,
+      seq: 42,
+      deviceId: 'device-test01',
     });
 
     expect(typeof hash).toBe('string');
-    expect(hash.length).toBeGreaterThan(0);
     expect(socket.emit).toHaveBeenCalledTimes(1);
-    expect(socket.emit).toHaveBeenCalledWith(
-      'push-update',
-      expect.objectContaining({
-        roomId: 'room-1',
-        encryptedData: expect.stringContaining('"content":"hello world"'),
-        timestamp: 12345,
-      })
-    );
+
+    const [, envelope] = socket.emit.mock.calls[0];
+    expect(envelope).toEqual({
+      v: 2,
+      roomId: 'room-1',
+      deviceId: 'device-test01',
+      seq: 42,
+      timestamp: 12345,
+      encryptedData:
+        'encrypted:{"content":"hello world"}:aad=' +
+        buildAad('room-1', 'device-test01', 42, 12345),
+    });
   });
 
-  it('emitEncryptedUpdate sends large content (>50KB) as a single push', async () => {
+  it('emitEncryptedUpdate falls back to getDeviceId when not provided', async () => {
     const socket = { emit: vi.fn() };
     const keys = { roomId: 'room-1', encryptionKey: {} };
-    const bigContent = 'A'.repeat(100 * 1024);
 
-    await emitEncryptedUpdate({ socket, keys, content: bigContent, timestamp: 1 });
+    await emitEncryptedUpdate({ socket, keys, content: 'x', timestamp: 1, seq: 7 });
 
-    expect(socket.emit).toHaveBeenCalledTimes(1);
-    expect(socket.emit.mock.calls[0][1].encryptedData).toContain(bigContent.slice(0, 50));
+    const [, envelope] = socket.emit.mock.calls[0];
+    expect(envelope.deviceId).toBe('device-test01');
   });
 
-  it('processEncryptedSyncPayload resolves plain content payloads', async () => {
+  it('processEncryptedSyncPayload rebuilds AAD from envelope fields and decrypts', async () => {
     const payload = {
-      encryptedData: 'cipher',
-      version: 2,
+      v: 2,
+      roomId: 'room-9',
+      deviceId: 'device-peer01',
+      seq: 5,
       timestamp: 200,
-      deviceName: 'remote',
+      encryptedData: 'encrypted:{"content":"remote"}:aad=' + buildAad('room-9', 'device-peer01', 5, 200),
     };
     const onRemoteContent = vi.fn().mockResolvedValue(undefined);
-    const decrypt = vi.fn().mockResolvedValue({ content: 'remote-content' });
+    const decrypt = vi.fn(async (_ct, _key, aad) => {
+      expect(aad).toBe(buildAad('room-9', 'device-peer01', 5, 200));
+      return { content: 'remote' };
+    });
 
     await processEncryptedSyncPayload({
       payload,
@@ -63,6 +83,24 @@ describe('socket-sync-utils', () => {
       decrypt,
     });
 
-    expect(onRemoteContent).toHaveBeenCalledWith('remote-content', payload);
+    expect(onRemoteContent).toHaveBeenCalledWith('remote', payload);
+  });
+
+  it('drops payloads missing v2 envelope fields without invoking the callback', async () => {
+    const onRemoteContent = vi.fn();
+    const decrypt = vi.fn();
+
+    for (const bad of [
+      null,
+      {},
+      { v: 1, roomId: 'r', deviceId: 'd-device1', seq: 1, timestamp: 1, encryptedData: 'c' },
+      { v: 2, roomId: 'r', seq: 1, timestamp: 1, encryptedData: 'c' },
+      { v: 2, roomId: 'r', deviceId: 'd-device1', seq: 'x', timestamp: 1, encryptedData: 'c' },
+    ]) {
+      await processEncryptedSyncPayload({ payload: bad, encryptionKey: 'k', onRemoteContent, decrypt });
+    }
+
+    expect(onRemoteContent).not.toHaveBeenCalled();
+    expect(decrypt).not.toHaveBeenCalled();
   });
 });

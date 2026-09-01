@@ -58,7 +58,7 @@ class OfflineQueue {
 
     /**
      * 处理队列中的操作
-     * @param {Function} processor - 处理函数，接收操作并返回 Promise<boolean>
+     * @param {Function} processor - 处理函数，接收操作并返回 Promise<boolean> 或 Promise<{success: boolean}>
      */
     async processQueue(processor) {
         if (this.isProcessing) {
@@ -80,7 +80,10 @@ class OfflineQueue {
 
             for (const op of operations) {
                 try {
-                    const success = await processor(op);
+                    const result = await processor(op);
+                    const success = (result && typeof result === 'object')
+                        ? Boolean(result.success)
+                        : Boolean(result);
 
                     if (success) {
                         await this.storage.removeOperation(op.id);

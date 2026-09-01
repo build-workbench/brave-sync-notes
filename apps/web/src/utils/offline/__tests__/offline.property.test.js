@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fc from 'fast-check';
 import OfflineQueue from '../OfflineQueue';
 
@@ -368,6 +368,43 @@ describe('Offline Queue Property Tests', () => {
       // Should be removed after max retries
       const size = await queue.getQueueSize();
       expect(size).toBe(0);
+    });
+
+    it('should treat { success: false } processor result as failure', async () => {
+      await queue.enqueue({ type: 'update', data: 'object-result-failure' });
+
+      const result = await queue.processQueue(async () => ({ success: false }));
+
+      expect(result.processed).toBe(0);
+
+      // First failure: kept in queue with retries incremented
+      const remaining = await queue.getAll();
+      expect(remaining).toHaveLength(1);
+      expect(remaining[0].retries).toBe(1);
+    });
+
+    it('should treat { success: true } processor result as success', async () => {
+      await queue.enqueue({ type: 'update', data: 'object-result-success' });
+
+      const result = await queue.processQueue(async () => ({ success: true }));
+
+      expect(result.processed).toBe(1);
+      expect(await queue.getQueueSize()).toBe(0);
+    });
+
+    it('should invoke onError and drop operation after max retries with object results', async () => {
+      const onError = vi.fn();
+      queue.setOnError(onError);
+      queue.maxRetries = 2;
+
+      await queue.enqueue({ type: 'update', data: 'doomed' });
+
+      await queue.processQueue(async () => ({ success: false }));
+      await queue.processQueue(async () => ({ success: false }));
+
+      expect(await queue.getQueueSize()).toBe(0);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][0].data).toBe('doomed');
     });
 
     it('should clear queue completely', async () => {
