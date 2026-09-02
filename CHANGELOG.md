@@ -11,6 +11,10 @@
 - README 新增主界面产品截图（`docs/screenshots/main.png`）
 
 ### Fixed
+- 修复 CI `npm ci` 失败：`apps/web/package-lock.json` 缺少 esbuild 0.28.2 条目
+  （vitest 嵌套的 vite 8 将其声明为 optional peer），重新生成 lock 补齐
+- 修复 `crypto.test.js` 校验和测试偶发失败：BIP39 校验和仅 4 位，替换单个词有
+  1/16 概率校验仍通过；改为遍历字表构造确定性无效助记词
 - 修复浏览器中创建同步链失败：bip39 依赖 Node `Buffer`，入口现在注入 polyfill
 - 修复侧边栏助记词断词：`break-all` 改为 `break-words`，单词不再被硬截断
 - 修复离线队列失败重试逻辑失效：`processQueue` 的 processor 现在正确解析 `{ success: boolean }`
@@ -44,6 +48,8 @@
 - 移除未使用的 `useOffline` hook 及其测试（与 useSocket 内离线逻辑完全重复）
 
 ### Docs
+- README 项目名修正为 Secure Note Chain 并精简（移除仓库结构、合并测试命令）；
+  AGENTS.md 项目名同步修正
 - ARCHITECTURE/SECURITY 补充已知安全局限披露：助记词明文本地持久化、无重放防护、
   无前向保密、salt 由密码派生、服务器可见元数据范围
 - Landing 页"无追踪、无数据收集"文案修正为如实描述

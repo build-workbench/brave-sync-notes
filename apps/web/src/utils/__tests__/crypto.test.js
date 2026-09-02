@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import * as bip39 from 'bip39';
 import {
   generateSyncChain,
   deriveKeys,
@@ -10,6 +11,20 @@ import {
   clearKeyCache,
   PBKDF2_ITERATIONS,
 } from '../crypto';
+
+// 构造"格式合法但校验和必然错误"的 12 词助记词。
+// BIP39 校验和仅 4 位，替换单个词有 1/16 概率校验仍通过（flaky），
+// 因此遍历字表取第一个替换后校验失败的候选词，保证确定性。
+const invalidChecksumMnemonic = () => {
+  const words = generateSyncChain().split(' ');
+  const original = words[3];
+  for (const candidate of bip39.wordlists.EN) {
+    if (candidate === original) continue;
+    const trial = [...words.slice(0, 3), candidate, ...words.slice(4)].join(' ');
+    if (!bip39.validateMnemonic(trial)) return trial;
+  }
+  throw new Error('failed to construct an invalid-checksum mnemonic');
+};
 
 describe('crypto', () => {
   describe('generateSyncChain', () => {
@@ -177,11 +192,7 @@ describe('crypto', () => {
     });
 
     it('should reject mnemonics with invalid BIP39 checksum', () => {
-      const mnemonic = generateSyncChain();
-      const words = mnemonic.split(' ');
-      const original = words[3];
-      words[3] = original === 'abandon' ? 'zoo' : 'abandon';
-      expect(validateMnemonic(words.join(' '))).toBe(false);
+      expect(validateMnemonic(invalidChecksumMnemonic())).toBe(false);
     });
   });
 
