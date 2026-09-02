@@ -34,6 +34,10 @@
 - 修复 `LOG_LEVEL` 环境变量无效：logger 现在读取该配置；服务入口的裸 `console.*` 统一替换为结构化 logger
 
 ### Changed
+- CI 升级至 Node 24，`actions/checkout`/`actions/setup-node` 升级 v4 → v5，
+  消除 Node 20 运行时弃用警告（此前 actions 被强制跑在 Node 24 上）
+- 前端 vite 5 → 6、react-syntax-highlighter 15 → 16（PrismJS 修复版）
+- 后端 sqlite3 5 → 6（N-API 预编译二进制，安装不再依赖 node-gyp 编译链）
 - PBKDF2 迭代次数默认值提升至 310,000（OWASP 建议），并强制下限 100,000——
   此前可经 `VITE_PBKDF2_ITERATIONS` 配置为任意低值甚至 1
 - 密钥缓存改以 roomId（公开哈希）为键，避免明文助记词长期驻留内存；
@@ -53,6 +57,17 @@
 - ARCHITECTURE/SECURITY 补充已知安全局限披露：助记词明文本地持久化、无重放防护、
   无前向保密、salt 由密码派生、服务器可见元数据范围
 - Landing 页"无追踪、无数据收集"文案修正为如实描述
+
+### Security
+- 依赖漏洞清零（两端 `npm audit` 0 漏洞，Dependabot 3 项告警全部消除）：
+  - 后端：socket.io 升级修复 engine.io WebTransport SID DoS（GHSA-gr94-w7qr-f4j3）；
+    js-yaml 升级修复 omap 解析二次复杂度（GHSA-5p4m-2wfm-xmqj）；
+    sqlite3 5 → 6 移除 node-gyp 安装链（tar 任意文件写 critical、http-proxy-agent 等 7 项）
+  - 前端：postcss 升级修复 sourceMappingURL 任意 .map 读取（GHSA-fxqj-rqcc-2cmp）；
+    vite 5 → 6 携 esbuild 0.25 修复 dev server 任意请求（GHSA-67mh-4wv8-2f99）；
+    react-syntax-highlighter 15 → 16 携 PrismJS 1.30 修复 DOM Clobbering（GHSA-x7hr-w5r2-h6wg）
+  - 两端：socket.io-parser 内存耗尽（GHSA-2m8v-j782-fhvr）、ws 未初始化内存泄露/
+    分片 DoS、body-parser、path-to-regexp、browserslist、brace-expansion 等传递依赖同步升级
 
 ### Removed
 - 移除 VitePress 文档站（37 文件）及全部构建配置，核心架构信息合并至 `ARCHITECTURE.md`
