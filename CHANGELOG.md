@@ -63,7 +63,7 @@
 - 跨房间防护：离线操作与当前同步链不匹配时丢弃并提示，
   防止切链后旧链内容被推送到新链
 - 加密后预校验 5MB 上限，超限明确提示而不是误报断线
-- 项目更名为 **ShadowNote / 影笔记**（原 brave-sync-notes / Secure Note Chain）：
+- 项目更名为 **ShadowNote / 影子笔记**（原 brave-sync-notes / Secure Note Chain）：
   产品显示名、网页标题、包名（shadow-note / shadow-note-client / shadow-note-server）
   与文档同步更新，体现"零知识 + 实时 + 轻量自托管"定位
 - CI 升级至 Node 24，`actions/checkout`/`actions/setup-node` 升级 v4 → v5，

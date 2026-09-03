@@ -85,7 +85,7 @@ export const translations = {
   },
   zh: {
     // 登录页面
-    appTitle: '影笔记',
+    appTitle: '影子笔记',
     appSubtitleLine1: '端到端加密的多设备同步。',
     appSubtitleLine2: '无需账号，不留痕迹。',
     deviceNameLabel: '设备名称',
