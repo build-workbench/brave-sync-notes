@@ -88,6 +88,8 @@ describe('useSocket', () => {
 
     await act(async () => {
       await mockSocket.handlers.connect();
+      // 加入确认(join-ack)后才提示连接成功并冲刷离线队列
+      await mockSocket.handlers['join-ack']({ roomId: keys.roomId, success: true });
     });
 
     expect(mockSocket.emit).toHaveBeenCalledWith('join-chain', {
@@ -103,6 +105,8 @@ describe('useSocket', () => {
     const { result } = renderHook(() => useSocket());
     const mnemonic = 'test test test test test test test test test test test ball';
 
+    const keys = await deriveKeys(mnemonic);
+
     await act(async () => {
       await result.current.joinChain(mnemonic, 'MacBook');
       await mockSocket.handlers.connect();
@@ -110,8 +114,12 @@ describe('useSocket', () => {
 
     await act(async () => {
       await mockSocket.handlers['sync-update']({
-        encryptedData: JSON.stringify({ content: 'remote note content' }),
+        v: 2,
+        roomId: keys.roomId,
+        deviceId: 'device-test01',
+        seq: 1,
         timestamp: 123456,
+        encryptedData: JSON.stringify({ content: 'remote note content' }),
         deviceName: 'Remote Device',
         version: 2,
       });

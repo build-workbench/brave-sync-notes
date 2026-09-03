@@ -130,7 +130,14 @@ class IndexedDBStorage extends ClientStorage {
                 const request = operation(store);
 
                 request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
+                request.onerror = () => {
+                    const err = request.error;
+                    if (err && err.name === 'QuotaExceededError') {
+                        reject(Object.assign(new Error('Storage quota exceeded: free up space or clear note history'), { code: 'QUOTA_EXCEEDED' }));
+                        return;
+                    }
+                    reject(err);
+                };
             } catch (error) {
                 reject(error);
             }
@@ -276,7 +283,14 @@ class IndexedDBStorage extends ClientStorage {
                 resolve(notes);
             };
 
-            request.onerror = () => reject(request.error);
+            request.onerror = () => {
+                    const err = request.error;
+                    if (err && err.name === 'QuotaExceededError') {
+                        reject(Object.assign(new Error('Storage quota exceeded: free up space or clear note history'), { code: 'QUOTA_EXCEEDED' }));
+                        return;
+                    }
+                    reject(err);
+                };
         });
     }
 
@@ -361,7 +375,14 @@ class IndexedDBStorage extends ClientStorage {
                 }
             };
 
-            request.onerror = () => reject(request.error);
+            request.onerror = () => {
+                    const err = request.error;
+                    if (err && err.name === 'QuotaExceededError') {
+                        reject(Object.assign(new Error('Storage quota exceeded: free up space or clear note history'), { code: 'QUOTA_EXCEEDED' }));
+                        return;
+                    }
+                    reject(err);
+                };
         });
     }
 
@@ -393,7 +414,14 @@ class IndexedDBStorage extends ClientStorage {
                 }
             };
 
-            request.onerror = () => reject(request.error);
+            request.onerror = () => {
+                    const err = request.error;
+                    if (err && err.name === 'QuotaExceededError') {
+                        reject(Object.assign(new Error('Storage quota exceeded: free up space or clear note history'), { code: 'QUOTA_EXCEEDED' }));
+                        return;
+                    }
+                    reject(err);
+                };
         });
     }
 

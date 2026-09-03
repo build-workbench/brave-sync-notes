@@ -81,8 +81,9 @@ cd apps/api && npm run test:property  # 属性测试
 ```
 
 ### Socket 事件速查
-- 客户端 -> 服务端：`join-chain`、`push-update`、`request-sync`
-- 服务端 -> 客户端：`sync-update`、`room-info`、`error`
+- 客户端 -> 服务端：`join-chain`、`push-update`（带 ack 回调确认）、`request-sync`
+- 服务端 -> 客户端：`join-ack`（确认加入成功）、`sync-update`、`room-info`、`error`
+  （结构化 `{ type, message, code, recoverable }`）
 
 ### 加密参数
 - 内容加密：AES-256-GCM（Web Crypto API 原生）

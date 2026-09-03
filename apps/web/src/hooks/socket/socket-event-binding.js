@@ -31,6 +31,12 @@ export const bindSocketEvents = ({
       deviceName: name,
     });
 
+    // 离线队列等 join-ack 确认后再冲刷:join 未完成时 push-update
+    // 会被服务端以 NOT_MEMBER 拒绝,确认机制保证失败操作留在队列重试
+  });
+
+  // 服务端确认加入成功后才处理离线队列
+  socket.on('join-ack', async () => {
     await initOfflineQueue();
     await processQueuedOperations();
 

@@ -13,6 +13,10 @@ const DEFAULT_DEV_ORIGIN = 'http://localhost:5173';
 
 function resolveCorsOrigin() {
   if (process.env.CORS_ORIGIN) {
+    // 生产环境拒绝通配符:允许任意站点连入会破坏房间成员边界
+    if (process.env.CORS_ORIGIN === '*' && NODE_ENV === 'production') {
+      throw new Error('CORS_ORIGIN must be a concrete origin in production (wildcard "*" is not allowed)');
+    }
     return process.env.CORS_ORIGIN;
   }
 
@@ -22,6 +26,11 @@ function resolveCorsOrigin() {
 
   logger.warn(`CORS_ORIGIN not set, defaulting to ${DEFAULT_DEV_ORIGIN} for ${NODE_ENV}`);
   return DEFAULT_DEV_ORIGIN;
+}
+
+// 结构化错误:客户端可依据 type/code/recoverable 区分可重试与永久失败
+function buildError(type, message, code, recoverable) {
+  return { type, message, code, recoverable: !!recoverable };
 }
 
 const corsOrigin = resolveCorsOrigin();
@@ -50,7 +59,9 @@ app.get('/health', async (req, res) => {
       health.persistence.healthy = await persistenceManager.isHealthy();
       health.persistence.adapter = persistenceManager.getCurrentAdapter();
     } catch (error) {
-      health.persistence.error = error.message;
+      // 脱敏:不向任意访问者暴露底层错误细节(主机/端口/路径等)
+      logger.error('Health check persistence error:', { error: error.message });
+      health.persistence.error = 'persistence check failed';
     }
   }
 
@@ -197,6 +208,7 @@ const RATE_LIMITS = {
   'push-update': 30,
   'join-chain': 10,
   'request-sync': 60,
+  'ping-latency': 120,
 };
 const RATE_WINDOW_MS = 60000;
 
@@ -215,20 +227,29 @@ function consumeRateBudget(meta, event) {
 function handleSocketConnection(socket) {
   logger.info(`User connected: ${socket.id}`);
 
+  // 发送结构化错误(带 ack 回调时同步回执,便于客户端区分失败类型)
+  const sendError = (message, code, recoverable = false) => {
+    socket.emit('error', buildError('ERROR', message, code, recoverable));
+  };
+
   // Join a specific sync chain
   socket.on('join-chain', async (payload = {}) => {
     const { roomId, deviceName } = payload;
     try {
       // Validate input
       if (!DataValidator.isValidRoomId(roomId)) {
-        socket.emit('error', { message: 'Invalid room ID' });
+        sendError('Invalid room ID', 'INVALID_ROOM_ID');
         return;
       }
 
-      // 限流:防止滥用 join 触发持久化读 + 全房间广播
-      const meta = socketMeta.get(socket.id);
-      if (meta && !consumeRateBudget(meta, 'join-chain')) {
-        socket.emit('error', { message: 'Rate limit exceeded' });
+      // 限流:首次 join 也计入预算(meta 尚未初始化时先建桶,防止换连接绕过)
+      let meta = socketMeta.get(socket.id);
+      if (!meta) {
+        meta = { _rate: null };
+        socketMeta.set(socket.id, meta);
+      }
+      if (!consumeRateBudget(meta, 'join-chain')) {
+        sendError('Rate limit exceeded', 'RATE_LIMIT', true);
         return;
       }
 
@@ -251,7 +272,8 @@ function handleSocketConnection(socket) {
       socketMeta.set(socket.id, {
         roomId,
         deviceName: sanitizedDeviceName,
-        joinedAt: Date.now()
+        joinedAt: Date.now(),
+        _rate: meta._rate,
       });
 
       logger.room('join', roomId, { socketId: socket.id, deviceName: sanitizedDeviceName });
@@ -279,38 +301,66 @@ function handleSocketConnection(socket) {
 
       // 2. Broadcast updated member list to everyone in the room
       updateRoomMembers(roomId);
+
+      // 3. 确认加入成功:客户端收到 join-ack 后才处理离线队列,
+      //    避免 push-update 因尚未成为成员而被拒绝
+      socket.emit('join-ack', { roomId, success: true });
     } catch (error) {
       logger.error('Error in join-chain:', { error: error.message });
-      socket.emit('error', { message: 'Failed to join chain' });
+      sendError('Failed to join chain', 'JOIN_FAILED', true);
     }
   });
 
   // Receive an update from a client (supports both legacy and v2 envelope)
-  socket.on('push-update', async (incoming = {}) => {
+  socket.on('push-update', async (incoming = {}, ack) => {
+    const fail = (message, code, recoverable = false) => {
+      if (typeof ack === 'function') {
+        ack({ success: false, code });
+      }
+      sendError(message, code, recoverable);
+    };
+
     try {
       const { roomId, encryptedData, timestamp, v, deviceId, seq } = incoming;
       // Validate room membership
       const meta = socketMeta.get(socket.id);
       if (!meta || meta.roomId !== roomId) {
-        socket.emit('error', { message: 'Not a member of this room' });
+        fail('Not a member of this room', 'NOT_MEMBER', true);
         return;
       }
 
-      // Validate encryptedData size to prevent DoS (max 5MB in bytes)
-      if (!encryptedData || typeof encryptedData !== 'string') {
-        socket.emit('error', { message: 'Invalid data format' });
+      // 校验密文结构:合法 base64 且至少含 12 字节 IV + 16 字节 tag + 1 字节密文。
+      // 仅校验格式与长度,不解析内容(保持零知识)。
+      if (!encryptedData || typeof encryptedData !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(encryptedData) || encryptedData.length < 40) {
+        fail('Invalid data format', 'INVALID_DATA');
         return;
       }
       // Use Buffer.byteLength for accurate byte count (handles Unicode correctly)
       const dataByteSize = Buffer.byteLength(encryptedData, 'utf8');
       if (dataByteSize > MAX_DATA_SIZE_BYTES) {
-        socket.emit('error', { message: `Data too large (max ${MAX_DATA_SIZE_BYTES / 1024 / 1024}MB)` });
+        fail(`Data too large (max ${MAX_DATA_SIZE_BYTES / 1024 / 1024}MB)`, 'DATA_TOO_LARGE');
+        return;
+      }
+
+      // v2 信封校验:deviceId/seq 必须合法;显式其他版本一律拒绝
+      if (v === 2) {
+        if (
+          typeof deviceId !== 'string' ||
+          !/^[a-zA-Z0-9_-]{8,64}$/.test(deviceId) ||
+          !Number.isInteger(seq) ||
+          seq < 0
+        ) {
+          fail('Invalid envelope', 'INVALID_ENVELOPE');
+          return;
+        }
+      } else if (v !== undefined) {
+        fail('Unsupported protocol version', 'UNSUPPORTED_PROTOCOL');
         return;
       }
 
       // Rate limiting: max 30 updates per minute per socket
       if (!consumeRateBudget(meta, 'push-update')) {
-        socket.emit('error', { message: 'Rate limit exceeded' });
+        fail('Rate limit exceeded', 'RATE_LIMIT', true);
         return;
       }
 
@@ -341,11 +391,14 @@ function handleSocketConnection(socket) {
       // Broadcast to everyone else in the chain
       socket.to(roomId).emit('sync-update', payload);
 
-      // Acknowledge receipt
+      // Acknowledge receipt:优先 ack 回调(客户端等待确认后才认为已同步)
+      if (typeof ack === 'function') {
+        ack({ success: true, timestamp });
+      }
       socket.emit('update-ack', { timestamp, success: true });
     } catch (error) {
       logger.error('Error in push-update:', { error: error.message });
-      socket.emit('error', { message: 'Failed to push update' });
+      fail('Failed to push update', 'PUSH_FAILED', true);
     }
   });
 
@@ -355,12 +408,12 @@ function handleSocketConnection(socket) {
       // 与 push-update 一致的成员校验:防止任意连接枚举/拉取任意房间密文
       const meta = socketMeta.get(socket.id);
       if (!meta || meta.roomId !== roomId) {
-        socket.emit('error', { message: 'Not a member of this room' });
+        sendError('Not a member of this room', 'NOT_MEMBER', true);
         return;
       }
 
       if (!consumeRateBudget(meta, 'request-sync')) {
-        socket.emit('error', { message: 'Rate limit exceeded' });
+        sendError('Rate limit exceeded', 'RATE_LIMIT', true);
         return;
       }
 
@@ -385,11 +438,16 @@ function handleSocketConnection(socket) {
       }
     } catch (error) {
       logger.error('Error in request-sync:', { error: error.message });
+      sendError('Failed to request sync', 'SYNC_FAILED', true);
     }
   });
 
   // Ping for latency measurement
   socket.on('ping-latency', (callback) => {
+    const meta = socketMeta.get(socket.id);
+    if (meta && !consumeRateBudget(meta, 'ping-latency')) {
+      return;
+    }
     if (typeof callback === 'function') {
       callback({ timestamp: Date.now() });
     }
@@ -405,8 +463,11 @@ function handleSocketConnection(socket) {
     }
   });
 
+  // 防御性日志:error.message 可能来自客户端伪造,非 Error 实例只记录类型
   socket.on('error', (error) => {
-    logger.error(`Socket error for ${socket.id}:`, { error: error.message });
+    logger.error(`Socket error for ${socket.id}:`, {
+      error: error instanceof Error ? error.message : typeof error,
+    });
   });
 }
 
@@ -445,6 +506,11 @@ async function gracefulShutdown(signal) {
   logger.warn(`${signal} received, shutting down gracefully...`);
 
   try {
+    // 先断开所有 Socket.IO 长连接,再关闭 HTTP server,
+    // 否则已建立的 WebSocket 会让 server.close 挂起等待
+    io.close();
+    logger.info('Socket.IO connections closed');
+
     if (server.listening) {
       await new Promise((resolve) => {
         server.close(resolve);
@@ -546,7 +612,8 @@ if (require.main === module) {
     gracefulShutdown('uncaughtException').catch(() => process.exit(1));
   });
   process.on('unhandledRejection', (reason) => {
-    console.error('Unhandled rejection:', reason);
+    console.error('Unhandled rejection, shutting down:', reason);
+    gracefulShutdown('unhandledRejection').catch(() => process.exit(1));
   });
 
   registerShutdownHandlers();

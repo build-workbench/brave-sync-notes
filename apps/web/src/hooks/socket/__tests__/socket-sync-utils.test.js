@@ -23,7 +23,7 @@ import { buildAad } from '../../../utils/sync/constants';
 
 describe('socket-sync-utils v2 envelope', () => {
   it('emitEncryptedUpdate sends a v2 envelope bound to seq/deviceId', async () => {
-    const socket = { emit: vi.fn() };
+    const socket = { emit: vi.fn((event, envelope, ack) => ack?.({ success: true })) };
     const keys = { roomId: 'room-1', encryptionKey: {} };
 
     const hash = await emitEncryptedUpdate({
@@ -52,7 +52,7 @@ describe('socket-sync-utils v2 envelope', () => {
   });
 
   it('emitEncryptedUpdate falls back to getDeviceId when not provided', async () => {
-    const socket = { emit: vi.fn() };
+    const socket = { emit: vi.fn((event, envelope, ack) => ack?.({ success: true })) };
     const keys = { roomId: 'room-1', encryptionKey: {} };
 
     await emitEncryptedUpdate({ socket, keys, content: 'x', timestamp: 1, seq: 7 });
@@ -99,6 +99,29 @@ describe('socket-sync-utils v2 envelope', () => {
     ]) {
       await processEncryptedSyncPayload({ payload: bad, encryptionKey: 'k', onRemoteContent, decrypt });
     }
+
+    expect(onRemoteContent).not.toHaveBeenCalled();
+    expect(decrypt).not.toHaveBeenCalled();
+  });
+
+  it('emitEncryptedUpdate rejects when server ack reports failure', async () => {
+    const socket = { emit: vi.fn((event, envelope, ack) => ack?.({ success: false, code: 'RATE_LIMIT' })) };
+    const keys = { roomId: 'room-1', encryptionKey: {} };
+
+    await expect(
+      emitEncryptedUpdate({ socket, keys, content: 'x', timestamp: 1, seq: 1 })
+    ).rejects.toMatchObject({ code: 'RATE_LIMIT' });
+  });
+
+  it('processEncryptedSyncPayload drops legacy envelopes without v field', async () => {
+    const onRemoteContent = vi.fn();
+    const decrypt = vi.fn();
+    const payload = {
+      encryptedData: 'encrypted:{"content":"old"}:aad=',
+      timestamp: 1,
+    };
+
+    await processEncryptedSyncPayload({ payload, encryptionKey: 'k', onRemoteContent, decrypt });
 
     expect(onRemoteContent).not.toHaveBeenCalled();
     expect(decrypt).not.toHaveBeenCalled();

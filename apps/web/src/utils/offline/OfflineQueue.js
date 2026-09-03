@@ -80,6 +80,12 @@ class OfflineQueue {
 
             for (const op of operations) {
                 try {
+                    // 指数退避:未到下次重试时间的操作本轮跳过,
+                    // 避免瞬时失败在毫秒级连试 maxRetries 次后被丢弃
+                    if (op.nextRetryAt && op.nextRetryAt > Date.now()) {
+                        continue;
+                    }
+
                     const result = await processor(op);
                     const success = (result && typeof result === 'object')
                         ? Boolean(result.success)
@@ -106,7 +112,8 @@ class OfflineQueue {
                                 this.onError(op, new Error('Max retries exceeded'));
                             }
                         } else {
-                            // 更新重试次数
+                            // 指数退避:1s、2s、4s... 更新重试次数与下次重试时间
+                            op.nextRetryAt = Date.now() + Math.min(2 ** op.retries * 1000, 60000);
                             await this.storage.enqueueOperation(op);
                         }
                     }

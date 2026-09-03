@@ -356,13 +356,24 @@ describe('Offline Queue Property Tests', () => {
       expect(size).toBe(0);
     });
 
+    // 模拟退避到期:把操作的下次重试时间置为过去。
+    // 注意必须直写 storage——queue.enqueue 会重置 retries/timestamp
+    async function expireBackoff() {
+        const ops = await queue.getAll();
+        for (const op of ops) {
+            op.nextRetryAt = 0;
+            await mockStorage.enqueueOperation(op);
+        }
+    }
+
     it('should respect max retries', async () => {
       queue.maxRetries = 2;
 
       await queue.enqueue({ type: 'update', data: 'flaky' });
 
-      // Fail twice
+      // Fail twice (两次尝试之间退避到期)
       await queue.processQueue(async () => false);
+      await expireBackoff();
       await queue.processQueue(async () => false);
 
       // Should be removed after max retries
@@ -400,6 +411,7 @@ describe('Offline Queue Property Tests', () => {
       await queue.enqueue({ type: 'update', data: 'doomed' });
 
       await queue.processQueue(async () => ({ success: false }));
+      await expireBackoff();
       await queue.processQueue(async () => ({ success: false }));
 
       expect(await queue.getQueueSize()).toBe(0);

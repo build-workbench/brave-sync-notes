@@ -19,6 +19,12 @@ export const RECONNECTION_DELAY_MAX = 5000;
 // Socket connection timeout (ms)
 export const SOCKET_TIMEOUT = 20000;
 
+// 推送确认超时:服务端 ack 回调的最长等待时间(ms)
+export const ACK_TIMEOUT_MS = 8000;
+
+// 单条密文推送上限(与服务端 MAX_DATA_SIZE_BYTES 一致,加密后字节数)
+export const MAX_DATA_SIZE_BYTES = 5 * 1024 * 1024;
+
 // Chunk session timeout (ms)
 export const CHUNK_SESSION_TIMEOUT = 30000;
 

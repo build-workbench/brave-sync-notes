@@ -202,7 +202,33 @@ describe('crypto', () => {
     });
   });
 
-  describe('clearKeyCache', () => {
+  
+describe('deriveRoomId (手写 SHA-256 与 Web Crypto 一致性)', () => {
+  const hexDigest = async (text) => {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  it('matches crypto.subtle.digest for varied inputs', async () => {
+    const inputs = [
+      '',
+      'a',
+      'hello world',
+      'x'.repeat(64), // 恰好一个块
+      'x'.repeat(65), // 跨块边界
+      'x'.repeat(1000),
+      '中文笔记内容测试',
+      'emoji: 🚀🔐 混合 content with 中文 and spaces!',
+      '\u0000\u0001null bytes',
+      'line1\nline2\r\nline3',
+    ];
+    for (const input of inputs) {
+      expect(deriveRoomId(input)).toBe(await hexDigest(input));
+    }
+  });
+});
+
+describe('clearKeyCache', () => {
     it('drops memoized keys so a fresh derivation creates a new CryptoKey', async () => {
       const mnemonic = generateSyncChain();
       const key1 = await deriveEncryptionKey(mnemonic);

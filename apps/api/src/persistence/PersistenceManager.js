@@ -1,4 +1,5 @@
 const RedisPersistence = require('./RedisPersistence');
+const { logger } = require('../utils/logger');
 const SQLitePersistence = require('./SQLitePersistence');
 
 /**
@@ -53,14 +54,14 @@ class PersistenceManager {
 
             this.isInitialized = true;
         } catch (error) {
-            console.error('Failed to initialize persistence manager:', error);
+            logger.error('Failed to initialize persistence manager:', { error: error.message });
 
             if (this.options.autoFailover && this.options.fallbackAdapter !== this.options.primaryAdapter) {
                 try {
                     await this._switchToAdapter(this.options.fallbackAdapter);
                     this.isInitialized = true;
                 } catch (fallbackError) {
-                    console.error('Failed to initialize fallback adapter:', fallbackError);
+                    logger.error('Failed to initialize fallback adapter:', { error: fallbackError.message });
                     throw new Error('All persistence adapters failed to initialize');
                 }
             } else {
@@ -90,7 +91,7 @@ class PersistenceManager {
             this.currentAdapter = adapter;
             this.currentAdapterName = adapterName;
         } catch (error) {
-            console.error(`Failed to switch to adapter ${adapterName}:`, error);
+            logger.error('Failed to switch adapter:', { adapter: adapterName, error: error.message });
             throw error;
         }
     }
@@ -108,7 +109,7 @@ class PersistenceManager {
             try {
                 await this._performHealthCheck();
             } catch (error) {
-                console.error('Health check error:', error);
+                logger.error('Health check error:', { error: error.message });
             }
         }, this.options.healthCheckInterval);
     }
@@ -125,7 +126,7 @@ class PersistenceManager {
         const isHealthy = await this.currentAdapter.isHealthy();
 
         if (!isHealthy) {
-            console.warn(`Current adapter ${this.currentAdapterName} is unhealthy, attempting failover`);
+            logger.warn('Current adapter unhealthy, attempting failover:', { adapter: this.currentAdapterName });
 
             // 尝试故障转移
             const fallbackName = this.currentAdapterName === this.options.primaryAdapter
@@ -136,7 +137,7 @@ class PersistenceManager {
                 try {
                     await this._switchToAdapter(fallbackName);
                 } catch (error) {
-                    console.error(`Failover to ${fallbackName} failed:`, error);
+                    logger.error('Failover failed:', { adapter: fallbackName, error: error.message });
                 }
             }
         }
@@ -282,7 +283,7 @@ class PersistenceManager {
         // 关闭所有适配器
         const closePromises = Array.from(this.adapters.values()).map(adapter =>
             adapter.close().catch(error =>
-                console.error('Error closing adapter:', error)
+                logger.error('Error closing adapter:', { error: error.message })
             )
         );
 
@@ -323,7 +324,7 @@ class PersistenceManager {
         };
 
         try {
-            console.log(`Starting migration from ${fromAdapter} to ${toAdapter}`);
+            logger.info('Starting migration:', { from: fromAdapter, to: toAdapter });
 
             // Step 1: Get all room IDs from source adapter
             let roomIds = [];
@@ -335,11 +336,11 @@ class PersistenceManager {
                 if (stats.roomIds) {
                     roomIds = stats.roomIds;
                 } else if (stats.roomCount) {
-                    console.warn('Source adapter does not support listing room IDs. Migration may be incomplete.');
+                    logger.warn('Source adapter does not support listing room IDs. Migration may be incomplete.');
                 }
             }
 
-            console.log(`Found ${roomIds.length} rooms to migrate`);
+            logger.info(`Found ${roomIds.length} rooms to migrate`);
 
             // Step 2: Migrate rooms in batches
             for (let i = 0; i < roomIds.length; i += batchSize) {
@@ -361,7 +362,7 @@ class PersistenceManager {
                             roomId,
                             error: error.message
                         });
-                        console.error(`Failed to migrate room ${roomId}:`, error.message);
+                        logger.error('Failed to migrate room:', { roomId: roomId.slice(0, 8), error: error.message });
                     }
                 }
 
@@ -384,23 +385,23 @@ class PersistenceManager {
                         try {
                             await targetAdapter.appendLog(log.roomId, log.operation);
                         } catch (logError) {
-                            console.error(`Failed to migrate log for room ${log.roomId}:`, logError.message);
+                            logger.error('Failed to migrate log:', { roomId: (log.roomId || '').slice(0, 8), error: logError.message });
                         }
                     }
                 } catch (logError) {
-                    console.warn('Log migration not supported or failed:', logError.message);
+                    logger.warn('Log migration not supported or failed:', { error: logError.message });
                 }
             }
 
             result.details.endTime = Date.now();
             const duration = (result.details.endTime - result.details.startTime) / 1000;
 
-            console.log(`Migration completed: ${result.migrated} rooms migrated, ${result.errors} errors in ${duration}s`);
+            logger.info(`Migration completed: ${result.migrated} rooms migrated, ${result.errors} errors in ${duration}s`);
 
             return result;
         } catch (error) {
             result.details.endTime = Date.now();
-            console.error('Data migration failed:', error);
+            logger.error('Data migration failed:', { error: error.message });
             throw error;
         }
     }

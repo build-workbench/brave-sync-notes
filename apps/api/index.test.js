@@ -12,6 +12,8 @@ jest.mock('./src/persistence/PersistenceManager', () => {
     }));
 });
 
+const VALID_CIPHERTEXT = Buffer.from('x'.repeat(32)).toString('base64');
+
 describe('server sync flow', () => {
     let app;
     let server;
@@ -68,7 +70,7 @@ describe('server sync flow', () => {
 
         await socket.handlers['join-chain']({ roomId: 'short', deviceName: 'Device A' });
 
-        expect(emit).toHaveBeenCalledWith('error', { message: 'Invalid room ID' });
+        expect(emit).toHaveBeenCalledWith('error', expect.objectContaining({ message: 'Invalid room ID', code: 'INVALID_ROOM_ID' }));
         expect(join).not.toHaveBeenCalled();
     });
 
@@ -92,22 +94,22 @@ describe('server sync flow', () => {
 
         await socket.handlers['push-update']({
             roomId,
-            encryptedData: 'encrypted',
+            encryptedData: VALID_CIPHERTEXT,
             timestamp: 1,
         });
 
-        expect(emit).toHaveBeenCalledWith('error', { message: 'Not a member of this room' });
+        expect(emit).toHaveBeenCalledWith('error', expect.objectContaining({ message: 'Not a member of this room', code: 'NOT_MEMBER' }));
 
         emit.mockClear();
         await socket.handlers['join-chain']({ roomId, deviceName: 'Device B' });
         await socket.handlers['push-update']({
             roomId,
-            encryptedData: 'encrypted',
+            encryptedData: VALID_CIPHERTEXT,
             timestamp: 2,
         });
 
         expect(stores.chainStore.get(roomId)).toMatchObject({
-            encryptedData: 'encrypted',
+            encryptedData: VALID_CIPHERTEXT,
             timestamp: 2,
             deviceName: 'Device B',
         });
@@ -135,7 +137,7 @@ describe('server sync flow', () => {
         handleSocketConnection(socketA);
         await socketA.handlers['join-chain']({ roomId, deviceName: 'Device A' });
 
-        const largeEncrypted = 'enc:' + 'x'.repeat(100 * 1024); // > 50KB, previously chunked
+        const largeEncrypted = Buffer.alloc(100 * 1024, 'x').toString('base64'); // > 50KB, previously chunked
         await socketA.handlers['push-update']({
             roomId,
             encryptedData: largeEncrypted,
@@ -204,7 +206,7 @@ describe('server sync flow', () => {
 
         await socket.handlers['request-sync']({ roomId });
 
-        expect(emit).toHaveBeenCalledWith('error', { message: 'Not a member of this room' });
+        expect(emit).toHaveBeenCalledWith('error', expect.objectContaining({ message: 'Not a member of this room', code: 'NOT_MEMBER' }));
         expect(emit).not.toHaveBeenCalledWith('sync-update', expect.anything());
     });
 
@@ -230,7 +232,7 @@ describe('server sync flow', () => {
             await socket.handlers['request-sync']({ roomId });
         }
 
-        expect(emit).toHaveBeenCalledWith('error', { message: 'Rate limit exceeded' });
+        expect(emit).toHaveBeenCalledWith('error', expect.objectContaining({ message: 'Rate limit exceeded', code: 'RATE_LIMIT' }));
     });
 
     test('push-update is rate limited after 30 updates per minute', async () => {
@@ -251,12 +253,12 @@ describe('server sync flow', () => {
         await socket.handlers['join-chain']({ roomId, deviceName: 'Device E' });
 
         for (let i = 0; i < 31; i++) {
-            await socket.handlers['push-update']({ roomId, encryptedData: `e-${i}`, timestamp: i });
+            await socket.handlers['push-update']({ roomId, encryptedData: VALID_CIPHERTEXT, timestamp: i });
         }
 
         // 前 30 次成功落库,第 31 次被限流
-        expect(emit).toHaveBeenCalledWith('error', { message: 'Rate limit exceeded' });
-        expect(stores.chainStore.get(roomId)).toMatchObject({ encryptedData: 'e-29' });
+        expect(emit).toHaveBeenCalledWith('error', expect.objectContaining({ message: 'Rate limit exceeded', code: 'RATE_LIMIT' }));
+        expect(stores.chainStore.get(roomId)).toMatchObject({ encryptedData: VALID_CIPHERTEXT });
     });
 
     test('registerShutdownHandlers wires SIGINT and SIGTERM', () => {
@@ -268,5 +270,100 @@ describe('server sync flow', () => {
         expect(onSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
 
         onSpy.mockRestore();
+    });
+
+    test('push-update acks success via callback and stores data', async () => {
+        const emit = jest.fn();
+        const ack = jest.fn();
+        const socket = {
+            id: 'socket-ack',
+            on: jest.fn((event, handler) => { socket.handlers[event] = handler; }),
+            emit,
+            join: jest.fn(),
+            leave: jest.fn(),
+            handlers: {},
+            to: jest.fn(() => ({ emit: jest.fn() })),
+        };
+
+        handleSocketConnection(socket);
+        await socket.handlers['join-chain']({ roomId, deviceName: 'Device F' });
+        emit.mockClear();
+
+        await socket.handlers['push-update']({
+            roomId,
+            encryptedData: VALID_CIPHERTEXT,
+            timestamp: 3,
+        }, ack);
+
+        expect(ack).toHaveBeenCalledWith({ success: true, timestamp: 3 });
+        expect(stores.chainStore.get(roomId)).toMatchObject({ encryptedData: VALID_CIPHERTEXT });
+    });
+
+    test('push-update acks failure and rejects malformed ciphertext', async () => {
+        const emit = jest.fn();
+        const ack = jest.fn();
+        const socket = {
+            id: 'socket-bad',
+            on: jest.fn((event, handler) => { socket.handlers[event] = handler; }),
+            emit,
+            join: jest.fn(),
+            leave: jest.fn(),
+            handlers: {},
+            to: jest.fn(() => ({ emit: jest.fn() })),
+        };
+
+        handleSocketConnection(socket);
+        await socket.handlers['join-chain']({ roomId, deviceName: 'Device G' });
+
+        // 非 base64 / 过短密文:ack 失败且不落库
+        await socket.handlers['push-update']({
+            roomId,
+            encryptedData: 'not-base64!!!',
+            timestamp: 4,
+        }, ack);
+
+        expect(ack).toHaveBeenCalledWith({ success: false, code: 'INVALID_DATA' });
+        expect(stores.chainStore.get(roomId)).toBeUndefined();
+
+        // v2 信封缺 deviceId/seq:拒绝
+        emit.mockClear();
+        const ack2 = jest.fn();
+        await socket.handlers['push-update']({
+            roomId,
+            encryptedData: VALID_CIPHERTEXT,
+            timestamp: 5,
+            v: 2,
+        }, ack2);
+
+        expect(ack2).toHaveBeenCalledWith({ success: false, code: 'INVALID_ENVELOPE' });
+
+        // 显式未知协议版本:拒绝
+        const ack3 = jest.fn();
+        await socket.handlers['push-update']({
+            roomId,
+            encryptedData: VALID_CIPHERTEXT,
+            timestamp: 6,
+            v: 99,
+        }, ack3);
+
+        expect(ack3).toHaveBeenCalledWith({ success: false, code: 'UNSUPPORTED_PROTOCOL' });
+    });
+
+    test('join-chain emits join-ack after successful join', async () => {
+        const emit = jest.fn();
+        const socket = {
+            id: 'socket-jack',
+            on: jest.fn((event, handler) => { socket.handlers[event] = handler; }),
+            emit,
+            join: jest.fn(),
+            leave: jest.fn(),
+            handlers: {},
+            to: jest.fn(() => ({ emit: jest.fn() })),
+        };
+
+        handleSocketConnection(socket);
+        await socket.handlers['join-chain']({ roomId, deviceName: 'Device H' });
+
+        expect(emit).toHaveBeenCalledWith('join-ack', { roomId, success: true });
     });
 });

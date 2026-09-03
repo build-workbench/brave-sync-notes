@@ -4,18 +4,22 @@
 
 /**
  * 内容哈希函数 - 用于比较内容是否相同
- * 使用完整内容进行哈希，确保准确性
+ * 双 32 位哈希(DJB2 + FNV-1a)拼成 64 位指纹 + 长度,
+ * 将 32 位空间下 2^-32 量级的碰撞概率降到 2^-64;
+ * 冲突检测仍有内容全等兜底比较,碰撞不会导致静默覆盖。
  * @param {string} content - 要哈希的内容
  * @returns {string} 哈希值
  */
 export function hashContent(content) {
-    let hash = 0;
+    let djb2 = 0;
+    let fnv = 0x811c9dc5;
     for (let i = 0; i < content.length; i++) {
         const char = content.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
+        djb2 = ((djb2 << 5) - djb2 + char) | 0;
+        fnv ^= char;
+        fnv = (fnv + ((fnv << 1) + (fnv << 4) + (fnv << 7) + (fnv << 8) + (fnv << 24))) | 0;
     }
-    return hash.toString(36) + '_' + content.length;
+    return djb2.toString(36) + '_' + (fnv >>> 0).toString(36) + '_' + content.length;
 }
 
 /**

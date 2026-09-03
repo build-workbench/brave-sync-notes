@@ -1,5 +1,6 @@
 const { PersistenceAdapter, DataSerializer, DataValidator } = require('./PersistenceAdapter');
 const Redis = require('redis');
+const { logger } = require('../utils/logger');
 
 /**
  * Redis 持久化存储实现
@@ -11,9 +12,9 @@ class RedisPersistence extends PersistenceAdapter {
 
         this.options = {
             host: options.host || process.env.REDIS_HOST || 'localhost',
-            port: options.port || process.env.REDIS_PORT || 6379,
+            port: parseInt(options.port || process.env.REDIS_PORT, 10) || 6379,
             password: options.password || process.env.REDIS_PASSWORD,
-            db: options.db || process.env.REDIS_DB || 0,
+            db: parseInt(options.db || process.env.REDIS_DB, 10) || 0,
             keyPrefix: options.keyPrefix || 'notesync:',
             defaultTTL: options.defaultTTL || 7 * 24 * 60 * 60, // 7天
             maxRetries: options.maxRetries || 3,
@@ -49,8 +50,8 @@ class RedisPersistence extends PersistenceAdapter {
                     port: this.options.port,
                     reconnectStrategy: (retries) => {
                         if (retries > this.options.maxRetries) {
-                            console.error('Redis max retries exceeded');
-                            return new Error('Max retries exceeded');
+                            logger.error('Redis max retries exceeded');
+                            return false; // 停止重连,由上层健康检查触发故障转移
                         }
                         return Math.min(retries * this.options.retryDelay, 3000);
                     },
@@ -60,7 +61,7 @@ class RedisPersistence extends PersistenceAdapter {
             });
 
             this.client.on('error', (err) => {
-                console.error('Redis client error:', err);
+                logger.error('Redis client error:', { error: err.message });
                 this.isConnected = false;
             });
 
@@ -75,7 +76,7 @@ class RedisPersistence extends PersistenceAdapter {
             await this.client.connect();
             this.isConnected = true;
         } catch (error) {
-            console.error('Failed to connect to Redis:', error);
+            logger.error('Failed to connect to Redis:', { error: error.message });
             this.isConnected = false;
             this.connectionPromise = null;
             throw error;
@@ -170,7 +171,7 @@ class RedisPersistence extends PersistenceAdapter {
 
             await this.client.expire(key, this.options.defaultTTL);
         } catch (error) {
-            console.error(`Failed to save room ${roomId}:`, error);
+            logger.error('Failed to save room:', { roomId: roomId.slice(0, 8), error: error.message });
             throw new Error(`Failed to save room data: ${error.message}`);
         }
     }
@@ -200,12 +201,13 @@ class RedisPersistence extends PersistenceAdapter {
             const decompressedData = DataSerializer.decompress(hashData.data);
             const roomData = DataSerializer.deserialize(decompressedData);
 
-            // 更新 TTL
+            // 访问续命:更新最后访问时间与 TTL,避免只读活跃房间被 cleanupExpired 误删
+            await this.client.hSet(key, { timestamp: String(Date.now()) });
             await this.client.expire(key, this.options.defaultTTL);
 
             return roomData;
         } catch (error) {
-            console.error(`Failed to get room ${roomId}:`, error);
+            logger.error('Failed to get room:', { roomId: roomId.slice(0, 8), error: error.message });
             throw new Error(`Failed to get room data: ${error.message}`);
         }
     }
@@ -241,13 +243,13 @@ class RedisPersistence extends PersistenceAdapter {
                         }
                     }
                 } catch (error) {
-                    console.error(`Error processing key ${key}:`, error);
+                    logger.error('Error processing key:', { error: error.message });
                 }
             }
 
             return deletedCount;
         } catch (error) {
-            console.error('Failed to cleanup expired data:', error);
+            logger.error('Failed to cleanup expired data:', { error: error.message });
             throw new Error(`Failed to cleanup expired data: ${error.message}`);
         }
     }
@@ -282,7 +284,7 @@ class RedisPersistence extends PersistenceAdapter {
             // 设置 TTL
             await this.client.expire(key, this.options.defaultTTL);
         } catch (error) {
-            console.error(`Failed to append log for room ${roomId}:`, error);
+            logger.error('Failed to append log:', { roomId: roomId.slice(0, 8), error: error.message });
             throw new Error(`Failed to append operation log: ${error.message}`);
         }
     }
@@ -314,7 +316,7 @@ class RedisPersistence extends PersistenceAdapter {
                         operations.push(operation);
                     }
                 } catch (error) {
-                    console.error('Failed to parse log entry:', error);
+                    logger.error('Failed to parse log entry:', { error: error.message });
                 }
             }
 
@@ -323,7 +325,7 @@ class RedisPersistence extends PersistenceAdapter {
 
             return operations;
         } catch (error) {
-            console.error(`Failed to get log for room ${roomId}:`, error);
+            logger.error('Failed to get log:', { roomId: roomId.slice(0, 8), error: error.message });
             throw new Error(`Failed to get operation log: ${error.message}`);
         }
     }
@@ -342,7 +344,7 @@ class RedisPersistence extends PersistenceAdapter {
             const result = await this.client.ping();
             return result === 'PONG';
         } catch (error) {
-            console.error('Redis health check failed:', error);
+            logger.error('Redis health check failed:', { error: error.message });
             return false;
         }
     }
@@ -356,7 +358,7 @@ class RedisPersistence extends PersistenceAdapter {
             try {
                 await this.client.quit();
             } catch (error) {
-                console.error('Error closing Redis connection:', error);
+                logger.error('Error closing Redis connection:', { error: error.message });
             } finally {
                 this.client = null;
                 this.isConnected = false;
@@ -390,7 +392,7 @@ class RedisPersistence extends PersistenceAdapter {
                 db: this.options.db
             };
         } catch (error) {
-            console.error('Failed to get Redis stats:', error);
+            logger.error('Failed to get Redis stats:', { error: error.message });
             return {
                 connected: false,
                 error: error.message

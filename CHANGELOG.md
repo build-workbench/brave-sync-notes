@@ -11,6 +11,22 @@
 - README 新增主界面产品截图（`docs/screenshots/main.png`）
 
 ### Fixed
+- 修复跨房间数据泄漏：切换同步链后旧链的离线操作会以新链密钥加密推送到新链；
+  现在按 roomId 校验并丢弃，防止旧链内容进入新链房间
+- 修复推送误报已同步：`emitEncryptedUpdate` 此前 fire-and-forget，
+  服务端拒绝（限流/超限/未加入）时客户端仍认为已送达并删除离线队列
+- 修复 `join-chain` 首次调用不受速率限制（meta 未初始化时跳过计数），
+  换连接可免费加入一次
+- 修复 SQLite 连接未等待打开回调：PRAGMA 可能在连接就绪前执行，
+  打开失败时异常无法被捕获
+- 修复 Redis 只读活跃房间被误删：`cleanupExpired` 依据"最后推送时间"判断，
+  改为访问续命（读取时刷新 timestamp，与 SQLite 语义一致）
+- 修复 Redis `reconnectStrategy` 返回 Error 对象导致重连行为不可预期，
+  改为返回 false 停止重连并交由健康检查故障转移
+- 修复 `unhandledRejection` 仅记录不退出，进程可能带病运行
+- 修复优雅关闭未断开 Socket.IO 长连接，WebSocket 使 `server.close` 挂起
+- 修复服务端接收任意垃圾密文并广播：`push-update` 现在校验 base64 格式、
+  最小长度与 v2 信封字段（deviceId/seq），非法的直接拒绝
 - 修复 CI `npm ci` 失败：`apps/web/package-lock.json` 缺少 esbuild 0.28.2 条目
   （vitest 嵌套的 vite 8 将其声明为 optional peer），重新生成 lock 补齐
 - 修复 `crypto.test.js` 校验和测试偶发失败：BIP39 校验和仅 4 位，替换单个词有
@@ -34,6 +50,19 @@
 - 修复 `LOG_LEVEL` 环境变量无效：logger 现在读取该配置；服务入口的裸 `console.*` 统一替换为结构化 logger
 
 ### Changed
+- 同步协议引入**发送确认机制**：`push-update` 带 ack 回调，服务端确认后才更新
+  本地同步水位/出队，未确认（超时、限流、被拒）的操作保留重试，不再误报已同步
+- `join-chain` 成功后新增 `join-ack` 事件：客户端收到确认后才冲刷离线队列，
+  避免推送因尚未成为房间成员而被拒绝
+- 服务端错误统一为结构化 `{ type, message, code, recoverable }`；
+  `/health` 持久化错误脱敏，不再向任意访问者暴露底层错误细节
+- 客户端仅接受 v2 加密信封（legacy 无 AAD 分支移除），防止恶意服务器
+  省略 `v` 字段降级到无 AAD 路径
+- 内容哈希升级为 64 位双哈希（DJB2 + FNV-1a），碰撞概率降至 2^-64
+- 离线队列增加指数退避（1s/2s/4s…），失败操作不再毫秒级连试后被丢弃
+- 跨房间防护：离线操作与当前同步链不匹配时丢弃并提示，
+  防止切链后旧链内容被推送到新链
+- 加密后预校验 5MB 上限，超限明确提示而不是误报断线
 - 项目更名为 **ShadowNote / 影笔记**（原 brave-sync-notes / Secure Note Chain）：
   产品显示名、网页标题、包名（shadow-note / shadow-note-client / shadow-note-server）
   与文档同步更新，体现"零知识 + 实时 + 轻量自托管"定位

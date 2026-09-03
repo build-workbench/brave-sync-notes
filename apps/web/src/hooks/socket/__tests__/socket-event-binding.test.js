@@ -25,7 +25,7 @@ const createMockSocket = () => {
 };
 
 describe('socket-event-binding', () => {
-  it('binds connect handler that joins room and flushes queue', async () => {
+  it('binds connect handler that joins room; queue flushes after join-ack', async () => {
     const socket = createMockSocket();
     const reconnectAttemptRef = { current: 5 };
     const isReconnectingRef = { current: false };
@@ -61,6 +61,12 @@ describe('socket-event-binding', () => {
       roomId: 'room-1',
       deviceName: 'Laptop',
     });
+    // 队列在 join-ack 确认后才冲刷,避免 push 被 NOT_MEMBER 拒绝
+    expect(initOfflineQueue).not.toHaveBeenCalled();
+    expect(processQueuedOperations).not.toHaveBeenCalled();
+
+    await socket.handlers['join-ack']({ roomId: 'room-1', success: true });
+
     expect(initOfflineQueue).toHaveBeenCalled();
     expect(processQueuedOperations).toHaveBeenCalled();
   });

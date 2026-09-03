@@ -44,12 +44,18 @@ class SQLitePersistence extends PersistenceAdapter {
             const dbDir = path.dirname(this.options.dbPath);
             await fs.mkdir(dbDir, { recursive: true });
 
-            // 创建数据库连接
-            this.db = new sqlite3.Database(this.options.dbPath, (err) => {
-                if (err) {
-                    logger.error('Failed to connect to SQLite:', { error: err.message });
-                    throw err;
-                }
+            // 创建数据库连接并等待打开完成(Promise 化),
+            // 此前回调异常无法被 try/catch 捕获,且 PRAGMA 可能跑在未就绪的连接上
+            await new Promise((resolve, reject) => {
+                this.db = new sqlite3.Database(this.options.dbPath, (err) => {
+                    if (err) {
+                        logger.error('Failed to connect to SQLite:', { error: err.message });
+                        this.db = null;
+                        reject(err);
+                        return;
+                    }
+                    resolve();
+                });
             });
 
             // 设置数据库配置

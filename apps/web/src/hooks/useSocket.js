@@ -35,6 +35,7 @@ export const useSocket = () => {
   const reconnectAttemptRef = useRef(0);
   const isReconnectingRef = useRef(false);
   const isJoiningRef = useRef(false);
+  const retryTimerRef = useRef(null);
 
   // Conflict management
   const conflictManagerRef = useRef(null);
@@ -130,7 +131,15 @@ export const useSocket = () => {
       setStatus('connected');
     } catch (err) {
       console.error('Push update error:', err);
-      setStatus('disconnected');
+      if (err.code === 'DATA_TOO_LARGE') {
+        // 内容超限:连接本身正常,不要误报断线;本地内容保留,等待用户精简后重试
+        toast.error('Content exceeds the 5MB sync limit and was not sent');
+        setStatus('connected');
+      } else {
+        // 未确认送达:lastSyncedHash 不更新,本地保持 dirty,下次编辑自动重推
+        toast.error('Sync failed, changes will be retried');
+        setStatus('syncing');
+      }
     }
   }, [setStatus]);
 
@@ -202,9 +211,18 @@ export const useSocket = () => {
     setIsProcessingQueue(true);
 
     try {
+      let dropped = 0;
       const results = await offlineQueueRef.current.processQueue(async (operation) => {
         if (operation.type !== 'update' || !operation.data) {
           return { success: false };
+        }
+
+        // 跨房间防护:离线操作属于其他同步链时不得推送到当前链
+        // (切链后旧链密钥已不可用,残留操作只会把旧链内容送进新链)。
+        // 直接丢弃并计数,由调用方提示用户。
+        if (operation.roomId && operation.roomId !== keysRef.current.roomId) {
+          dropped++;
+          return { success: true, dropped: true };
         }
 
         try {
@@ -225,8 +243,23 @@ export const useSocket = () => {
       const size = await offlineQueueRef.current.getQueueSize();
       setQueueSize(size);
 
-      if (results.processed > 0) {
-        toast.success(`Synced ${results.processed} offline change${results.processed > 1 ? 's' : ''}`);
+      if (dropped > 0) {
+        toast.error(
+          `${dropped} offline change${dropped > 1 ? 's were' : ' was'} discarded (different sync chain)`
+        );
+      }
+
+      // dropped 的操作已从队列移除但不属于"已同步"
+      const synced = results.processed - dropped;
+      if (synced > 0) {
+        toast.success(`Synced ${synced} offline change${synced > 1 ? 's' : ''}`);
+      }
+
+      // 退避中的操作稍后自动重试(轮询直至队列清空或断开)
+      const remaining = await offlineQueueRef.current.getQueueSize();
+      if (remaining > 0 && socketRef.current?.connected) {
+        if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = setTimeout(() => processQueuedOperations(), 5000);
       }
 
       return results;
@@ -335,6 +368,10 @@ export const useSocket = () => {
   }, [setStatus, isOffline, initOfflineQueue]);
 
   const disconnect = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
     if (debouncedPushRef.current) {
       debouncedPushRef.current.cancel();
     }
