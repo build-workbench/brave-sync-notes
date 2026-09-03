@@ -4,7 +4,7 @@
 
 ## 项目定位
 
-**Secure Note Chain / 安全同步笔记** -- 端到端加密的笔记同步系统。
+**ShadowNote / 影笔记** -- 零知识的实时笔记同步系统：端到端加密、轻量自托管。
 - 客户端加密（AES-256-GCM），服务器只转发密文
 - 12 词 BIP39 助记词恢复密钥
 - WebSocket 实时同步，离线优先，多设备协作
@@ -21,7 +21,7 @@
 ## 仓库结构
 
 ```
-brave-sync-notes/
+shadow-note/
 ├── apps/
 │   ├── web/                 # React + Vite 前端
 │   │   ├── src/

@@ -1,7 +1,7 @@
 export const translations = {
   en: {
     // Landing Page
-    appTitle: 'Secure Note Chain',
+    appTitle: 'ShadowNote',
     appSubtitleLine1: 'End-to-end encrypted synchronization.',
     appSubtitleLine2: 'No accounts. No tracking.',
     deviceNameLabel: 'Your Device Name',
@@ -85,7 +85,7 @@ export const translations = {
   },
   zh: {
     // 登录页面
-    appTitle: '安全同步笔记',
+    appTitle: '影笔记',
     appSubtitleLine1: '端到端加密的多设备同步。',
     appSubtitleLine2: '无需账号，不留痕迹。',
     deviceNameLabel: '设备名称',

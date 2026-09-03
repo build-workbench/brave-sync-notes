@@ -1,6 +1,6 @@
-# Secure Note Chain / 安全同步笔记
+# ShadowNote / 影笔记
 
-端到端加密的笔记同步系统，无需账号。
+零知识的实时笔记同步系统——端到端加密，服务器只转发密文、看不见内容；轻量自托管，无需账号。
 
 ![浏览器窗口框](./docs/screenshots/browser.png)
 

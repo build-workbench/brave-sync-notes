@@ -19,4 +19,4 @@
 
 ## 报告漏洞
 
-发现安全问题请通过 [GitHub Security Advisories](https://github.com/vibe-knight/brave-sync-notes/security/advisories/new) 私下报告。
+发现安全问题请通过 [GitHub Security Advisories](https://github.com/build-workbench/shadow-note/security/advisories/new) 私下报告。

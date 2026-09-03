@@ -34,6 +34,9 @@
 - 修复 `LOG_LEVEL` 环境变量无效：logger 现在读取该配置；服务入口的裸 `console.*` 统一替换为结构化 logger
 
 ### Changed
+- 项目更名为 **ShadowNote / 影笔记**（原 brave-sync-notes / Secure Note Chain）：
+  产品显示名、网页标题、包名（shadow-note / shadow-note-client / shadow-note-server）
+  与文档同步更新，体现"零知识 + 实时 + 轻量自托管"定位
 - CI 升级至 Node 24，`actions/checkout`/`actions/setup-node` 升级 v4 → v5，
   消除 Node 20 运行时弃用警告（此前 actions 被强制跑在 Node 24 上）
 - 前端 vite 5 → 6、react-syntax-highlighter 15 → 16（PrismJS 修复版）
@@ -282,13 +285,13 @@
 
 ---
 
-[Unreleased]: https://github.com/vibe-knight/brave-sync-notes/compare/v2.2.0...HEAD
-[2.2.0]: https://github.com/vibe-knight/brave-sync-notes/compare/v2.1.0...v2.2.0
-[2.1.0]: https://github.com/vibe-knight/brave-sync-notes/compare/v2.0.2...v2.1.0
-[2.0.2]: https://github.com/vibe-knight/brave-sync-notes/compare/v2.0.1...v2.0.2
-[2.0.1]: https://github.com/vibe-knight/brave-sync-notes/compare/v2.0.0...v2.0.1
-[2.0.0]: https://github.com/vibe-knight/brave-sync-notes/compare/v1.2.0...v2.0.0
-[1.2.0]: https://github.com/vibe-knight/brave-sync-notes/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/vibe-knight/brave-sync-notes/compare/v1.0.1...v1.1.0
-[1.0.1]: https://github.com/vibe-knight/brave-sync-notes/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/vibe-knight/brave-sync-notes/releases/tag/v1.0.0
+[Unreleased]: https://github.com/build-workbench/shadow-note/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/build-workbench/shadow-note/compare/v2.1.0...v2.2.0
+[2.1.0]: https://github.com/build-workbench/shadow-note/compare/v2.0.2...v2.1.0
+[2.0.2]: https://github.com/build-workbench/shadow-note/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/build-workbench/shadow-note/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/build-workbench/shadow-note/compare/v1.2.0...v2.0.0
+[1.2.0]: https://github.com/build-workbench/shadow-note/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/build-workbench/shadow-note/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/build-workbench/shadow-note/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/build-workbench/shadow-note/releases/tag/v1.0.0
